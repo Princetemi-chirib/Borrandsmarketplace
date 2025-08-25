@@ -1,7 +1,7 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface IMenuItem extends Document {
-  restaurantId: string;
+  restaurantId: Types.ObjectId;
   name: string;
   description: string;
   price: number;

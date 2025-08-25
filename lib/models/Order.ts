@@ -1,11 +1,11 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface IOrder extends Document {
-  studentId: string;
-  restaurantId: string;
-  riderId?: string;
+  studentId: Types.ObjectId;
+  restaurantId: Types.ObjectId;
+  riderId?: Types.ObjectId;
   items: Array<{
-    menuItemId: string;
+    menuItemId: Types.ObjectId;
     name: string;
     price: number;
     quantity: number;

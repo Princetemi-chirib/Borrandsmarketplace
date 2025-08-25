@@ -1,7 +1,7 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface IRestaurant extends Document {
-  userId: string;
+  userId: Types.ObjectId;
   name: string;
   description: string;
   address: string;
@@ -123,6 +123,8 @@ restaurantSchema.index({ rating: -1 });
 restaurantSchema.index({ name: 'text', description: 'text' });
 
 export default mongoose.models.Restaurant || mongoose.model<IRestaurant>('Restaurant', restaurantSchema);
+
+
 
 
 

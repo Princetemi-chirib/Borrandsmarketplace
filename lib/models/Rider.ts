@@ -1,7 +1,7 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface IRider extends Document {
-  userId: string;
+  userId: Types.ObjectId;
   name: string;
   phone: string;
   email: string;
