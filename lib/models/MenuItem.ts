@@ -45,7 +45,7 @@ const nutritionalInfoSchema = new Schema({
   }
 });
 
-const menuItemSchema = new Schema<IMenuItem>({
+const menuItemSchema = new Schema({
   restaurantId: {
     type: Schema.Types.ObjectId,
     ref: 'Restaurant',

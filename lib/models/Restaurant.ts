@@ -21,7 +21,7 @@ export interface IRestaurant extends Document {
   updatedAt: Date;
 }
 
-const restaurantSchema = new Schema<IRestaurant>({
+const restaurantSchema = new Schema({
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',

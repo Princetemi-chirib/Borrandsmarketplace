@@ -87,7 +87,7 @@ const deliveryAddressSchema = new Schema({
   }
 });
 
-const orderSchema = new Schema<IOrder>({
+const orderSchema = new Schema({
   studentId: {
     type: Schema.Types.ObjectId,
     ref: 'User',

@@ -36,7 +36,7 @@ const locationSchema = new Schema({
   }
 });
 
-const riderSchema = new Schema<IRider>({
+const riderSchema = new Schema({
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
