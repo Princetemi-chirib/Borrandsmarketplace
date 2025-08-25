@@ -16,6 +16,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
+import Logo from '../../../components/Logo';
 
 interface RegisterFormData {
   name: string;
@@ -132,13 +133,16 @@ export default function RegisterPage() {
           transition={{ duration: 0.5 }}
         >
           <div className="text-center">
-            <Link href="/" className="inline-flex items-center text-primary-600 hover:text-primary-700 mb-6">
+            <div className="mb-6">
+              <Logo size="lg" />
+            </div>
+            <Link href="/" className="inline-flex items-center text-primary-600 hover:text-primary-700 mb-4">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Home
             </Link>
             <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
             <p className="mt-2 text-sm text-gray-600">
-              Join University Marketplace and connect with your community
+              Join Borrands Marketplace and connect with your community
             </p>
           </div>
 
@@ -411,3 +415,5 @@ export default function RegisterPage() {
     </div>
   );
 }
+
+

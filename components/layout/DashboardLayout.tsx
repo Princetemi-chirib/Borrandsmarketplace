@@ -23,6 +23,7 @@ import {
   FileText,
   HelpCircle
 } from 'lucide-react';
+import Logo from '../Logo';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -125,9 +126,7 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
       {/* Sidebar */}
       <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0">
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-          <Link href="/" className="text-xl font-bold text-primary-600">
-            University Marketplace
-          </Link>
+          <Logo size="md" />
           <button
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
@@ -239,3 +238,5 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
     </div>
   );
 }
+
+

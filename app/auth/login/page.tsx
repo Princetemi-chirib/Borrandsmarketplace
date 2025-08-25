@@ -14,6 +14,7 @@ import {
   Mail,
   Lock
 } from 'lucide-react';
+import Logo from '../../../components/Logo';
 
 interface LoginFormData {
   email: string;
@@ -85,13 +86,16 @@ export default function LoginPage() {
           transition={{ duration: 0.5 }}
         >
           <div className="text-center">
-            <Link href="/" className="inline-flex items-center text-primary-600 hover:text-primary-700 mb-6">
+            <div className="mb-6">
+              <Logo size="lg" />
+            </div>
+            <Link href="/" className="inline-flex items-center text-primary-600 hover:text-primary-700 mb-4">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Home
             </Link>
             <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
             <p className="mt-2 text-sm text-gray-600">
-              Sign in to your University Marketplace account
+              Sign in to your Borrands Marketplace account
             </p>
           </div>
 
@@ -255,3 +259,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+

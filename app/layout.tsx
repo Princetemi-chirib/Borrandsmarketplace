@@ -6,32 +6,32 @@ import { Toaster } from 'react-hot-toast'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'University Marketplace - Connect Students, Restaurants & Riders',
+  title: 'Borrands Marketplace - Connect Students, Restaurants & Riders',
   description: 'A comprehensive marketplace platform connecting university students with local restaurants and delivery riders. Order food, track deliveries, and manage your business all in one place.',
   keywords: 'university marketplace, food delivery, student ordering, restaurant management, delivery tracking, campus food',
-  authors: [{ name: 'University Marketplace Team' }],
-  creator: 'University Marketplace',
-  publisher: 'University Marketplace',
+  authors: [{ name: 'Borrands Marketplace Team' }],
+  creator: 'Borrands Marketplace',
+  publisher: 'Borrands Marketplace',
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://university-marketplace.vercel.app'),
+  metadataBase: new URL('https://borrands-marketplace.vercel.app'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'University Marketplace - Connect Students, Restaurants & Riders',
+    title: 'Borrands Marketplace - Connect Students, Restaurants & Riders',
     description: 'A comprehensive marketplace platform connecting university students with local restaurants and delivery riders.',
-    url: 'https://university-marketplace.vercel.app',
-    siteName: 'University Marketplace',
+    url: 'https://borrands-marketplace.vercel.app',
+    siteName: 'Borrands Marketplace',
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/images/brand-logo.jpeg',
         width: 1200,
         height: 630,
-        alt: 'University Marketplace',
+        alt: 'Borrands Marketplace',
       },
     ],
     locale: 'en_US',
@@ -39,9 +39,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'University Marketplace - Connect Students, Restaurants & Riders',
+    title: 'Borrands Marketplace - Connect Students, Restaurants & Riders',
     description: 'A comprehensive marketplace platform connecting university students with local restaurants and delivery riders.',
-    images: ['/og-image.jpg'],
+    images: ['/images/brand-logo.jpeg'],
   },
   robots: {
     index: true,
@@ -72,7 +72,7 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        <meta name="theme-color" content="#3b82f6" />
+        <meta name="theme-color" content="#152d8f" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </head>
       <body className={inter.className}>
@@ -107,3 +107,5 @@ export default function RootLayout({
     </html>
   )
 }
+
+

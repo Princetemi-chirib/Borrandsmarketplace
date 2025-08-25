@@ -22,6 +22,7 @@ import {
   Instagram,
   Linkedin
 } from 'lucide-react';
+import Logo from '../components/Logo';
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('students');
@@ -97,7 +98,7 @@ export default function HomePage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-primary-600">University Marketplace</h1>
+                <Logo size="lg" />
               </div>
             </div>
             <div className="hidden md:block">
@@ -134,7 +135,7 @@ export default function HomePage() {
             >
               <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
                 Connect Your
-                <span className="text-primary-600"> University</span>
+                <span className="text-brand-primary"> University</span>
                 <br />
                 Community
               </h1>
@@ -346,7 +347,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-2xl font-bold text-primary-400 mb-4">University Marketplace</h3>
+              <h3 className="text-2xl font-bold text-primary-400 mb-4">Borrands Marketplace</h3>
               <p className="text-gray-400 mb-4">
                 Connecting university communities through food delivery and marketplace services.
               </p>
@@ -398,10 +399,12 @@ export default function HomePage() {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 University Marketplace. All rights reserved.</p>
+            <p>&copy; 2024 Borrands Marketplace. All rights reserved.</p>
           </div>
         </div>
       </footer>
     </div>
   );
 }
+
+

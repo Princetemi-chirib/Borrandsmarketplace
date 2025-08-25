@@ -6,15 +6,17 @@
 
 :root {
   --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
+  --background-start-rgb: 248, 250, 252;
   --background-end-rgb: 255, 255, 255;
+  --primary-color: #152d8f;
+  --accent-color: #fc1c15;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+    --background-start-rgb: 15, 23, 42;
+    --background-end-rgb: 30, 41, 59;
   }
 }
 
@@ -46,22 +48,22 @@ a {
   text-decoration: none;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar with brand colors */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+  background: #152d8f;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: #0f2265;
 }
 
 /* Custom animations */
@@ -94,6 +96,15 @@ a {
   }
 }
 
+@keyframes brandPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(252, 28, 21, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(252, 28, 21, 0);
+  }
+}
+
 /* Custom utility classes */
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out;
@@ -107,10 +118,14 @@ a {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Loading spinner */
+.animate-brand-pulse {
+  animation: brandPulse 2s infinite;
+}
+
+/* Loading spinner with brand colors */
 .spinner {
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid #3b82f6;
+  border: 2px solid #e2e8f0;
+  border-top: 2px solid #152d8f;
   border-radius: 50%;
   width: 20px;
   height: 20px;
@@ -122,39 +137,55 @@ a {
   100% { transform: rotate(360deg); }
 }
 
-/* Custom button styles */
+/* Custom button styles with brand colors */
 .btn-primary {
-  @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  @apply bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 shadow-sm hover:shadow-md;
+}
+
+.btn-accent {
+  @apply bg-accent-500 hover:bg-accent-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent-400 focus:ring-offset-2 shadow-sm hover:shadow-md;
 }
 
 .btn-secondary {
-  @apply bg-secondary-200 hover:bg-secondary-300 text-secondary-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2;
+  @apply bg-secondary-200 hover:bg-secondary-300 text-secondary-800 font-medium py-2 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 shadow-sm hover:shadow-md;
 }
 
 .btn-success {
-  @apply bg-success-600 hover:bg-success-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-success-500 focus:ring-offset-2;
+  @apply bg-success-600 hover:bg-success-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-success-500 focus:ring-offset-2 shadow-sm hover:shadow-md;
 }
 
 .btn-warning {
-  @apply bg-warning-600 hover:bg-warning-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:ring-offset-2;
+  @apply bg-warning-600 hover:bg-warning-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:ring-offset-2 shadow-sm hover:shadow-md;
 }
 
 .btn-error {
-  @apply bg-error-600 hover:bg-error-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-error-500 focus:ring-offset-2;
+  @apply bg-accent-500 hover:bg-accent-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent-400 focus:ring-offset-2 shadow-sm hover:shadow-md;
 }
 
-/* Card styles */
+/* Card styles with brand colors */
 .card {
-  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200;
+}
+
+.card-primary {
+  @apply bg-gradient-to-br from-primary-50 to-primary-100 border-primary-200;
+}
+
+.card-accent {
+  @apply bg-gradient-to-br from-accent-50 to-accent-100 border-accent-200;
 }
 
 .card-hover {
-  @apply hover:shadow-md transition-shadow duration-200;
+  @apply hover:shadow-lg hover:scale-[1.02] transition-all duration-200;
 }
 
-/* Form styles */
+/* Form styles with brand colors */
 .form-input {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+  @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
+}
+
+.form-input:focus {
+  @apply shadow-sm;
 }
 
 .form-label {
@@ -162,10 +193,10 @@ a {
 }
 
 .form-error {
-  @apply text-error-600 text-sm mt-1;
+  @apply text-accent-600 text-sm mt-1;
 }
 
-/* Status badges */
+/* Status badges with brand colors */
 .status-badge {
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
 }
@@ -179,7 +210,7 @@ a {
 }
 
 .status-preparing {
-  @apply bg-blue-100 text-blue-800;
+  @apply bg-primary-100 text-primary-800;
 }
 
 .status-ready {
@@ -187,11 +218,11 @@ a {
 }
 
 .status-picked_up {
-  @apply bg-purple-100 text-purple-800;
+  @apply bg-accent-100 text-accent-800;
 }
 
 .status-in_transit {
-  @apply bg-indigo-100 text-indigo-800;
+  @apply bg-primary-100 text-primary-800;
 }
 
 .status-delivered {
@@ -199,7 +230,7 @@ a {
 }
 
 .status-cancelled {
-  @apply bg-error-100 text-error-800;
+  @apply bg-accent-100 text-accent-800;
 }
 
 /* Rating stars */
@@ -211,14 +242,14 @@ a {
   @apply text-gray-300;
 }
 
-/* Order timeline */
+/* Order timeline with brand colors */
 .timeline-item {
   @apply relative pl-8 pb-4;
 }
 
 .timeline-item::before {
   content: '';
-  @apply absolute left-0 top-2 w-3 h-3 bg-primary-600 rounded-full;
+  @apply absolute left-0 top-2 w-3 h-3 bg-primary-500 rounded-full;
 }
 
 .timeline-item::after {
@@ -230,14 +261,22 @@ a {
   display: none;
 }
 
+.timeline-item.active::before {
+  @apply bg-accent-500;
+}
+
 /* Responsive grid */
 .grid-auto-fit {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
-/* Custom focus styles */
+/* Custom focus styles with brand colors */
 .focus-ring {
   @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+}
+
+.focus-ring-accent {
+  @apply focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2;
 }
 
 /* Loading skeleton */
@@ -253,7 +292,7 @@ a {
   @apply w-10 h-10 bg-gray-200 rounded-full;
 }
 
-/* Toast notifications */
+/* Toast notifications with brand colors */
 .toast {
   @apply fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm;
 }
@@ -263,7 +302,7 @@ a {
 }
 
 .toast-error {
-  @apply bg-error-500 text-white;
+  @apply bg-accent-500 text-white;
 }
 
 .toast-warning {
@@ -273,3 +312,62 @@ a {
 .toast-info {
   @apply bg-primary-500 text-white;
 }
+
+/* Brand-specific gradients */
+.brand-gradient {
+  background: linear-gradient(135deg, #152d8f 0%, #fc1c15 100%);
+}
+
+.brand-gradient-reverse {
+  background: linear-gradient(135deg, #fc1c15 0%, #152d8f 100%);
+}
+
+.brand-gradient-vertical {
+  background: linear-gradient(180deg, #152d8f 0%, #fc1c15 100%);
+}
+
+/* Brand text colors */
+.text-brand-primary {
+  color: #152d8f;
+}
+
+.text-brand-accent {
+  color: #fc1c15;
+}
+
+/* Brand backgrounds */
+.bg-brand-primary {
+  background-color: #152d8f;
+}
+
+.bg-brand-accent {
+  background-color: #fc1c15;
+}
+
+/* Brand borders */
+.border-brand-primary {
+  border-color: #152d8f;
+}
+
+.border-brand-accent {
+  border-color: #fc1c15;
+}
+
+/* Hover effects with brand colors */
+.hover-brand-primary:hover {
+  color: #152d8f;
+}
+
+.hover-brand-accent:hover {
+  color: #fc1c15;
+}
+
+.hover-bg-brand-primary:hover {
+  background-color: #152d8f;
+}
+
+.hover-bg-brand-accent:hover {
+  background-color: #fc1c15;
+}
+
+

@@ -123,3 +123,5 @@ restaurantSchema.index({ rating: -1 });
 restaurantSchema.index({ name: 'text', description: 'text' });
 
 export default mongoose.models.Restaurant || mongoose.model<IRestaurant>('Restaurant', restaurantSchema);
+
+
