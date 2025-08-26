@@ -21,7 +21,10 @@ import {
   MapPin,
   CreditCard,
   FileText,
-  HelpCircle
+  HelpCircle,
+  Heart,
+  Star,
+  Clock
 } from 'lucide-react';
 import Logo from '../Logo';
 
@@ -34,11 +37,13 @@ interface DashboardLayoutProps {
 const navigationItems = {
   student: [
     { name: 'Dashboard', href: '/dashboard/student', icon: Home },
-    { name: 'Browse Restaurants', href: '/dashboard/student/restaurants', icon: Store },
-    { name: 'My Orders', href: '/dashboard/student/orders', icon: ShoppingBag },
-    { name: 'Order History', href: '/dashboard/student/history', icon: FileText },
-    { name: 'Profile', href: '/dashboard/student/profile', icon: User },
+    { name: 'Restaurants', href: '/dashboard/student/restaurants', icon: Store },
+    { name: 'Favorites', href: '/dashboard/student/favorites', icon: Heart },
+    { name: 'Orders', href: '/dashboard/student/orders', icon: ShoppingBag },
+    { name: 'Reviews', href: '/dashboard/student/reviews', icon: Star },
+    { name: 'History', href: '/dashboard/student/history', icon: Clock },
     { name: 'Support', href: '/dashboard/student/support', icon: HelpCircle },
+    { name: 'Profile', href: '/dashboard/student/profile', icon: User },
   ],
   restaurant: [
     { name: 'Dashboard', href: '/dashboard/restaurant', icon: Home },
@@ -72,6 +77,8 @@ const navigationItems = {
 export default function DashboardLayout({ children, userRole, userName }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifications, setNotifications] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -98,6 +105,25 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
     fetchNotifications();
   }, []);
 
+  // Close sidebar when route changes on mobile
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.notification-dropdown') && !target.closest('.user-menu-dropdown')) {
+        setShowNotifications(false);
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -117,26 +143,32 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
+            className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
       </AnimatePresence>
 
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0">
-        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-          <Logo size="md" />
+      <motion.div 
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        initial={false}
+      >
+        {/* Logo Section - Optimized for mobile */}
+        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 bg-white">
+          <Logo size="sm" />
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-colors"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="mt-6 px-3">
+        {/* Navigation - Improved mobile spacing */}
+        <nav className="mt-2 px-3 pb-24 overflow-y-auto h-full">
           <div className="space-y-1">
             {navigation.map((item) => {
               const Icon = item.icon;
@@ -146,29 +178,29 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  className={`group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                     isActive
-                      ? 'bg-primary-100 text-primary-700 border-r-2 border-primary-600'
+                      ? 'bg-brand-primary text-white shadow-sm'
                       : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                   onClick={() => setSidebarOpen(false)}
                 >
-                  <Icon className={`mr-3 h-5 w-5 ${
-                    isActive ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-500'
+                  <Icon className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                    isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'
                   }`} />
-                  {item.name}
+                  <span className="truncate">{item.name}</span>
                 </Link>
               );
             })}
           </div>
         </nav>
 
-        {/* User section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+        {/* User section - Fixed positioning and better mobile design */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                <User className="h-4 w-4 text-primary-600" />
+              <div className="w-10 h-10 bg-brand-primary rounded-full flex items-center justify-center">
+                <User className="h-5 w-5 text-white" />
               </div>
             </div>
             <div className="ml-3 flex-1 min-w-0">
@@ -181,56 +213,171 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
             </div>
             <button
               onClick={handleLogout}
-              className="ml-2 p-1 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+              className="ml-2 p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-colors"
               title="Logout"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-5 w-5" />
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
-        {/* Top navigation */}
+      <div className="lg:pl-72">
+        {/* Top navigation - Optimized for mobile */}
         <div className="sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-colors"
               >
                 <Menu className="h-6 w-6" />
               </button>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-3">
               {/* Notifications */}
-              <button className="relative p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-md">
-                <Bell className="h-6 w-6" />
-                {notifications > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {notifications > 9 ? '9+' : notifications}
-                  </span>
-                )}
-              </button>
+              <div className="relative notification-dropdown">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  <Bell className="h-5 w-5" />
+                  {notifications > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                      {notifications > 9 ? '9+' : notifications}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notifications Dropdown */}
+                <AnimatePresence>
+                  {showNotifications && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+                    >
+                      <div className="p-4 border-b border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+                      </div>
+                      <div className="max-h-96 overflow-y-auto">
+                        {notifications > 0 ? (
+                          <div className="p-4">
+                            <div className="space-y-3">
+                              <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-gray-900">Order Update</p>
+                                  <p className="text-xs text-gray-600">Your order #ORD-123 has been picked up</p>
+                                  <p className="text-xs text-gray-500 mt-1">2 minutes ago</p>
+                                </div>
+                              </div>
+                              <div className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg">
+                                <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-gray-900">Delivery Complete</p>
+                                  <p className="text-xs text-gray-600">Your order has been delivered successfully</p>
+                                  <p className="text-xs text-gray-500 mt-1">1 hour ago</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-8 text-center">
+                            <Bell className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                            <p className="text-gray-500">No notifications yet</p>
+                          </div>
+                        )}
+                      </div>
+                      {notifications > 0 && (
+                        <div className="p-3 border-t border-gray-200">
+                          <button className="w-full text-sm text-brand-primary hover:text-brand-accent font-medium">
+                            Mark all as read
+                          </button>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* User menu */}
-              <div className="relative">
-                <button className="flex items-center space-x-2 text-sm text-gray-700 hover:text-gray-900">
-                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                    <User className="h-4 w-4 text-primary-600" />
+              <div className="relative user-menu-dropdown">
+                <button 
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center space-x-2 text-sm text-gray-700 hover:text-gray-900 p-2 rounded-md hover:bg-gray-100 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-brand-primary rounded-full flex items-center justify-center">
+                    <User className="h-4 w-4 text-white" />
                   </div>
-                  <span className="hidden md:block">{userName}</span>
+                  <span className="hidden sm:block font-medium">{userName}</span>
                 </button>
+
+                {/* User Menu Dropdown */}
+                <AnimatePresence>
+                  {showUserMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+                    >
+                      <div className="p-4 border-b border-gray-200">
+                        <p className="text-sm font-medium text-gray-900">{userName}</p>
+                        <p className="text-xs text-gray-500 capitalize">{userRole}</p>
+                      </div>
+                      <div className="py-2">
+                        <Link
+                          href={`/dashboard/${userRole}/profile`}
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <User className="h-4 w-4 mr-3" />
+                          Profile
+                        </Link>
+                        <Link
+                          href={`/dashboard/${userRole}/settings`}
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <Settings className="h-4 w-4 mr-3" />
+                          Settings
+                        </Link>
+                        <Link
+                          href={`/dashboard/${userRole}/support`}
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <HelpCircle className="h-4 w-4 mr-3" />
+                          Support
+                        </Link>
+                      </div>
+                      <div className="border-t border-gray-200 py-2">
+                        <button
+                          onClick={() => {
+                            handleLogout();
+                            setShowUserMenu(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <LogOut className="h-4 w-4 mr-3" />
+                          Sign out
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Page content */}
-        <main className="py-6">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Page content - Optimized padding for mobile */}
+        <main className="py-3 sm:py-4">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
             {children}
           </div>
         </main>

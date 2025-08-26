@@ -2,22 +2,31 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface IMenuItem extends Document {
   restaurantId: Types.ObjectId;
+  categoryId: Types.ObjectId;
   name: string;
   description: string;
   price: number;
-  category: string;
+  originalPrice?: number;
   image: string;
   isAvailable: boolean;
-  stock: number;
-  lowStockThreshold: number;
-  preparationTime: number;
+  isFeatured: boolean;
+  isVegetarian: boolean;
+  isVegan: boolean;
+  isSpicy: boolean;
   allergens: string[];
   nutritionalInfo: {
     calories: number;
     protein: number;
     carbs: number;
     fat: number;
+    fiber: number;
   };
+  preparationTime: number; // in minutes
+  ingredients: string[];
+  tags: string[];
+  rating: number;
+  reviewCount: number;
+  orderCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +51,11 @@ const nutritionalInfoSchema = new Schema({
     type: Number,
     default: 0,
     min: [0, 'Fat cannot be negative']
+  },
+  fiber: {
+    type: Number,
+    default: 0,
+    min: [0, 'Fiber cannot be negative']
   }
 });
 
@@ -49,6 +63,11 @@ const menuItemSchema = new Schema({
   restaurantId: {
     type: Schema.Types.ObjectId,
     ref: 'Restaurant',
+    required: true
+  },
+  categoryId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Category',
     required: true
   },
   name: {
@@ -61,72 +80,78 @@ const menuItemSchema = new Schema({
     type: String,
     required: [true, 'Description is required'],
     trim: true,
-    maxlength: [300, 'Description cannot exceed 300 characters']
+    maxlength: [500, 'Description cannot exceed 500 characters']
   },
   price: {
     type: Number,
     required: [true, 'Price is required'],
     min: [0, 'Price cannot be negative']
   },
-  category: {
-    type: String,
-    required: [true, 'Category is required'],
-    trim: true,
-    enum: [
-      'appetizers',
-      'main_course',
-      'desserts',
-      'beverages',
-      'sides',
-      'breakfast',
-      'lunch',
-      'dinner',
-      'snacks',
-      'drinks'
-    ]
+  originalPrice: {
+    type: Number,
+    min: [0, 'Original price cannot be negative']
   },
   image: {
     type: String,
-    default: '/images/default-menu-item.jpg'
+    required: [true, 'Image is required']
   },
   isAvailable: {
     type: Boolean,
     default: true
   },
-  stock: {
-    type: Number,
-    default: 0,
-    min: [0, 'Stock cannot be negative']
+  isFeatured: {
+    type: Boolean,
+    default: false
   },
-  lowStockThreshold: {
-    type: Number,
-    default: 5,
-    min: [0, 'Low stock threshold cannot be negative']
+  isVegetarian: {
+    type: Boolean,
+    default: false
   },
-  preparationTime: {
-    type: Number,
-    required: [true, 'Preparation time is required'],
-    min: [1, 'Preparation time must be at least 1 minute'],
-    max: [60, 'Preparation time cannot exceed 60 minutes']
+  isVegan: {
+    type: Boolean,
+    default: false
+  },
+  isSpicy: {
+    type: Boolean,
+    default: false
   },
   allergens: [{
     type: String,
-    enum: [
-      'dairy',
-      'eggs',
-      'fish',
-      'shellfish',
-      'tree_nuts',
-      'peanuts',
-      'wheat',
-      'soy',
-      'gluten',
-      'none'
-    ]
+    enum: ['peanuts', 'tree-nuts', 'milk', 'eggs', 'soy', 'fish', 'shellfish', 'wheat', 'gluten']
   }],
   nutritionalInfo: {
     type: nutritionalInfoSchema,
     default: () => ({})
+  },
+  preparationTime: {
+    type: Number,
+    default: 15,
+    min: [1, 'Preparation time must be at least 1 minute'],
+    max: [120, 'Preparation time cannot exceed 120 minutes']
+  },
+  ingredients: [{
+    type: String,
+    trim: true
+  }],
+  tags: [{
+    type: String,
+    trim: true
+  }],
+  rating: {
+    type: Number,
+    default: 0,
+    min: [0, 'Rating cannot be negative'],
+    max: [5, 'Rating cannot exceed 5']
+  },
+  reviewCount: {
+    type: Number,
+    default: 0,
+    min: [0, 'Review count cannot be negative']
+  },
+  orderCount: {
+    type: Number,
+    default: 0,
+    min: [0, 'Order count cannot be negative']
   }
 }, {
   timestamps: true,
@@ -134,42 +159,53 @@ const menuItemSchema = new Schema({
   toObject: { virtuals: true }
 });
 
-// Virtual for stock status
-menuItemSchema.virtual('stockStatus').get(function() {
-  if (this.stock === 0) return 'out_of_stock';
-  if (this.stock <= this.lowStockThreshold) return 'low_stock';
-  return 'in_stock';
+// Virtual for average rating calculation
+menuItemSchema.virtual('averageRating').get(function() {
+  return this.reviewCount > 0 ? this.rating / this.reviewCount : 0;
 });
 
-// Virtual for isAvailable based on stock
-menuItemSchema.virtual('isActuallyAvailable').get(function() {
-  return this.isAvailable && this.stock > 0;
-});
-
-// Method to update stock
-menuItemSchema.methods.updateStock = function(quantity: number) {
-  this.stock = Math.max(0, this.stock - quantity);
-  if (this.stock === 0) {
-    this.isAvailable = false;
+// Virtual for discount percentage
+menuItemSchema.virtual('discountPercentage').get(function() {
+  if (this.originalPrice && this.originalPrice > this.price) {
+    return Math.round(((this.originalPrice - this.price) / this.originalPrice) * 100);
   }
+  return 0;
+});
+
+// Virtual for is on sale
+menuItemSchema.virtual('isOnSale').get(function() {
+  return this.originalPrice && this.originalPrice > this.price;
+});
+
+// Method to update rating
+menuItemSchema.methods.updateRating = function(newRating: number) {
+  this.rating += newRating;
+  this.reviewCount += 1;
   return this.save();
 };
 
-// Method to add stock
-menuItemSchema.methods.addStock = function(quantity: number) {
-  this.stock += quantity;
-  if (this.stock > 0 && !this.isAvailable) {
-    this.isAvailable = true;
-  }
+// Method to increment order count
+menuItemSchema.methods.incrementOrderCount = function() {
+  this.orderCount += 1;
+  return this.save();
+};
+
+// Method to toggle availability
+menuItemSchema.methods.toggleAvailability = function() {
+  this.isAvailable = !this.isAvailable;
   return this.save();
 };
 
 // Index for better query performance
-menuItemSchema.index({ restaurantId: 1, category: 1 });
+menuItemSchema.index({ restaurantId: 1, categoryId: 1 });
 menuItemSchema.index({ restaurantId: 1, isAvailable: 1 });
-menuItemSchema.index({ restaurantId: 1, stock: 1 });
+menuItemSchema.index({ restaurantId: 1, isFeatured: 1 });
 menuItemSchema.index({ name: 'text', description: 'text' });
-menuItemSchema.index({ category: 1 });
+menuItemSchema.index({ tags: 1 });
+menuItemSchema.index({ allergens: 1 });
+menuItemSchema.index({ isVegetarian: 1, isVegan: 1 });
+menuItemSchema.index({ rating: -1 });
+menuItemSchema.index({ orderCount: -1 });
 
 export default mongoose.models.MenuItem || mongoose.model<IMenuItem>('MenuItem', menuItemSchema);
 

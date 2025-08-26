@@ -1,274 +1,224 @@
-# University Marketplace
+# Borrands - University Marketplace
 
-A comprehensive web-based platform designed to connect students, restaurants, and riders within university communities. The platform enables students to place orders from registered restaurants, restaurants to receive and manage orders, and riders to fulfill deliveries with real-time WhatsApp notifications via Twilio integration.
+A comprehensive university marketplace platform connecting students, restaurants, and riders for seamless food ordering and delivery.
 
-## 🚀 Features
+## Features
 
-### For Students
-- Browse restaurants and menus
-- Filter items by category, price, and availability
-- Place orders with Paystack payment integration
+### 🔐 Authentication System
+- **Phone-based OTP Authentication**: Primary authentication via WhatsApp OTP
+- **Password Login**: Optional password-based login for convenience
+- **Role-based Access**: Student, Restaurant, Rider, and Admin roles
+- **Phone Verification**: Automatic verification via WhatsApp
+
+### 👥 User Roles
+- **Students**: Browse restaurants, place orders, track deliveries
+- **Restaurants**: Manage menu, process orders, view analytics
+- **Riders**: Accept deliveries, track earnings, manage availability
+- **Admins**: Platform management, user oversight, analytics
+
+### 🍽️ Core Features
+- Restaurant browsing and menu management
 - Real-time order tracking
-- WhatsApp notifications for order status updates
-- Order history and ratings
-- Multi-university support
+- Payment integration (Paystack)
+- WhatsApp notifications
+- Mobile-responsive design
+- Order history and reviews
 
-### For Restaurants
-- Create and manage restaurant profile and menu
-- Advanced inventory management with stock tracking
-- Automatic stock deduction on orders
-- Low-stock alerts via WhatsApp
-- Order management (accept, prepare, reject)
-- Assign orders to riders
-- Sales history and analytics
-- Real-time order notifications
+## Tech Stack
 
-### For Riders
-- Rider profile with university affiliation
-- View and accept delivery tasks
-- Update delivery progress (picked up, en route, delivered)
-- WhatsApp notifications for new requests
-- Delivery history and earnings overview
-- Location tracking
-
-### For Admins
-- Approve/reject restaurant and rider applications
-- Manage users and monitor inventory compliance
-- Resolve disputes and process refunds
-- Analytics dashboard with comprehensive metrics
-- Platform-wide monitoring and management
-
-### WhatsApp Integration (Twilio)
-- Automated notifications for each order stage
-- Communication bridge among students, restaurants, and riders
-- Optional chatbot for FAQs and support
-- Real-time status updates
-
-## 🛠️ Technology Stack
-
-- **Frontend**: Next.js 14 with TypeScript
-- **Backend**: Node.js with Next.js API routes
+- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Node.js
 - **Database**: MongoDB with Mongoose ODM
-- **Authentication**: JWT-based authentication
-- **Payment Gateway**: Paystack integration
+- **Authentication**: JWT + WhatsApp OTP
+- **Payment**: Paystack
 - **Notifications**: Twilio WhatsApp Business API
-- **Styling**: Tailwind CSS with custom components
-- **State Management**: Zustand
-- **Form Handling**: React Hook Form
-- **Animations**: Framer Motion
-- **Hosting**: Vercel (recommended)
+- **Deployment**: Vercel (recommended)
 
-## 📋 Prerequisites
+## Prerequisites
 
-Before running this project, make sure you have the following installed:
+- Node.js 18+ 
+- MongoDB (local or cloud)
+- Twilio Account (for WhatsApp OTP)
+- Paystack Account (for payments)
 
-- Node.js (v18 or higher)
-- npm or yarn
-- MongoDB database (local or cloud)
-- Twilio account for WhatsApp integration
-- Paystack account for payment processing
+## Installation
 
-## 🚀 Getting Started
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/borrands.git
+   cd borrands
+   ```
 
-### 1. Clone the Repository
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-```bash
-git clone https://github.com/yourusername/university-marketplace.git
-cd university-marketplace
-```
+3. **Set up environment variables**
+   ```bash
+   cp env.example .env.local
+   ```
+   
+   Update `.env.local` with your credentials:
+   ```env
+   # Database
+   MONGODB_URI=mongodb://localhost:27017/borrands
+   
+   # Authentication
+   JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+   
+   # Application
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   NODE_ENV=development
+   
+   # Twilio WhatsApp (Required for OTP authentication)
+   TWILIO_ACCOUNT_SID=your_twilio_account_sid_here
+   TWILIO_AUTH_TOKEN=your_twilio_auth_token_here
+   TWILIO_PHONE_NUMBER=+1234567890
+   
+   # Paystack (Payment Gateway)
+   PAYSTACK_SECRET_KEY=your_paystack_secret_key_here
+   PAYSTACK_PUBLIC_KEY=your_paystack_public_key_here
+   ```
 
-### 2. Install Dependencies
+4. **Set up Twilio WhatsApp**
+   - Create a Twilio account
+   - Enable WhatsApp Business API
+   - Get your Account SID and Auth Token
+   - Set up your WhatsApp phone number
+   - Update the environment variables
 
-```bash
-npm install
-# or
-yarn install
-```
+5. **Set up Paystack**
+   - Create a Paystack account
+   - Get your test/live keys
+   - Update the environment variables
 
-### 3. Environment Variables
+6. **Run the development server**
+   ```bash
+   npm run dev
+   ```
 
-Create a `.env.local` file in the root directory with the following variables:
+7. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-```env
-# Database
-MONGODB_URI=your_mongodb_connection_string
+## Authentication Flow
 
-# JWT Secret
-JWT_SECRET=your_jwt_secret_key
+### Registration
+1. User fills registration form (phone-first)
+2. System sends OTP via WhatsApp
+3. User verifies OTP
+4. Account created and verified
 
-# Twilio Configuration
-TWILIO_ACCOUNT_SID=your_twilio_account_sid
-TWILIO_AUTH_TOKEN=your_twilio_auth_token
-TWILIO_PHONE_NUMBER=your_twilio_whatsapp_number
+### Login
+1. **Password Login**: Phone + Password
+2. **OTP Login**: Phone + WhatsApp OTP
+3. JWT token generated and stored
 
-# Paystack Configuration
-PAYSTACK_SECRET_KEY=your_paystack_secret_key
-PAYSTACK_PUBLIC_KEY=your_paystack_public_key
+## API Endpoints
 
-# Optional: Email Service (for email verification)
-SMTP_HOST=your_smtp_host
-SMTP_PORT=your_smtp_port
-SMTP_USER=your_smtp_username
-SMTP_PASS=your_smtp_password
-```
+### Authentication
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - Password-based login
+- `POST /api/auth/send-otp` - Send WhatsApp OTP
+- `POST /api/auth/verify-otp` - Verify OTP and login
 
-### 4. Database Setup
+### Users
+- `GET /api/users/profile` - Get user profile
+- `PUT /api/users/profile` - Update user profile
+- `GET /api/users/orders` - Get user orders
 
-1. Set up a MongoDB database (local or cloud)
-2. Update the `MONGODB_URI` in your `.env.local` file
-3. The application will automatically create the necessary collections
+### Restaurants
+- `GET /api/restaurants` - List restaurants
+- `GET /api/restaurants/[id]` - Get restaurant details
+- `GET /api/restaurants/[id]/menu` - Get restaurant menu
 
-### 5. Twilio Setup
+### Orders
+- `POST /api/orders` - Create order
+- `GET /api/orders/[id]` - Get order details
+- `PUT /api/orders/[id]/status` - Update order status
 
-1. Create a Twilio account at [twilio.com](https://www.twilio.com)
-2. Set up WhatsApp Business API
-3. Get your Account SID, Auth Token, and WhatsApp phone number
-4. Update the Twilio environment variables
+### Payments
+- `POST /api/payments/initialize` - Initialize Paystack payment
+- `POST /api/payments/verify` - Verify payment
 
-### 6. Paystack Setup
+## Database Models
 
-1. Create a Paystack account at [paystack.com](https://www.paystack.com)
-2. Get your Secret Key and Public Key
-3. Update the Paystack environment variables
+### User
+- Basic info (name, phone, role, university)
+- OTP fields (code, expiration, attempts)
+- Preferences and wallet
+- Order statistics
 
-### 7. Run the Development Server
+### Restaurant
+- Basic info and location
+- Operating hours and features
+- Menu items and categories
+- Performance statistics
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+### Order
+- Order details and items
+- Status tracking
+- Payment information
+- Delivery details
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### MenuItem
+- Item details and pricing
+- Nutritional information
+- Availability and ratings
 
-## 📁 Project Structure
+## WhatsApp Integration
 
-```
-university-marketplace/
-├── app/                          # Next.js 14 app directory
-│   ├── api/                      # API routes
-│   │   ├── auth/                 # Authentication endpoints
-│   │   ├── restaurants/          # Restaurant management
-│   │   ├── orders/               # Order management
-│   │   ├── riders/               # Rider management
-│   │   └── admin/                # Admin endpoints
-│   ├── auth/                     # Authentication pages
-│   ├── dashboard/                # Dashboard pages
-│   └── globals.css               # Global styles
-├── components/                   # Reusable components
-│   ├── ui/                       # UI components
-│   ├── forms/                    # Form components
-│   └── layout/                   # Layout components
-├── lib/                          # Utility libraries
-│   ├── models/                   # Mongoose models
-│   ├── auth.ts                   # Authentication utilities
-│   ├── db.ts                     # Database connection
-│   ├── paystack.ts               # Paystack integration
-│   └── whatsapp.ts               # WhatsApp integration
-├── types/                        # TypeScript type definitions
-├── store/                        # Zustand state management
-├── hooks/                        # Custom React hooks
-└── utils/                        # Utility functions
-```
+The platform uses Twilio's WhatsApp Business API for:
+- OTP delivery during registration/login
+- Order status updates
+- Delivery notifications
+- Payment confirmations
 
-## 🔧 Available Scripts
+### Setup Requirements
+1. Twilio account with WhatsApp Business API enabled
+2. Verified WhatsApp phone number
+3. Proper environment configuration
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run type-check` - Run TypeScript type checking
+## Payment Integration
 
-## 🚀 Deployment
+Paystack integration handles:
+- Card payments
+- Bank transfers
+- Payment verification
+- Refund processing
 
-### Deploy to Vercel
+## Mobile Responsiveness
 
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Add environment variables in Vercel dashboard
-4. Deploy
+All components are optimized for mobile devices with:
+- Responsive design patterns
+- Touch-friendly interfaces
+- Optimized navigation
+- Mobile-first approach
 
-### Deploy to Other Platforms
+## Deployment
 
-The application can be deployed to any platform that supports Next.js:
+### Vercel (Recommended)
+1. Connect your GitHub repository
+2. Set environment variables
+3. Deploy automatically
 
-- Netlify
-- Railway
-- DigitalOcean App Platform
-- AWS Amplify
-- Google Cloud Run
+### Other Platforms
+- Ensure MongoDB connection
+- Configure environment variables
+- Set up proper build commands
 
-## 🔒 Security Features
-
-- JWT-based authentication
-- Password hashing with bcrypt
-- Input validation and sanitization
-- CORS protection
-- Rate limiting (can be added)
-- Secure payment processing
-- Environment variable protection
-
-## 📱 Mobile Responsiveness
-
-The application is fully responsive and works seamlessly on:
-- Desktop computers
-- Tablets
-- Mobile phones
-- Progressive Web App (PWA) ready
-
-## 🔄 Real-time Features
-
-- Live order tracking
-- Real-time notifications via WhatsApp
-- Instant status updates
-- Live inventory management
-- Real-time delivery tracking
-
-## 📊 Analytics and Monitoring
-
-- Order analytics
-- Sales reports
-- User activity tracking
-- Performance monitoring
-- Error logging
-
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-## 📄 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
-## 🆘 Support
+## Support
 
-For support, email support@universitymarketplace.com or create an issue in the GitHub repository.
-
-## 🙏 Acknowledgments
-
-- Next.js team for the amazing framework
-- Tailwind CSS for the utility-first CSS framework
-- Twilio for WhatsApp integration
-- Paystack for payment processing
-- All contributors and users
-
-## 📈 Roadmap
-
-- [ ] Mobile app development
-- [ ] Advanced analytics dashboard
-- [ ] Multi-language support
-- [ ] Advanced payment options
-- [ ] AI-powered recommendations
-- [ ] Voice ordering
-- [ ] Integration with university systems
-- [ ] Advanced inventory forecasting
-- [ ] Loyalty program
-- [ ] Social features
-
----
-
-**University Marketplace** - Connecting university communities through technology.
+For support, email support@borrands.com or create an issue in the repository.

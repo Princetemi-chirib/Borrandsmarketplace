@@ -14,18 +14,22 @@ import {
   EyeOff, 
   ArrowLeft,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Phone,
+  MessageCircle
 } from 'lucide-react';
 import Logo from '../../../components/Logo';
 
 interface RegisterFormData {
   name: string;
-  email: string;
   phone: string;
-  password: string;
-  confirmPassword: string;
+  password?: string;
+  confirmPassword?: string;
   role: 'student' | 'restaurant' | 'rider';
   university: string;
+  studentId?: string;
+  department?: string;
+  level?: string;
   agreeToTerms: boolean;
 }
 
@@ -73,16 +77,78 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [registrationStep, setRegistrationStep] = useState<'form' | 'otp'>('form');
+  const [otpCode, setOtpCode] = useState('');
+  const [phoneForOtp, setPhoneForOtp] = useState('');
 
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
-    setValue
+    setValue,
+    getValues
   } = useForm<RegisterFormData>();
 
   const password = watch('password');
+  const watchedPhone = watch('phone');
+
+  const sendOtp = async (phone: string) => {
+    if (!phone) {
+      toast.error('Please enter your phone number');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, purpose: 'register' }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        toast.success('OTP sent via WhatsApp!');
+        setPhoneForOtp(phone);
+        setRegistrationStep('otp');
+      } else {
+        toast.error(result.message || 'Failed to send OTP');
+      }
+    } catch (error) {
+      toast.error('Failed to send OTP');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyOtpAndRegister = async () => {
+    if (!otpCode || otpCode.length !== 6) {
+      toast.error('Please enter a valid 6-digit OTP');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phoneForOtp, code: otpCode }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        toast.success('Registration successful! You can now log in.');
+        router.push('/auth/login');
+      } else {
+        toast.error(result.message || 'OTP verification failed');
+      }
+    } catch (error) {
+      toast.error('Failed to verify OTP');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const onSubmit = async (data: RegisterFormData) => {
     if (!selectedRole) {
@@ -90,7 +156,7 @@ export default function RegisterPage() {
       return;
     }
 
-    if (data.password !== data.confirmPassword) {
+    if (data.password && data.password !== data.confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
@@ -112,17 +178,96 @@ export default function RegisterPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success('Registration successful! Please check your email for verification.');
-        router.push('/auth/login');
+        // Send OTP for verification
+        await sendOtp(data.phone);
       } else {
         toast.error(result.message || 'Registration failed');
+        setIsLoading(false);
       }
     } catch (error) {
+      console.error('Registration error:', error);
       toast.error('An error occurred during registration');
-    } finally {
       setIsLoading(false);
     }
   };
+
+  if (registrationStep === 'otp') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="text-center">
+              <div className="mb-6">
+                <Logo size="lg" />
+              </div>
+              <button
+                onClick={() => setRegistrationStep('form')}
+                className="inline-flex items-center text-primary-600 hover:text-primary-700 mb-4"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Registration
+              </button>
+              <h2 className="text-3xl font-bold text-gray-900">Verify Your Phone</h2>
+              <p className="mt-2 text-sm text-gray-600">
+                Enter the 6-digit code sent to {phoneForOtp}
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label htmlFor="otpCode" className="form-label">
+                  OTP Code
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <MessageCircle className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="otpCode"
+                    type="text"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                    className="form-input pl-10"
+                    placeholder="Enter 6-digit code"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={verifyOtpAndRegister}
+                disabled={isLoading || otpCode.length !== 6}
+                className="w-full btn-primary py-3 text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="spinner mr-2"></div>
+                    Verifying...
+                  </div>
+                ) : (
+                  'Verify & Complete Registration'
+                )}
+              </button>
+
+              <div className="text-center">
+                <button
+                  onClick={() => sendOtp(phoneForOtp)}
+                  disabled={isLoading}
+                  className="text-sm text-primary-600 hover:text-primary-500 disabled:opacity-50"
+                >
+                  {isLoading ? 'Sending...' : 'Resend OTP'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -203,50 +348,29 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="form-label">
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                {...register('email', { 
-                  required: 'Email is required',
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'Invalid email address'
-                  }
-                })}
-                className={`form-input ${errors.email ? 'border-error-500' : ''}`}
-                placeholder="Enter your email"
-              />
-              {errors.email && (
-                <p className="form-error flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" />
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
-
             {/* Phone */}
             <div>
               <label htmlFor="phone" className="form-label">
                 Phone Number
               </label>
-              <input
-                id="phone"
-                type="tel"
-                {...register('phone', { 
-                  required: 'Phone number is required',
-                  pattern: {
-                    value: /^\+?[\d\s-()]+$/,
-                    message: 'Invalid phone number'
-                  }
-                })}
-                className={`form-input ${errors.phone ? 'border-error-500' : ''}`}
-                placeholder="Enter your phone number"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Phone className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="phone"
+                  type="tel"
+                  {...register('phone', { 
+                    required: 'Phone number is required',
+                    pattern: {
+                      value: /^\+?[\d\s-()]+$/,
+                      message: 'Invalid phone number'
+                    }
+                  })}
+                  className={`form-input pl-10 ${errors.phone ? 'border-error-500' : ''}`}
+                  placeholder="Enter your phone number"
+                />
+              </div>
               {errors.phone && (
                 <p className="form-error flex items-center">
                   <AlertCircle className="h-4 w-4 mr-1" />
@@ -280,21 +404,72 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Password */}
+            {/* Student-specific fields */}
+            {selectedRole === 'student' && (
+              <>
+                <div>
+                  <label htmlFor="studentId" className="form-label">
+                    Student ID (Optional)
+                  </label>
+                  <input
+                    id="studentId"
+                    type="text"
+                    {...register('studentId')}
+                    className="form-input"
+                    placeholder="Enter your student ID"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="department" className="form-label">
+                    Department (Optional)
+                  </label>
+                  <input
+                    id="department"
+                    type="text"
+                    {...register('department')}
+                    className="form-input"
+                    placeholder="Enter your department"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="level" className="form-label">
+                    Level (Optional)
+                  </label>
+                  <select
+                    id="level"
+                    {...register('level')}
+                    className="form-input"
+                  >
+                    <option value="">Select your level</option>
+                    <option value="100">100 Level</option>
+                    <option value="200">200 Level</option>
+                    <option value="300">300 Level</option>
+                    <option value="400">400 Level</option>
+                    <option value="500">500 Level</option>
+                    <option value="600">600 Level</option>
+                    <option value="Masters">Masters</option>
+                    <option value="PhD">PhD</option>
+                  </select>
+                </div>
+              </>
+            )}
+
+            {/* Password (Optional) */}
             <div>
               <label htmlFor="password" className="form-label">
-                Password
+                Password (Optional)
               </label>
               <div className="relative">
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   {...register('password', { 
-                    required: 'Password is required',
                     minLength: { value: 6, message: 'Password must be at least 6 characters' }
                   })}
                   className={`form-input pr-10 ${errors.password ? 'border-error-500' : ''}`}
-                  placeholder="Create a password"
+                  placeholder="Create a password (optional)"
                 />
                 <button
                   type="button"
@@ -316,41 +491,42 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Confirm Password */}
-            <div>
-              <label htmlFor="confirmPassword" className="form-label">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  {...register('confirmPassword', { 
-                    required: 'Please confirm your password',
-                    validate: value => value === password || 'Passwords do not match'
-                  })}
-                  className={`form-input pr-10 ${errors.confirmPassword ? 'border-error-500' : ''}`}
-                  placeholder="Confirm your password"
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
+            {/* Confirm Password (if password provided) */}
+            {password && (
+              <div>
+                <label htmlFor="confirmPassword" className="form-label">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    {...register('confirmPassword', { 
+                      validate: value => !password || value === password || 'Passwords do not match'
+                    })}
+                    className={`form-input pr-10 ${errors.confirmPassword ? 'border-error-500' : ''}`}
+                    placeholder="Confirm your password"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-5 w-5 text-gray-400" />
+                    ) : (
+                      <Eye className="h-5 w-5 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="form-error flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    {errors.confirmPassword.message}
+                  </p>
+                )}
               </div>
-              {errors.confirmPassword && (
-                <p className="form-error flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" />
-                  {errors.confirmPassword.message}
-                </p>
-              )}
-            </div>
+            )}
 
             {/* Terms and Conditions */}
             <div className="flex items-start">

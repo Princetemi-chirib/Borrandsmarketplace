@@ -24,7 +24,7 @@ export default function Logo({ size = 'md', showText = true, className = '' }: L
     <Link href="/" className={`flex items-center space-x-2 ${className}`}>
       <div className={`relative ${sizeClasses[size]} flex-shrink-0`}>
         <Image
-          src="/images/brand-logo.jpeg"
+          src="/images/2016fb98-da44-4e3d-a546-36774790ad1c_adobe_express.png"
           alt="Borrands Marketplace"
           fill
           className="object-contain rounded-lg"

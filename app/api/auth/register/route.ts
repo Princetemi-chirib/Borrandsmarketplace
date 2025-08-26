@@ -1,52 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import User from '@/lib/models/User';
-import whatsappService from '@/lib/whatsapp';
+import WhatsApp from '@/lib/whatsapp';
 
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
 
     const body = await request.json();
-    const { name, email, phone, password, role, university } = body;
+    let { name, phone, password, role, university, studentId, department, level } = body;
 
-    // Validate required fields
-    if (!name || !email || !phone || !password || !role || !university) {
+    // Normalize optional fields: treat empty strings as undefined
+    if (studentId === '') studentId = undefined;
+    if (department === '') department = undefined;
+    if (level === '') level = undefined;
+    if (password === '') password = undefined;
+
+    // Validate required fields (phone is primary, password optional)
+    if (!name || !phone || !role || !university) {
       return NextResponse.json(
-        { success: false, message: 'All fields are required' },
+        { success: false, message: 'Name, phone, role, and university are required' },
         { status: 400 }
       );
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { phone }]
-    });
+    const existingUser = await User.findOne({ phone });
 
     if (existingUser) {
       return NextResponse.json(
-        { success: false, message: 'User with this email or phone already exists' },
+        { success: false, message: 'User with this phone already exists' },
         { status: 400 }
       );
     }
 
-    // Create new user
+    // Create new user (password optional, will be verified via OTP)
     const user = new User({
       name,
-      email,
       phone,
-      password,
+      password, // Optional - can be set later
       role,
       university,
-      isVerified: false, // Will be verified via email/phone
-      isActive: true
+      studentId,
+      department,
+      level,
+      isVerified: false, // Will be verified via OTP
+      isActive: true,
+      phoneVerified: false
     });
 
     await user.save();
 
     // Send welcome WhatsApp message
     try {
-      await whatsappService.sendWelcomeMessage(phone, name, role);
+      const message = `Welcome to Borrands, ${name}! Your account has been created. Please verify your phone number to start using the platform.`;
+      await WhatsApp.sendMessage(phone, message);
     } catch (error) {
       console.error('WhatsApp welcome message failed:', error);
       // Don't fail registration if WhatsApp fails
@@ -56,7 +64,6 @@ export async function POST(request: NextRequest) {
     const userResponse = {
       _id: user._id,
       name: user.name,
-      email: user.email,
       phone: user.phone,
       role: user.role,
       university: user.university,
@@ -67,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Registration successful! Please check your email for verification.',
+      message: 'Registration successful! Please verify your phone number via OTP.',
       data: userResponse
     });
 
@@ -76,7 +83,7 @@ export async function POST(request: NextRequest) {
     
     if (error.code === 11000) {
       return NextResponse.json(
-        { success: false, message: 'User with this email or phone already exists' },
+        { success: false, message: 'User with this phone already exists' },
         { status: 400 }
       );
     }
@@ -87,6 +94,9 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
+
 
 
 

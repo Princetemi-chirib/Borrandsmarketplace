@@ -1,41 +1,39 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface IOrder extends Document {
-  studentId: Types.ObjectId;
-  restaurantId: Types.ObjectId;
-  riderId?: Types.ObjectId;
+  student: Types.ObjectId;
+  restaurant: Types.ObjectId;
+  rider?: Types.ObjectId;
   items: Array<{
-    menuItemId: Types.ObjectId;
+    itemId: Types.ObjectId;
     name: string;
     price: number;
     quantity: number;
+    total: number;
     specialInstructions?: string;
   }>;
   subtotal: number;
   deliveryFee: number;
-  tax: number;
   total: number;
-  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'picked_up' | 'in_transit' | 'delivered' | 'cancelled';
+  status: 'pending' | 'accepted' | 'preparing' | 'ready' | 'picked_up' | 'delivered' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
-  paymentMethod: 'paystack' | 'cash';
-  deliveryAddress: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    instructions?: string;
-  };
-  estimatedDeliveryTime: Date;
+  paymentMethod: 'card' | 'cash';
+  deliveryAddress: string;
+  deliveryInstructions?: string;
+  estimatedDeliveryTime: number; // in minutes
   actualDeliveryTime?: Date;
+  orderNumber: string;
   notes?: string;
   rating?: number;
   review?: string;
+  ratedAt?: Date;
+  cancelledAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
 
 const orderItemSchema = new Schema({
-  menuItemId: {
+  itemId: {
     type: Schema.Types.ObjectId,
     ref: 'MenuItem',
     required: true
@@ -54,51 +52,29 @@ const orderItemSchema = new Schema({
     required: true,
     min: [1, 'Quantity must be at least 1']
   },
+  total: {
+    type: Number,
+    required: true,
+    min: [0, 'Total cannot be negative']
+  },
   specialInstructions: {
     type: String,
     maxlength: [200, 'Special instructions cannot exceed 200 characters']
   }
 });
 
-const deliveryAddressSchema = new Schema({
-  street: {
-    type: String,
-    required: [true, 'Street address is required'],
-    trim: true
-  },
-  city: {
-    type: String,
-    required: [true, 'City is required'],
-    trim: true
-  },
-  state: {
-    type: String,
-    required: [true, 'State is required'],
-    trim: true
-  },
-  zipCode: {
-    type: String,
-    required: [true, 'Zip code is required'],
-    trim: true
-  },
-  instructions: {
-    type: String,
-    maxlength: [300, 'Delivery instructions cannot exceed 300 characters']
-  }
-});
-
 const orderSchema = new Schema({
-  studentId: {
+  student: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  restaurantId: {
+  restaurant: {
     type: Schema.Types.ObjectId,
     ref: 'Restaurant',
     required: true
   },
-  riderId: {
+  rider: {
     type: Schema.Types.ObjectId,
     ref: 'Rider'
   },
@@ -113,11 +89,6 @@ const orderSchema = new Schema({
     required: true,
     min: [0, 'Delivery fee cannot be negative']
   },
-  tax: {
-    type: Number,
-    required: true,
-    min: [0, 'Tax cannot be negative']
-  },
   total: {
     type: Number,
     required: true,
@@ -125,7 +96,7 @@ const orderSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'preparing', 'ready', 'picked_up', 'in_transit', 'delivered', 'cancelled'],
+    enum: ['pending', 'accepted', 'preparing', 'ready', 'picked_up', 'delivered', 'cancelled'],
     default: 'pending',
     required: true
   },
@@ -137,19 +108,30 @@ const orderSchema = new Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['paystack', 'cash'],
+    enum: ['card', 'cash'],
     required: true
   },
   deliveryAddress: {
-    type: deliveryAddressSchema,
-    required: true
+    type: String,
+    required: true,
+    trim: true
+  },
+  deliveryInstructions: {
+    type: String,
+    maxlength: [300, 'Delivery instructions cannot exceed 300 characters']
   },
   estimatedDeliveryTime: {
-    type: Date,
-    required: true
+    type: Number,
+    required: true,
+    min: [5, 'Estimated delivery time must be at least 5 minutes']
   },
   actualDeliveryTime: {
     type: Date
+  },
+  orderNumber: {
+    type: String,
+    required: true,
+    unique: true
   },
   notes: {
     type: String,
@@ -163,6 +145,12 @@ const orderSchema = new Schema({
   review: {
     type: String,
     maxlength: [1000, 'Review cannot exceed 1000 characters']
+  },
+  ratedAt: {
+    type: Date
+  },
+  cancelledAt: {
+    type: Date
   }
 }, {
   timestamps: true,
@@ -177,23 +165,19 @@ orderSchema.virtual('statusTimeline').get(function() {
   ];
 
   if (this.status !== 'pending') {
-    timeline.push({ status: 'confirmed', label: 'Order Confirmed', time: this.updatedAt });
+    timeline.push({ status: 'accepted', label: 'Order Confirmed', time: this.updatedAt });
   }
 
-  if (['preparing', 'ready', 'picked_up', 'in_transit', 'delivered'].includes(this.status)) {
+  if (['preparing', 'ready', 'picked_up', 'delivered'].includes(this.status)) {
     timeline.push({ status: 'preparing', label: 'Preparing', time: this.updatedAt });
   }
 
-  if (['ready', 'picked_up', 'in_transit', 'delivered'].includes(this.status)) {
+  if (['ready', 'picked_up', 'delivered'].includes(this.status)) {
     timeline.push({ status: 'ready', label: 'Ready for Pickup', time: this.updatedAt });
   }
 
-  if (['picked_up', 'in_transit', 'delivered'].includes(this.status)) {
+  if (['picked_up', 'delivered'].includes(this.status)) {
     timeline.push({ status: 'picked_up', label: 'Picked Up', time: this.updatedAt });
-  }
-
-  if (['in_transit', 'delivered'].includes(this.status)) {
-    timeline.push({ status: 'in_transit', label: 'In Transit', time: this.updatedAt });
   }
 
   if (this.status === 'delivered') {
@@ -217,23 +201,38 @@ orderSchema.methods.updateStatus = function(newStatus: string) {
   if (newStatus === 'delivered' && !this.actualDeliveryTime) {
     this.actualDeliveryTime = new Date();
   }
+  if (newStatus === 'cancelled' && !this.cancelledAt) {
+    this.cancelledAt = new Date();
+  }
   return this.save();
 };
 
 // Method to assign rider
 orderSchema.methods.assignRider = function(riderId: string) {
-  this.riderId = riderId;
+  this.rider = riderId;
+  return this.save();
+};
+
+// Method to rate order
+orderSchema.methods.rateOrder = function(rating: number, review?: string) {
+  this.rating = rating;
+  this.review = review;
+  this.ratedAt = new Date();
   return this.save();
 };
 
 // Index for better query performance
-orderSchema.index({ studentId: 1, createdAt: -1 });
-orderSchema.index({ restaurantId: 1, status: 1 });
-orderSchema.index({ riderId: 1, status: 1 });
+orderSchema.index({ student: 1, createdAt: -1 });
+orderSchema.index({ restaurant: 1, status: 1 });
+orderSchema.index({ rider: 1, status: 1 });
 orderSchema.index({ status: 1, createdAt: -1 });
 orderSchema.index({ paymentStatus: 1 });
-orderSchema.index({ estimatedDeliveryTime: 1 });
+orderSchema.index({ orderNumber: 1 });
 
 export default mongoose.models.Order || mongoose.model<IOrder>('Order', orderSchema);
+
+
+
+
 
 

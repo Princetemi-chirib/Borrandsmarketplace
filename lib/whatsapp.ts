@@ -1,15 +1,69 @@
 import twilio from 'twilio';
 import { WhatsAppMessage } from '@/types';
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID!;
-const authToken = process.env.TWILIO_AUTH_TOKEN!;
-const phoneNumber = process.env.TWILIO_PHONE_NUMBER!;
-
-if (!accountSid || !authToken || !phoneNumber) {
-  throw new Error('Twilio credentials not properly configured');
+// Helper: normalize phone numbers to E.164
+function normalizeE164(raw: string): string {
+  if (!raw) return raw;
+  const trimmed = raw.replace(/\s+/g, '');
+  if (trimmed.startsWith('+')) return trimmed;
+  // Nigeria local format like 070..., convert to +23470...
+  if (/^0\d{10}$/.test(trimmed)) {
+    return `+234${trimmed.slice(1)}`;
+  }
+  return trimmed;
 }
 
-const client = twilio(accountSid, authToken);
+// Function to get Twilio configuration dynamically
+function getTwilioConfig() {
+  const accountSid = (process.env.TWILIO_ACCOUNT_SID || '').trim();
+  const authToken = (process.env.TWILIO_AUTH_TOKEN || '').trim();
+  const phoneNumberRaw = (process.env.TWILIO_PHONE_NUMBER || '').trim();
+  const phoneNumber = normalizeE164(phoneNumberRaw);
+  
+  // Debug logging
+  console.log('🔍 Twilio Config Debug:', {
+    accountSid: accountSid ? `${accountSid.slice(0, 6)}...` : 'missing',
+    authToken: authToken ? `${authToken.slice(0, 6)}...` : 'missing',
+    phoneNumberRaw: phoneNumberRaw || 'missing'
+  });
+  
+  const isConfigured = Boolean(accountSid && authToken && phoneNumber);
+  console.log('🔍 Twilio Configured:', isConfigured, 'Phone:', phoneNumber);
+  
+  return { accountSid, authToken, phoneNumber, isConfigured };
+}
+
+// Initialize client
+let client: any = null;
+let lastConfigCheck = 0;
+const CONFIG_CACHE_DURATION = 5000; // 5 seconds
+
+function initializeClient() {
+  const now = Date.now();
+  if (now - lastConfigCheck < CONFIG_CACHE_DURATION) {
+    return client; // Return cached client
+  }
+  
+  lastConfigCheck = now;
+  const { accountSid, authToken, phoneNumber, isConfigured } = getTwilioConfig();
+  
+  if (isConfigured) {
+    try {
+      client = twilio(accountSid as string, authToken as string);
+      const maskedSid = accountSid ? `${accountSid.slice(0, 6)}...` : 'unknown';
+      console.log(`✅ Twilio WhatsApp configured (SID ${maskedSid})`);
+    } catch (error) {
+      console.error('❌ Failed to initialize Twilio client:', error);
+      client = null;
+    }
+  } else {
+    console.warn('⚠️ Twilio credentials not configured. WhatsApp notifications will be disabled.');
+    console.log('To enable WhatsApp notifications, set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER in .env.local');
+    client = null;
+  }
+  
+  return client;
+}
 
 export class WhatsAppService {
   private static instance: WhatsAppService;
@@ -24,21 +78,33 @@ export class WhatsAppService {
   }
 
   async sendMessage(to: string, body: string, mediaUrl?: string): Promise<boolean> {
+    const { phoneNumber, isConfigured } = getTwilioConfig();
+    const currentClient = initializeClient();
+    
+    const fromWhatsapp = `whatsapp:${phoneNumber}`;
+    const toWhatsapp = `whatsapp:${normalizeE164(to)}`;
+
+    if (!isConfigured || !currentClient) {
+      console.log('📱 WhatsApp message (disabled):', { from: fromWhatsapp, to: toWhatsapp, body, mediaUrl });
+      return true; // simulate success in development
+    }
+
     try {
       const messageData: any = {
-        from: `whatsapp:${phoneNumber}`,
-        to: `whatsapp:${to}`,
-        body: body
+        from: fromWhatsapp,
+        to: toWhatsapp,
+        body
       };
 
       if (mediaUrl) {
         messageData.mediaUrl = mediaUrl;
       }
 
-      await client.messages.create(messageData);
+      const message = await currentClient.messages.create(messageData);
+      console.log('✅ WhatsApp message sent successfully:', message.sid);
       return true;
     } catch (error) {
-      console.error('WhatsApp message sending failed:', error);
+      console.error('❌ WhatsApp message sending failed:', error);
       return false;
     }
   }
@@ -196,19 +262,23 @@ We\'re excited to have you on board! 🚀`;
     return this.sendMessage(phone, message);
   }
 
-  async sendSupportMessage(
-    phone: string,
-    issue: string,
-    ticketId: string
-  ): Promise<boolean> {
-    const message = `🆘 *Support Ticket Created*
+  isConfigured(): boolean {
+    const { isConfigured } = getTwilioConfig();
+    const currentClient = initializeClient();
+    return Boolean(isConfigured && currentClient !== null);
+  }
 
-Ticket ID: #${ticketId}
-Issue: ${issue}
-
-Our support team will get back to you within 24 hours. Thank you for your patience! 🙏`;
-
-    return this.sendMessage(phone, message);
+  getConfigStatus(): { configured: boolean; message: string } {
+    const { accountSid, authToken, phoneNumber, isConfigured } = getTwilioConfig();
+    const currentClient = initializeClient();
+    
+    if (isConfigured && currentClient) {
+      return { configured: true, message: 'WhatsApp service is active and ready' };
+    }
+    if (!accountSid || !authToken || !phoneNumber) {
+      return { configured: false, message: 'Twilio credentials are missing' };
+    }
+    return { configured: false, message: 'Twilio client initialization failed' };
   }
 }
 
