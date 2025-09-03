@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import BackArrow from '@/components/ui/BackArrow';
 import { 
   ShoppingBag, 
   Clock, 
@@ -237,6 +238,11 @@ export default function StudentDashboard() {
   return (
     <DashboardLayout userRole="student" userName={displayName}>
       <div className="space-y-3 sm:space-y-4">
+        {/* Back Arrow */}
+        <div className="flex justify-start">
+          <BackArrow href="/" />
+        </div>
+        
         {/* Enhanced Header - Mobile Optimized */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

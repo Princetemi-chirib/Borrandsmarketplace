@@ -181,7 +181,12 @@ export default function RegisterPage() {
         // Send OTP for verification
         await sendOtp(data.phone);
       } else {
-        toast.error(result.message || 'Registration failed');
+        // Handle specific error cases
+        if (result.message?.includes('already exists')) {
+          toast.error('An account with this phone number already exists. Please try logging in instead.');
+        } else {
+          toast.error(result.message || 'Registration failed');
+        }
         setIsLoading(false);
       }
     } catch (error) {

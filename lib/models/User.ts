@@ -57,6 +57,10 @@ export interface IUser extends Document {
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
+export interface IUserModel extends Model<IUser> {
+  cleanupUnverifiedUsers(): Promise<any>;
+}
+
 const addressSchema = new Schema({
   id: {
     type: String,
@@ -343,4 +347,15 @@ userSchema.index({ university: 1, role: 1 });
 userSchema.index({ favorites: 1 });
 userSchema.index({ isActive: 1, isVerified: 1 });
 
-export default mongoose.models.User || mongoose.model<IUser>('User', userSchema);
+// Static method to clean up old unverified users
+userSchema.statics.cleanupUnverifiedUsers = async function() {
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const result = await this.deleteMany({
+    isVerified: false,
+    phoneVerified: false,
+    createdAt: { $lt: twentyFourHoursAgo }
+  });
+  return result;
+};
+
+export default mongoose.models.User || mongoose.model<IUser, IUserModel>('User', userSchema);

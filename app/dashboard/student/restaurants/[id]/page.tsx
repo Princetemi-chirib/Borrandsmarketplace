@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import BackArrow from '@/components/ui/BackArrow';
 import { 
   ArrowLeft, 
   Star, 
@@ -358,15 +359,13 @@ export default function RestaurantPage() {
   return (
     <DashboardLayout userRole="student" userName={user?.name || 'Student'}>
       <div className="space-y-6">
+        {/* Back Arrow */}
+        <div className="flex justify-start">
+          <BackArrow href="/dashboard/student/restaurants" />
+        </div>
+        
         {/* Header */}
         <div className="flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            <span>Back</span>
-          </button>
           <button
             onClick={() => setShowCart(true)}
             className="relative p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"

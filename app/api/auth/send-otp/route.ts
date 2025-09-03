@@ -18,22 +18,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Phone is required' }, { status: 400 });
     }
 
-    // Find or create user for register flow
+    // Find existing user
     let user = await User.findOne({ phone });
 
     if (!user && purpose === 'login') {
       return NextResponse.json({ success: false, message: 'No account found for this phone' }, { status: 404 });
     }
 
-    if (!user) {
-      user = await User.create({
-        name: 'New User',
-        phone,
-        role: 'student',
-        university: 'Unknown',
-        isVerified: false,
-        phoneVerified: false,
-      });
+    // For registration, if user exists but is not verified, we can still send OTP
+    // The registration route will handle cleaning up unverified users
+    if (!user && purpose === 'register') {
+      return NextResponse.json({ success: false, message: 'Please complete registration first' }, { status: 400 });
     }
 
     // Rate limit OTP sends (60s)

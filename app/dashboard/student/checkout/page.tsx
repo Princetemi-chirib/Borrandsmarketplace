@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import BackArrow from '@/components/ui/BackArrow';
 import { 
   ArrowLeft, 
   MapPin, 
@@ -182,15 +183,13 @@ export default function CheckoutPage() {
   return (
     <DashboardLayout userRole="student" userName={user?.name || 'Student'}>
       <div className="max-w-4xl mx-auto space-y-6">
+        {/* Back Arrow */}
+        <div className="flex justify-start">
+          <BackArrow href="/dashboard/student/restaurants" />
+        </div>
+        
         {/* Header */}
         <div className="flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            <span>Back</span>
-          </button>
           <h1 className="text-2xl font-bold text-gray-900">Checkout</h1>
         </div>
 

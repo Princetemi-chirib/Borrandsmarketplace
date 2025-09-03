@@ -1,23 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import User from '@/lib/models/User';
-import WhatsApp from '@/lib/whatsapp';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('Starting registration process...');
+    console.log('Starting simple registration process...');
     await dbConnect();
     console.log('Database connected successfully');
-
-    // Clean up old unverified users (older than 24 hours)
-    // Temporarily disabled for debugging
-    // try {
-    //   await User.cleanupUnverifiedUsers();
-    //   console.log('Cleanup completed');
-    // } catch (cleanupError) {
-    //   console.error('Cleanup error (non-fatal):', cleanupError);
-    //   // Continue with registration even if cleanup fails
-    // }
 
     const body = await request.json();
     console.log('Request body received:', { ...body, password: body.password ? '[HIDDEN]' : undefined });
@@ -29,7 +18,7 @@ export async function POST(request: NextRequest) {
     if (level === '') level = undefined;
     if (password === '') password = undefined;
 
-    // Validate required fields (phone is primary, password optional)
+    // Validate required fields
     if (!name || !phone || !role || !university) {
       return NextResponse.json(
         { success: false, message: 'Name, phone, role, and university are required' },
@@ -39,32 +28,25 @@ export async function POST(request: NextRequest) {
 
     // Check if user already exists
     const existingUser = await User.findOne({ phone });
-
     if (existingUser) {
-      // If user exists but is not verified, allow re-registration
-      if (!existingUser.isVerified || !existingUser.phoneVerified) {
-        // Delete the unverified user to allow fresh registration
-        await User.findByIdAndDelete(existingUser._id);
-      } else {
-        return NextResponse.json(
-          { success: false, message: 'User with this phone already exists' },
-          { status: 400 }
-        );
-      }
+      return NextResponse.json(
+        { success: false, message: 'User with this phone already exists' },
+        { status: 400 }
+      );
     }
 
-    // Create new user (password optional, will be verified via OTP)
+    // Create new user
     console.log('Creating user with data:', { name, phone, role, university, studentId, department, level });
     const user = new User({
       name,
       phone,
-      password, // Optional - can be set later
+      password,
       role,
       university,
       studentId,
       department,
       level,
-      isVerified: false, // Will be verified via OTP
+      isVerified: false,
       isActive: true,
       phoneVerified: false
     });
@@ -73,16 +55,7 @@ export async function POST(request: NextRequest) {
     await user.save();
     console.log('User saved successfully with ID:', user._id);
 
-    // Send welcome WhatsApp message
-    try {
-      const message = `Welcome to Borrands, ${name}! Your account has been created. Please verify your phone number to start using the platform.`;
-      await WhatsApp.sendMessage(phone, message);
-    } catch (error) {
-      console.error('WhatsApp welcome message failed:', error);
-      // Don't fail registration if WhatsApp fails
-    }
-
-    // Return success response (without password)
+    // Return success response
     const userResponse = {
       _id: user._id,
       name: user.name,
@@ -110,14 +83,12 @@ export async function POST(request: NextRequest) {
     });
     
     if (error.code === 11000) {
-      // This should rarely happen now due to our pre-check, but handle it gracefully
       return NextResponse.json(
         { success: false, message: 'User with this phone already exists. Please try again.' },
         { status: 400 }
       );
     }
 
-    // Provide more specific error messages based on the error type
     if (error.name === 'ValidationError') {
       return NextResponse.json(
         { success: false, message: 'Invalid data provided. Please check your information.' },
@@ -138,9 +109,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-
-
-
 
 

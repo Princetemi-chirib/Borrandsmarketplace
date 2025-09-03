@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import BackArrow from '@/components/ui/BackArrow';
 import { 
   ArrowLeft, 
   Clock, 
@@ -249,19 +250,16 @@ export default function OrderTracking() {
   return (
     <DashboardLayout userRole="student" userName="Student">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Back Arrow */}
+        <div className="flex justify-start mb-4">
+          <BackArrow href="/dashboard/student/orders" />
+        </div>
+        
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <Link
-              href="/dashboard/student/orders"
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5 text-gray-600" />
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Order #{order.orderNumber}</h1>
-              <p className="text-gray-600">{order.restaurantName}</p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Order #{order.orderNumber}</h1>
+            <p className="text-gray-600">{order.restaurantName}</p>
           </div>
           <button
             onClick={refreshOrder}

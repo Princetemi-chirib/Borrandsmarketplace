@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import BackArrow from '@/components/ui/BackArrow';
 import { 
   Clock, 
   CheckCircle, 
@@ -138,6 +139,15 @@ export default function MyOrders() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Back Arrow */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-start">
+            <BackArrow href="/dashboard/student" />
+          </div>
+        </div>
+      </div>
+      
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

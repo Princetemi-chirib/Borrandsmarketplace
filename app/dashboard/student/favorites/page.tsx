@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import BackArrow from '@/components/ui/BackArrow';
 import { 
   Heart, 
   Star, 
@@ -255,6 +256,11 @@ export default function FavoritesPage() {
   return (
     <DashboardLayout userRole="student" userName={user?.name || 'Student'}>
       <div className="space-y-6">
+        {/* Back Arrow */}
+        <div className="flex justify-start">
+          <BackArrow href="/dashboard/student" />
+        </div>
+        
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           <div>
