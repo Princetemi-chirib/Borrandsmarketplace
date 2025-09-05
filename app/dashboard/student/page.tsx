@@ -1,31 +1,21 @@
 'use client';
+// Updated: Removed mock data, now fetches real data from /api/students/orders and /api/students/favorites
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import BackArrow from '@/components/ui/BackArrow';
 import { 
-  ShoppingBag, 
+  Package, 
   Clock, 
   CheckCircle, 
-  TrendingUp,
-  Star,
+  Star, 
+  TrendingUp, 
   MapPin,
-  Calendar,
-  Search,
-  Filter,
-  Bell,
-  Truck,
-  Package,
-  Heart,
-  Plus,
   ArrowRight,
-  Zap,
-  Award,
-  Users,
-  DollarSign,
-  Activity
+  Calendar,
+  Clock3,
+  MessageCircle
 } from 'lucide-react';
 
 interface Order {
@@ -35,16 +25,18 @@ interface Order {
   total: number;
   createdAt: string;
   estimatedDeliveryTime: string;
-  items: Array<{
-    name: string;
-    quantity: number;
-    price: number;
-  }>;
+  items: Array<{ name: string; quantity: number; price: number }>;
   riderName?: string;
   trackingCode?: string;
 }
 
-interface DashboardStats {
+interface Restaurant {
+  _id: string;
+  name: string;
+  rating: number;
+}
+
+interface Stats {
   totalOrders: number;
   activeOrders: number;
   completedOrders: number;
@@ -53,18 +45,9 @@ interface DashboardStats {
   averageRating: number;
 }
 
-interface QuickAction {
-  title: string;
-  description: string;
-  icon: any;
-  href: string;
-  color: string;
-  gradient: string;
-}
-
 export default function StudentDashboard() {
   const [user, setUser] = useState<any>(null);
-  const [stats, setStats] = useState<DashboardStats>({
+  const [stats, setStats] = useState<Stats>({
     totalOrders: 0,
     activeOrders: 0,
     completedOrders: 0,
@@ -74,427 +57,365 @@ export default function StudentDashboard() {
   });
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
-
-  // Mock data for demonstration
-  const mockStats = {
-    totalOrders: 24,
-    activeOrders: 2,
-    completedOrders: 22,
-    totalSpent: 45600,
-    favoriteRestaurants: 8,
-    averageRating: 4.8
-  };
-
-  const mockOrders: Order[] = [
-    {
-      _id: '1',
-      restaurantName: 'Pizza Palace',
-      status: 'in_transit',
-      total: 8500,
-      createdAt: '2024-01-15T10:30:00Z',
-      estimatedDeliveryTime: '2024-01-15T11:15:00Z',
-      items: [
-        { name: 'Margherita Pizza', quantity: 1, price: 6500 },
-        { name: 'Coca Cola', quantity: 2, price: 1000 }
-      ],
-      riderName: 'John Doe',
-      trackingCode: 'TRK123456'
-    },
-    {
-      _id: '2',
-      restaurantName: 'Burger House',
-      status: 'preparing',
-      total: 3200,
-      createdAt: '2024-01-15T09:15:00Z',
-      estimatedDeliveryTime: '2024-01-15T10:00:00Z',
-      items: [
-        { name: 'Chicken Burger', quantity: 1, price: 2200 },
-        { name: 'French Fries', quantity: 1, price: 1000 }
-      ]
-    },
-    {
-      _id: '3',
-      restaurantName: 'Sushi Express',
-      status: 'delivered',
-      total: 12000,
-      createdAt: '2024-01-14T18:00:00Z',
-      estimatedDeliveryTime: '2024-01-14T18:45:00Z',
-      items: [
-        { name: 'California Roll', quantity: 2, price: 6000 }
-      ]
-    }
-  ];
-
-  const quickActions: QuickAction[] = [
-    {
-      title: 'Browse Restaurants',
-      description: 'Discover new places to eat',
-      icon: Search,
-      href: '/dashboard/student/restaurants',
-      color: 'from-blue-500 to-blue-600',
-      gradient: 'bg-gradient-to-r from-blue-500 to-blue-600'
-    },
-    {
-      title: 'Track Orders',
-      description: 'Real-time order updates',
-      icon: Truck,
-      href: '/dashboard/student/orders',
-      color: 'from-green-500 to-green-600',
-      gradient: 'bg-gradient-to-r from-green-500 to-green-600'
-    },
-    {
-      title: 'Order History',
-      description: 'View past orders & ratings',
-      icon: Package,
-      href: '/dashboard/student/history',
-      color: 'from-purple-500 to-purple-600',
-      gradient: 'bg-gradient-to-r from-purple-500 to-purple-600'
-    },
-    {
-      title: 'Favorites',
-      description: 'Your saved restaurants',
-      icon: Heart,
-      href: '/dashboard/student/favorites',
-      color: 'from-red-500 to-red-600',
-      gradient: 'bg-gradient-to-r from-red-500 to-red-600'
-    }
-  ];
 
   useEffect(() => {
     // Get user from localStorage
     try {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        setUser(JSON.parse(userData));
       }
     } catch (error) {
       console.error('Error parsing user data:', error);
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setStats(mockStats);
-      setRecentOrders(mockOrders);
-      setIsLoading(false);
-    }, 1000);
+    // Fetch orders and favorites to compute stats
+    const fetchDashboardData = async () => {
+      try {
+        const [ordersResponse, favoritesResponse] = await Promise.all([
+          fetch('/api/students/orders'),
+          fetch('/api/students/favorites')
+        ]);
+
+        if (ordersResponse.ok && favoritesResponse.ok) {
+          const orders = await ordersResponse.json();
+          const favorites = await favoritesResponse.json();
+
+          // Compute stats from real data
+          const totalOrders = orders.length;
+          const activeOrders = orders.filter((order: Order) => 
+            ['pending', 'accepted', 'preparing', 'ready', 'picked_up', 'in_transit'].includes(order.status)
+          ).length;
+          const completedOrders = orders.filter((order: Order) => 
+            order.status === 'delivered'
+          ).length;
+          const totalSpent = orders.reduce((sum: number, order: Order) => sum + order.total, 0);
+          const favoriteRestaurants = favorites.length;
+          const averageRating = favorites.length > 0 
+            ? favorites.reduce((sum: number, restaurant: Restaurant) => sum + restaurant.rating, 0) / favorites.length
+            : 0;
+
+          setStats({
+            totalOrders,
+            activeOrders,
+            completedOrders,
+            totalSpent,
+            favoriteRestaurants,
+            averageRating: Math.round(averageRating * 10) / 10
+          });
+
+          // Get recent orders (last 3)
+          const sortedOrders = orders
+            .sort((a: Order, b: Order) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(0, 3);
+          setRecentOrders(sortedOrders);
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'text-yellow-600 bg-yellow-100 border-yellow-200';
-      case 'confirmed':
-        return 'text-blue-600 bg-blue-100 border-blue-200';
-      case 'preparing':
-        return 'text-orange-600 bg-orange-100 border-orange-200';
-      case 'ready':
-        return 'text-purple-600 bg-purple-100 border-purple-200';
-      case 'picked_up':
-        return 'text-indigo-600 bg-indigo-100 border-indigo-200';
-      case 'in_transit':
-        return 'text-cyan-600 bg-cyan-100 border-cyan-200';
       case 'delivered':
-        return 'text-green-600 bg-green-100 border-green-200';
-      case 'cancelled':
-        return 'text-red-600 bg-red-100 border-red-200';
+        return 'text-green-600 bg-green-100';
+      case 'in_transit':
+        return 'text-blue-600 bg-blue-100';
+      case 'picked_up':
+        return 'text-purple-600 bg-purple-100';
+      case 'ready':
+        return 'text-orange-600 bg-orange-100';
+      case 'preparing':
+        return 'text-yellow-600 bg-yellow-100';
+      case 'accepted':
+        return 'text-indigo-600 bg-indigo-100';
       default:
-        return 'text-gray-600 bg-gray-100 border-gray-200';
+        return 'text-gray-600 bg-gray-100';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending':
-        return <Clock className="h-4 w-4" />;
-      case 'preparing':
-        return <Package className="h-4 w-4" />;
-      case 'in_transit':
-        return <Truck className="h-4 w-4" />;
       case 'delivered':
-        return <CheckCircle className="h-4 w-4" />;
+        return <CheckCircle className="w-4 h-4" />;
+      case 'in_transit':
+        return <Package className="w-4 h-4" />;
+      case 'picked_up':
+        return <Package className="w-4 h-4" />;
+      case 'ready':
+        return <Package className="w-4 h-4" />;
+      case 'preparing':
+        return <Clock className="w-4 h-4" />;
+      case 'accepted':
+        return <CheckCircle className="w-4 h-4" />;
       default:
-        return <ShoppingBag className="h-4 w-4" />;
+        return <Clock className="w-4 h-4" />;
     }
   };
 
   const getStatusText = (status: string) => {
-    return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return status.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (isLoading) {
     return (
       <DashboardLayout userRole="student" userName={user?.name || 'Student'}>
-        <div className="flex items-center justify-center h-64">
-          <div className="spinner"></div>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
         </div>
       </DashboardLayout>
     );
   }
 
-  const userName = user?.name || 'Student';
-  const displayName = userName === 'Student' ? 'Student' : userName;
-
   return (
-    <DashboardLayout userRole="student" userName={displayName}>
-      <div className="space-y-3 sm:space-y-4">
-        {/* Back Arrow */}
-        <div className="flex justify-start">
-          <BackArrow href="/" />
+    <DashboardLayout userRole="student" userName={user?.name || 'Student'}>
+      <div className="p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome back, {user?.name || 'Student'}! 👋
+          </h1>
+          <p className="text-gray-600">
+            Here's what's happening with your food orders today
+          </p>
         </div>
-        
-        {/* Enhanced Header - Mobile Optimized */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-brand-primary to-brand-accent rounded-xl p-4 sm:p-5"
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            <div className="flex-1">
-              <h1 className="text-lg sm:text-xl font-bold mb-1 text-gray-900">Welcome back, {displayName}!</h1>
-              <p className="text-gray-700 text-sm">Here's what's happening with your orders today</p>
-            </div>
-            <div className="flex items-center justify-between sm:justify-end space-x-4 sm:space-x-6">
-              <div className="text-center">
-                <div className="text-lg sm:text-xl font-bold text-gray-900">{stats.activeOrders}</div>
-                <div className="text-xs text-gray-600">Active Orders</div>
-              </div>
-              <div className="hidden sm:block w-px h-10 bg-gray-300"></div>
-              <div className="text-center">
-                <div className="text-lg sm:text-xl font-bold text-gray-900">₦{stats.totalSpent.toLocaleString()}</div>
-                <div className="text-xs text-gray-600">Total Spent</div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
 
-        {/* Quick Actions Grid - Mobile Optimized */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 gap-2 sm:gap-3"
-        >
-          {quickActions.map((action, index) => (
-            <Link
-              key={action.title}
-              href={action.href}
-              className={`${action.gradient} rounded-lg p-3 sm:p-4 text-white hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl min-h-[80px] sm:min-h-[100px] flex items-center justify-center`}
-            >
-              <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
-                <action.icon className="h-5 w-5 sm:h-6 sm:w-6" />
-                <div>
-                  <h3 className="font-semibold text-xs sm:text-sm">{action.title}</h3>
-                  <p className="text-xs text-white/80 hidden sm:block">{action.description}</p>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </motion.div>
-
-        {/* Stats Cards - Mobile Optimized */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3"
-        >
-          <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-2">
-              <div className="p-1.5 bg-blue-100 rounded-lg">
-                <ShoppingBag className="h-4 w-4 text-blue-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-base sm:text-lg font-bold text-gray-900">{stats.totalOrders}</p>
-                <p className="text-xs text-gray-500">Total Orders</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-2">
-              <div className="p-1.5 bg-yellow-100 rounded-lg">
-                <Clock className="h-4 w-4 text-yellow-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-base sm:text-lg font-bold text-gray-900">{stats.activeOrders}</p>
-                <p className="text-xs text-gray-500">Active</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-2">
-              <div className="p-1.5 bg-green-100 rounded-lg">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-base sm:text-lg font-bold text-gray-900">{stats.completedOrders}</p>
-                <p className="text-xs text-gray-500">Completed</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-2">
-              <div className="p-1.5 bg-purple-100 rounded-lg">
-                <DollarSign className="h-4 w-4 text-purple-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-base sm:text-lg font-bold text-gray-900">₦{(stats.totalSpent / 1000).toFixed(0)}k</p>
-                <p className="text-xs text-gray-500">Total Spent</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-2">
-              <div className="p-1.5 bg-red-100 rounded-lg">
-                <Heart className="h-4 w-4 text-red-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-base sm:text-lg font-bold text-gray-900">{stats.favoriteRestaurants}</p>
-                <p className="text-xs text-gray-500">Favorites</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-2">
-              <div className="p-1.5 bg-yellow-100 rounded-lg">
-                <Star className="h-4 w-4 text-yellow-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-base sm:text-lg font-bold text-gray-900">{stats.averageRating}</p>
-                <p className="text-xs text-gray-500">Avg Rating</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Recent Orders with Enhanced Design - Mobile Optimized */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-        >
-          <div className="px-4 sm:px-5 py-3 border-b border-gray-200 bg-gray-50">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+          >
             <div className="flex items-center justify-between">
-              <h2 className="text-base sm:text-lg font-semibold text-gray-900">Recent Orders</h2>
-              <Link 
-                href="/dashboard/student/orders"
-                className="text-brand-primary hover:text-brand-accent text-sm font-medium flex items-center"
-              >
-                <span className="hidden sm:inline">View All</span>
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Link>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Orders</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-full">
+                <Package className="w-6 h-6 text-blue-600" />
+              </div>
             </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Orders</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.activeOrders}</p>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-full">
+                <Clock className="w-6 h-6 text-orange-600" />
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Spent</p>
+                <p className="text-2xl font-bold text-gray-900">₦{stats.totalSpent.toLocaleString()}</p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-full">
+                <TrendingUp className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Completed Orders</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.completedOrders}</p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-full">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Favorite Restaurants</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.favoriteRestaurants}</p>
+              </div>
+              <div className="p-3 bg-red-100 rounded-full">
+                <Star className="w-6 h-6 text-red-600" />
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Average Rating</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.averageRating}</p>
+              </div>
+              <div className="p-3 bg-yellow-100 rounded-full">
+                <Star className="w-6 h-6 text-yellow-600" />
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Recent Orders */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">Recent Orders</h2>
+            <Link 
+              href="/dashboard/student/orders"
+              className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2"
+            >
+              View All
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
 
-          <div className="divide-y divide-gray-200">
-            {recentOrders.length > 0 ? (
-              recentOrders.map((order, index) => (
-                <motion.div
-                  key={order._id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="p-3 sm:p-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3 flex-1 min-w-0">
-                      <div className={`p-2 rounded-lg border ${getStatusColor(order.status)} flex-shrink-0`}>
-                        {getStatusIcon(order.status)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 space-y-1 sm:space-y-0">
-                          <h3 className="text-sm sm:text-base font-semibold text-gray-900 truncate">
-                            {order.restaurantName}
-                          </h3>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)} self-start sm:self-auto`}>
-                            {getStatusText(order.status)}
-                          </span>
-                        </div>
-                        
-                        <div className="space-y-0.5 mb-2">
-                          {order.items.map((item, itemIndex) => (
-                            <p key={itemIndex} className="text-xs sm:text-sm text-gray-600">
-                              {item.quantity}x {item.name}
-                            </p>
-                          ))}
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 space-y-1 sm:space-y-0">
-                          <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-3">
-                            <span className="flex items-center">
-                              <Calendar className="h-3 w-3 mr-1" />
-                              {new Date(order.createdAt).toLocaleDateString()}
-                            </span>
-                            {order.riderName && (
-                              <span className="flex items-center">
-                                <Users className="h-3 w-3 mr-1" />
-                                {order.riderName}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-left sm:text-right">
-                            <p className="text-sm sm:text-base font-bold text-gray-900">
-                              ₦{order.total.toLocaleString()}
-                            </p>
-                            {order.trackingCode && (
-                              <p className="text-xs text-gray-500">#{order.trackingCode}</p>
-                            )}
-                          </div>
-                        </div>
-
-                        {order.status === 'in_transit' && (
-                          <div className="mt-2 p-2 bg-cyan-50 rounded-lg border border-cyan-200">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-1 sm:space-y-0">
-                              <div className="flex items-center space-x-2">
-                                <Truck className="h-3 w-3 text-cyan-600" />
-                                <span className="text-xs sm:text-sm font-medium text-cyan-800">Out for delivery</span>
-                              </div>
-                              <span className="text-xs sm:text-sm text-cyan-600">
-                                Est. {new Date(order.estimatedDeliveryTime).toLocaleTimeString()}
-                              </span>
-                            </div>
-                          </div>
-                        )}
+          {recentOrders.length === 0 ? (
+            <div className="text-center py-8">
+              <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">No orders yet</p>
+              <p className="text-gray-400">Start exploring restaurants and place your first order!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {recentOrders.map((order) => (
+                <div key={order._id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-gray-100 rounded-full">
+                      <Package className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">{order.restaurantName}</h3>
+                      <p className="text-sm text-gray-500">
+                        {order.items.length} item{order.items.length !== 1 ? 's' : ''} • ₦{order.total.toLocaleString()}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Calendar className="w-3 h-3 text-gray-400" />
+                        <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
                       </div>
                     </div>
                   </div>
-                </motion.div>
-              ))
-            ) : (
-              <div className="px-4 sm:px-5 py-8 text-center">
-                <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">No orders yet</h3>
-                <p className="text-gray-500 mb-4 max-w-md mx-auto text-sm">
-                  Start exploring restaurants and place your first order to see it here!
-                </p>
-                <Link 
-                  href="/dashboard/student/restaurants"
-                  className="btn-primary inline-flex items-center"
-                >
-                  <Search className="h-4 w-4 mr-2" />
-                  Browse Restaurants
-                </Link>
-              </div>
-            )}
-          </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                      <span className="flex items-center gap-1">
+                        {getStatusIcon(order.status)}
+                        {getStatusText(order.status)}
+                      </span>
+                    </span>
+                    <Link 
+                      href={`/dashboard/student/orders/${order._id}`}
+                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </motion.div>
 
-        {/* Special Offers & Promotions - Mobile Optimized */}
+        {/* Quick Actions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
+          transition={{ duration: 0.5, delay: 0.7 }}
+          className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6"
         >
-        
+          <Link 
+            href="/marketplace"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-full">
+                <MapPin className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Explore Restaurants</h3>
+                <p className="text-blue-100">Discover new places to eat</p>
+              </div>
+            </div>
+          </Link>
 
-      
+          <Link 
+            href="/dashboard/student/favorites"
+            className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-full">
+                <Star className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">My Favorites</h3>
+                <p className="text-red-100">View your saved restaurants</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link 
+            href="/dashboard/student/support"
+            className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-full">
+                <MessageCircle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Get Support</h3>
+                <p className="text-green-100">Need help? Contact us</p>
+              </div>
+            </div>
+          </Link>
         </motion.div>
       </div>
     </DashboardLayout>

@@ -1,4 +1,5 @@
 'use client';
+// Updated: Removed mock data, now fetches real data from /api/students/restaurants/[id]
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -84,131 +85,56 @@ export default function RestaurantPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('name');
 
-  // Mock data for demonstration
-  const mockRestaurant: Restaurant = {
-    _id: '1',
-    name: 'Pizza Palace',
-    description: 'Authentic Italian pizza with fresh ingredients and traditional recipes passed down through generations. We use only the finest ingredients to create the perfect pizza experience.',
-    image: '/images/pizza-palace.jpg',
-    rating: 4.8,
-    reviewCount: 156,
-    cuisine: 'Italian',
-    deliveryFee: 500,
-    minimumOrder: 2000,
-    estimatedDeliveryTime: 25,
-    isOpen: true,
-    distance: 1.2,
-    address: 'University Mall, Block A, Floor 2',
-    phone: '+234 801 234 5678',
-    email: 'info@pizzapalace.com',
-    website: 'www.pizzapalace.com',
-    isFavorite: true,
-    menu: [
-      {
-        _id: '1',
-        name: 'Margherita Pizza',
-        description: 'Classic pizza with fresh mozzarella, tomato sauce, and basil',
-        price: 3500,
-        image: '/images/margherita.jpg',
-        category: 'Pizza',
-        isAvailable: true,
-        isVegetarian: true,
-        isSpicy: false,
-        allergens: ['Gluten', 'Dairy'],
-        preparationTime: 15
-      },
-      {
-        _id: '2',
-        name: 'Pepperoni Pizza',
-        description: 'Spicy pepperoni with melted cheese and tomato sauce',
-        price: 4000,
-        image: '/images/pepperoni.jpg',
-        category: 'Pizza',
-        isAvailable: true,
-        isVegetarian: false,
-        isSpicy: true,
-        allergens: ['Gluten', 'Dairy', 'Pork'],
-        preparationTime: 18
-      },
-      {
-        _id: '3',
-        name: 'Hawaiian Pizza',
-        description: 'Ham and pineapple with cheese and tomato sauce',
-        price: 3800,
-        image: '/images/hawaiian.jpg',
-        category: 'Pizza',
-        isAvailable: true,
-        isVegetarian: false,
-        isSpicy: false,
-        allergens: ['Gluten', 'Dairy', 'Pork'],
-        preparationTime: 16
-      },
-      {
-        _id: '4',
-        name: 'Caesar Salad',
-        description: 'Fresh romaine lettuce with Caesar dressing, croutons, and parmesan',
-        price: 1800,
-        image: '/images/caesar-salad.jpg',
-        category: 'Salads',
-        isAvailable: true,
-        isVegetarian: false,
-        isSpicy: false,
-        allergens: ['Gluten', 'Dairy', 'Eggs'],
-        preparationTime: 8
-      },
-      {
-        _id: '5',
-        name: 'Garlic Bread',
-        description: 'Toasted bread with garlic butter and herbs',
-        price: 800,
-        image: '/images/garlic-bread.jpg',
-        category: 'Sides',
-        isAvailable: true,
-        isVegetarian: true,
-        isSpicy: false,
-        allergens: ['Gluten', 'Dairy'],
-        preparationTime: 5
-      },
-      {
-        _id: '6',
-        name: 'Chicken Wings',
-        description: 'Crispy wings with your choice of sauce',
-        price: 2500,
-        image: '/images/chicken-wings.jpg',
-        category: 'Sides',
-        isAvailable: true,
-        isVegetarian: false,
-        isSpicy: true,
-        allergens: ['Gluten'],
-        preparationTime: 12
-      },
-      {
-        _id: '7',
-        name: 'Tiramisu',
-        description: 'Classic Italian dessert with coffee and mascarpone',
-        price: 1200,
-        image: '/images/tiramisu.jpg',
-        category: 'Desserts',
-        isAvailable: true,
-        isVegetarian: true,
-        isSpicy: false,
-        allergens: ['Gluten', 'Dairy', 'Eggs'],
-        preparationTime: 3
-      },
-      {
-        _id: '8',
-        name: 'Coca Cola',
-        description: 'Refreshing soft drink',
-        price: 300,
-        image: '/images/coca-cola.jpg',
-        category: 'Beverages',
-        isAvailable: true,
-        isVegetarian: true,
-        isSpicy: false,
-        allergens: [],
-        preparationTime: 1
-      }
-    ]
+  const fetchRestaurant = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch(`/api/students/restaurants/${restaurantId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load restaurant');
+      const r = data.restaurant;
+      const mapped: Restaurant = {
+        _id: r._id,
+        name: r.name,
+        description: r.description,
+        image: r.image,
+        rating: r.rating,
+        reviewCount: r.reviewCount,
+        cuisine: r.cuisine,
+        deliveryFee: r.deliveryFee,
+        minimumOrder: r.minimumOrder,
+        estimatedDeliveryTime: r.estimatedDeliveryTime,
+        isOpen: r.isOpen,
+        distance: r.distance,
+        address: r.address,
+        phone: r.phone,
+        email: r.email,
+        website: r.website,
+        isFavorite: r.isFavorite,
+        menu: (r.menu || []).map((m: any) => ({
+          _id: m._id,
+          name: m.name,
+          description: m.description,
+          price: m.price,
+          image: m.image || '',
+          category: m.category,
+          isAvailable: m.isAvailable,
+          isVegetarian: m.isVegetarian,
+          isSpicy: m.isSpicy,
+          allergens: m.allergens || [],
+          preparationTime: m.preparationTime || 0,
+        })),
+      };
+      setRestaurant(mapped);
+    } catch (e) {
+      console.error(e);
+      setRestaurant(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -228,11 +154,7 @@ export default function RestaurantPage() {
       setCart(JSON.parse(savedCart));
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setRestaurant(mockRestaurant);
-      setIsLoading(false);
-    }, 1000);
+    fetchRestaurant();
   }, [restaurantId]);
 
   useEffect(() => {

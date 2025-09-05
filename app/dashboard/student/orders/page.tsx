@@ -1,6 +1,7 @@
 'use client';
+// Updated: Removed mock data, now fetches real data from /api/students/orders
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import BackArrow from '@/components/ui/BackArrow';
@@ -26,90 +27,36 @@ export default function MyOrders() {
 
   const statuses = ['All', 'Active', 'Completed', 'Cancelled'];
   
-  const orders = [
-    {
-      id: 'ORD-001',
-      restaurant: 'Campus Delight',
-      items: [
-        { name: 'Jollof Rice with Chicken', quantity: 1, price: '₦1,200' },
-        { name: 'Plantain', quantity: 2, price: '₦300' }
-      ],
-      total: '₦1,800',
-      status: 'active',
-      orderTime: '2024-01-15 14:30',
-      estimatedDelivery: '15:00',
-      deliveryAddress: 'Block A, Room 205, University Campus',
-      paymentMethod: 'Card',
-      orderNumber: 'ORD-001',
-      trackingSteps: [
-        { step: 'Order Placed', completed: true, time: '14:30' },
-        { step: 'Restaurant Confirmed', completed: true, time: '14:32' },
-        { step: 'Preparing', completed: true, time: '14:35' },
-        { step: 'Rider Picked Up', completed: false, time: null },
-        { step: 'Delivered', completed: false, time: null }
-      ]
-    },
-    {
-      id: 'ORD-002',
-      restaurant: 'Pizza Palace',
-      items: [
-        { name: 'Margherita Pizza (Large)', quantity: 1, price: '₦2,500' },
-        { name: 'Coca Cola', quantity: 1, price: '₦200' }
-      ],
-      total: '₦2,700',
-      status: 'completed',
-      orderTime: '2024-01-14 19:15',
-      estimatedDelivery: '19:45',
-      deliveryAddress: 'Block B, Room 312, University Campus',
-      paymentMethod: 'Mobile Money',
-      orderNumber: 'ORD-002',
-      rating: 5,
-      review: 'Great pizza, fast delivery!'
-    },
-    {
-      id: 'ORD-003',
-      restaurant: 'Burger House',
-      items: [
-        { name: 'Classic Burger', quantity: 2, price: '₦1,800' },
-        { name: 'French Fries', quantity: 1, price: '₦500' }
-      ],
-      total: '₦4,100',
-      status: 'cancelled',
-      orderTime: '2024-01-13 12:00',
-      estimatedDelivery: '12:25',
-      deliveryAddress: 'Block C, Room 108, University Campus',
-      paymentMethod: 'Card',
-      orderNumber: 'ORD-003',
-      cancelReason: 'Restaurant was closed'
-    },
-    {
-      id: 'ORD-004',
-      restaurant: 'Sweet Treats',
-      items: [
-        { name: 'Chocolate Cake Slice', quantity: 1, price: '₦800' },
-        { name: 'Cappuccino', quantity: 1, price: '₦400' }
-      ],
-      total: '₦1,200',
-      status: 'active',
-      orderTime: '2024-01-15 16:45',
-      estimatedDelivery: '17:00',
-      deliveryAddress: 'Library, Ground Floor, University Campus',
-      paymentMethod: 'Card',
-      orderNumber: 'ORD-004',
-      trackingSteps: [
-        { step: 'Order Placed', completed: true, time: '16:45' },
-        { step: 'Restaurant Confirmed', completed: true, time: '16:47' },
-        { step: 'Preparing', completed: false, time: null },
-        { step: 'Rider Picked Up', completed: false, time: null },
-        { step: 'Delivered', completed: false, time: null }
-      ]
-    }
-  ];
+  const [orders, setOrders] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const filteredOrders = orders.filter(order => {
-    if (selectedStatus === 'All') return true;
-    return order.status === selectedStatus.toLowerCase();
-  });
+  const fetchOrders = async () => {
+    try {
+      setIsLoading(true);
+      const statusParam = selectedStatus.toLowerCase() === 'all' ? 'all' : selectedStatus.toLowerCase();
+      const url = `/api/students/orders?status=${encodeURIComponent(statusParam)}&limit=50`;
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load orders');
+      setOrders(data.orders || []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      setOrders([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStatus]);
+
+  const filteredOrders = orders; // API already filters by status
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -136,6 +83,23 @@ export default function MyOrders() {
         return <Package className="h-4 w-4" />;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex justify-start">
+              <BackArrow href="/dashboard/student" />
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+          <div className="spinner"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -1,4 +1,5 @@
 'use client';
+// Updated: Removed mock data, now fetches real data from /api/students/orders/[id]
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -115,37 +116,51 @@ export default function OrderTrackingPage() {
   const [eta, setEta] = useState<number>(0);
   const [showRiderDetails, setShowRiderDetails] = useState(false);
 
-  // Mock order data
-  const mockOrder: Order = {
-    _id: orderId,
-    orderNumber: 'ORD-20241201-ABC123',
-    status: 'picked_up',
-    items: [
-      { name: 'Margherita Pizza', quantity: 1, price: 3500 },
-      { name: 'Caesar Salad', quantity: 1, price: 1800 }
-    ],
-    total: 5800,
-    deliveryAddress: 'Student Hall A, Room 101, University Campus',
-    deliveryInstructions: 'Call when at gate',
-    estimatedDeliveryTime: 25,
-    createdAt: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-    restaurant: {
-      name: 'Pizza Palace',
-      address: 'University Mall, Block A',
-      phone: '+234 801 234 5678'
-    },
-    rider: {
-      _id: 'rider1',
-      name: 'John Rider',
-      phone: '+234 802 345 6789',
-      vehicleNumber: 'UNI-001',
-      photo: '/images/rider.jpg',
-      rating: 4.8,
-      isOnline: true,
-      currentLocation: {
-        lat: 6.5244,
-        lng: 3.3792
-      }
+  const fetchOrder = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch(`/api/students/orders/${orderId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load order');
+      const o = data.order;
+      const mapped: Order = {
+        _id: o._id,
+        orderNumber: o.orderNumber,
+        status: o.status,
+        items: (o.items || []).map((it: any) => ({ name: it.name, quantity: it.quantity, price: it.price })),
+        total: o.total,
+        deliveryAddress: o.deliveryAddress,
+        deliveryInstructions: o.deliveryInstructions,
+        estimatedDeliveryTime: o.estimatedDeliveryTime,
+        createdAt: new Date(o.createdAt),
+        restaurant: {
+          name: o.restaurant?.name || 'Restaurant',
+          address: o.restaurant?.address || '',
+          phone: o.restaurant?.phone || '',
+        },
+        rider: o.rider && {
+          _id: o.rider._id,
+          name: o.rider.name,
+          phone: o.rider.phone,
+          vehicleNumber: o.rider.vehicleNumber || '',
+          photo: '',
+          rating: 0,
+          isOnline: true,
+          currentLocation: { lat: 0, lng: 0 },
+        },
+      };
+      setOrder(mapped);
+      setCurrentStatus(orderStatuses.findIndex(s => s.status === mapped.status));
+      setEta(mapped.estimatedDeliveryTime || 0);
+    } catch (e) {
+      console.error(e);
+      setOrder(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -160,13 +175,7 @@ export default function OrderTrackingPage() {
       console.error('Error parsing user data:', error);
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setOrder(mockOrder);
-      setCurrentStatus(orderStatuses.findIndex(status => status.status === mockOrder.status));
-      setEta(15); // 15 minutes remaining
-      setIsLoading(false);
-    }, 1000);
+    fetchOrder();
 
     // Simulate real-time updates
     const interval = setInterval(() => {

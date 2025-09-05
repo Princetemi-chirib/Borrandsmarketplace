@@ -3,7 +3,6 @@ import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
   name: string;
-  email?: string;
   phone: string;
   password?: string;
   role: 'student' | 'restaurant' | 'rider' | 'admin';
@@ -14,8 +13,8 @@ export interface IUser extends Document {
   profileImage?: string;
   isVerified: boolean;
   isActive: boolean;
-  emailVerified: boolean;
   phoneVerified: boolean;
+  whatsappVerified: boolean;
   lastLogin?: Date;
   loginCount: number;
   otpCode?: string;
@@ -35,7 +34,7 @@ export interface IUser extends Document {
     allergens: string[];
     preferredCuisines: string[];
     notificationSettings: {
-      email: boolean;
+      whatsapp: boolean;
       sms: boolean;
       push: boolean;
       orderUpdates: boolean;
@@ -87,9 +86,9 @@ const addressSchema = new Schema({
 });
 
 const notificationSettingsSchema = new Schema({
-  email: {
+  whatsapp: {
     type: Boolean,
-    default: false
+    default: true
   },
   sms: {
     type: Boolean,
@@ -168,10 +167,9 @@ const userSchema = new Schema<IUser>({
     trim: true,
     maxlength: [50, 'Name cannot exceed 50 characters']
   },
-  email: {
-    type: String,
-    lowercase: true,
-    trim: true
+  whatsappVerified: {
+    type: Boolean,
+    default: false
   },
   phone: {
     type: String,
@@ -226,10 +224,7 @@ const userSchema = new Schema<IUser>({
     type: Boolean,
     default: true
   },
-  emailVerified: {
-    type: Boolean,
-    default: false
-  },
+
   phoneVerified: {
     type: Boolean,
     default: false
@@ -353,6 +348,7 @@ userSchema.statics.cleanupUnverifiedUsers = async function() {
   const result = await this.deleteMany({
     isVerified: false,
     phoneVerified: false,
+    whatsappVerified: false,
     createdAt: { $lt: twentyFourHoursAgo }
   });
   return result;

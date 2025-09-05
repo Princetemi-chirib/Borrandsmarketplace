@@ -481,6 +481,99 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Restaurant Registration CTA */}
+      <section className="py-16 bg-gradient-to-r from-red-50 to-red-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <span className="inline-flex items-center rounded-full bg-red-100 text-red-600 px-3 py-1 text-sm font-semibold mb-4">
+                  <Store className="h-4 w-4 mr-1" />
+                  For Restaurant Owners
+                </span>
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                  Grow Your Business with Borrands
+                </h2>
+                <p className="text-gray-600 text-lg mb-6">
+                  Join our platform and start serving thousands of hungry students. Get access to our powerful restaurant management tools, real-time order tracking, and dedicated support team.
+                </p>
+                
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span className="text-gray-700">Easy menu management and inventory control</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span className="text-gray-700">Real-time order notifications and tracking</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span className="text-gray-700">Analytics and business insights</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span className="text-gray-700">Dedicated support and onboarding</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link 
+                    href="/auth/register-restaurant" 
+                    className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center transition-colors hover:scale-105"
+                  >
+                    <Store className="w-5 h-5 mr-2" />
+                    Register Your Restaurant
+                  </Link>
+                  <Link 
+                    href="/dashboard/restaurant" 
+                    className="border border-red-300 text-red-600 hover:bg-red-50 px-6 py-3 rounded-lg font-semibold flex items-center justify-center transition-colors"
+                  >
+                    View Demo Dashboard
+                  </Link>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="relative"
+              >
+                <div className="bg-gradient-to-br from-red-100 to-red-100 rounded-2xl p-8">
+                  <div className="text-center">
+                    <div className="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Store className="w-10 h-10 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">Restaurant Dashboard</h3>
+                    <div className="space-y-3 text-left">
+                                             <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                         <span className="text-gray-700">Today's Orders</span>
+                         <span className="font-bold text-red-600">24</span>
+                       </div>
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                        <span className="text-gray-700">Revenue</span>
+                        <span className="font-bold text-green-600">₦45,200</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                        <span className="text-gray-700">Rating</span>
+                        <span className="font-bold text-yellow-600">4.8 ★</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works Section */}
       <section id="how-it-works" className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

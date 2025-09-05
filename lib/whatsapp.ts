@@ -282,6 +282,44 @@ We\'re excited to have you on board! 🚀`;
   }
 }
 
+// Function to send OTP via WhatsApp
+export async function sendWhatsAppOTP(phone: string, otp: string): Promise<boolean> {
+  const { phoneNumber, isConfigured } = getTwilioConfig();
+  const currentClient = initializeClient();
+  
+  const fromWhatsapp = `whatsapp:${phoneNumber}`;
+  const toWhatsapp = `whatsapp:${normalizeE164(phone)}`;
+
+  if (!isConfigured || !currentClient) {
+    console.log('📱 WhatsApp OTP (disabled):', { from: fromWhatsapp, to: toWhatsapp, otp });
+    return true; // simulate success in development
+  }
+
+  try {
+    const message = `🔐 *Your Verification Code*
+
+Your OTP code is: *${otp}*
+
+This code will expire in 10 minutes.
+Do not share this code with anyone.
+
+If you didn't request this code, please ignore this message.`;
+
+    const messageData: any = {
+      from: fromWhatsapp,
+      to: toWhatsapp,
+      body: message
+    };
+
+    const result = await currentClient.messages.create(messageData);
+    console.log('✅ WhatsApp OTP sent successfully:', result.sid);
+    return true;
+  } catch (error) {
+    console.error('❌ WhatsApp OTP sending failed:', error);
+    return false;
+  }
+}
+
 export default WhatsAppService.getInstance();
 
 

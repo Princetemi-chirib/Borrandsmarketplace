@@ -86,6 +86,52 @@ export default function CheckoutPage() {
     return getCartTotal() + getDeliveryFee();
   };
 
+  const synthesizeEmailFromPhone = (phone: string) => {
+    const digits = (phone || '').toString().replace(/\D/g, '');
+    const localPart = digits.length > 2 ? digits : 'customer';
+    return `${localPart}@borrands.com`;
+  };
+
+  const initializeCardPayment = async () => {
+    const phone = user?.phone || deliveryAddress.phone;
+    if (!phone) {
+      setError('Missing phone number. Please add your phone.');
+      return;
+    }
+
+    const reference = `BOR_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+    const payload = {
+      // Paystack requires email; synthesize a compliant email from phone
+      email: synthesizeEmailFromPhone(phone),
+      amount: getTotal(),
+      reference,
+      callback_url: `${window.location.origin}/payment/success?reference=${reference}`,
+      metadata: {
+        cart,
+        deliveryAddress,
+        userId: user?._id,
+        role: 'student',
+        paymentMethod: 'paystack',
+        phone,
+      },
+    };
+
+    const res = await fetch('/api/paystack/initialize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await res.json();
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to initialize payment');
+    }
+
+    // Redirect to Paystack hosted page
+    window.location.href = result.data.authorization_url;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -103,7 +149,12 @@ export default function CheckoutPage() {
     setError('');
 
     try {
-      // Group items by restaurant
+      if (paymentMethod === 'card') {
+        await initializeCardPayment();
+        return; // Redirecting; do not proceed to create orders now
+      }
+
+      // Cash on delivery: create orders immediately
       const ordersByRestaurant = cart.reduce((acc, item) => {
         if (!acc[item.restaurantId]) {
           acc[item.restaurantId] = {
@@ -121,7 +172,6 @@ export default function CheckoutPage() {
         return acc;
       }, {} as Record<string, any>);
 
-      // Create orders for each restaurant
       const orderPromises = Object.values(ordersByRestaurant).map(async (orderData: any) => {
         const response = await fetch('/api/students/orders', {
           method: 'POST',
@@ -147,7 +197,7 @@ export default function CheckoutPage() {
         return response.json();
       });
 
-      const results = await Promise.all(orderPromises);
+      await Promise.all(orderPromises);
       
       // Clear cart
       localStorage.removeItem('cart');
@@ -223,7 +273,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text.sm font-medium text-gray-700 mb-2">
                     Delivery Instructions
                   </label>
                   <textarea
@@ -285,10 +335,10 @@ export default function CheckoutPage() {
                     onChange={(e) => setPaymentMethod(e.target.value as 'card' | 'cash')}
                     className="h-4 w-4 text-brand-primary focus:ring-brand-primary border-gray-300"
                   />
-                                     <div className="ml-3 flex items-center">
-                     <Banknote className="h-5 w-5 text-gray-400 mr-2" />
-                     <span className="text-sm font-medium text-gray-900">Cash on Delivery</span>
-                   </div>
+                  <div className="ml-3 flex items-center">
+                    <Banknote className="h-5 w-5 text-gray-400 mr-2" />
+                    <span className="text-sm font-medium text-gray-900">Cash on Delivery</span>
+                  </div>
                 </label>
               </div>
             </motion.div>
@@ -381,7 +431,7 @@ export default function CheckoutPage() {
                 ) : (
                   <>
                     <CheckCircle className="h-5 w-5" />
-                    <span>Place Order</span>
+                    <span>{paymentMethod === 'card' ? 'Pay with Card' : 'Place Order'}</span>
                   </>
                 )}
               </button>

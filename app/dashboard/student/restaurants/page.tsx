@@ -1,4 +1,5 @@
 'use client';
+// Updated: Removed mock data, now fetches real data from /api/students/restaurants and handles favorites toggle
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -68,109 +69,35 @@ export default function RestaurantsPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
 
-  // Mock data for demonstration
-  const mockRestaurants: Restaurant[] = [
-    {
-      _id: '1',
-      name: 'Pizza Palace',
-      description: 'Authentic Italian pizza with fresh ingredients',
-      image: '/images/pizza-palace.jpg',
-      rating: 4.8,
-      reviewCount: 156,
-      cuisine: 'Italian',
-      deliveryFee: 500,
-      minimumOrder: 2000,
-      estimatedDeliveryTime: 25,
-      isOpen: true,
-      distance: 1.2,
-      address: 'University Mall, Block A',
-      isFavorite: true,
-      featuredItems: [
-        { _id: '1', name: 'Margherita Pizza', price: 3500, image: '/images/margherita.jpg', description: 'Fresh mozzarella and basil' },
-        { _id: '2', name: 'Pepperoni Pizza', price: 4000, image: '/images/pepperoni.jpg', description: 'Spicy pepperoni with cheese' }
-      ]
-    },
-    {
-      _id: '2',
-      name: 'Burger House',
-      description: 'Juicy burgers and crispy fries',
-      image: '/images/burger-house.jpg',
-      rating: 4.6,
-      reviewCount: 89,
-      cuisine: 'American',
-      deliveryFee: 300,
-      minimumOrder: 1500,
-      estimatedDeliveryTime: 20,
-      isOpen: true,
-      distance: 0.8,
-      address: 'Food Court, Block B',
-      isFavorite: false,
-      featuredItems: [
-        { _id: '3', name: 'Classic Burger', price: 2500, image: '/images/classic-burger.jpg', description: 'Beef patty with lettuce and tomato' },
-        { _id: '4', name: 'Chicken Burger', price: 2200, image: '/images/chicken-burger.jpg', description: 'Grilled chicken breast' }
-      ]
-    },
-    {
-      _id: '3',
-      name: 'Sushi Express',
-      description: 'Fresh sushi and Japanese cuisine',
-      image: '/images/sushi-express.jpg',
-      rating: 4.9,
-      reviewCount: 234,
-      cuisine: 'Japanese',
-      deliveryFee: 600,
-      minimumOrder: 3000,
-      estimatedDeliveryTime: 30,
-      isOpen: true,
-      distance: 2.1,
-      address: 'University Mall, Block C',
-      isFavorite: false,
-      featuredItems: [
-        { _id: '5', name: 'California Roll', price: 3000, image: '/images/california-roll.jpg', description: 'Crab, avocado, and cucumber' },
-        { _id: '6', name: 'Salmon Nigiri', price: 2500, image: '/images/salmon-nigiri.jpg', description: 'Fresh salmon over rice' }
-      ]
-    },
-    {
-      _id: '4',
-      name: 'Taco Fiesta',
-      description: 'Authentic Mexican tacos and burritos',
-      image: '/images/taco-fiesta.jpg',
-      rating: 4.4,
-      reviewCount: 67,
-      cuisine: 'Mexican',
-      deliveryFee: 400,
-      minimumOrder: 1800,
-      estimatedDeliveryTime: 22,
-      isOpen: true,
-      distance: 1.5,
-      address: 'Food Court, Block D',
-      isFavorite: true,
-      featuredItems: [
-        { _id: '7', name: 'Beef Taco', price: 1800, image: '/images/beef-taco.jpg', description: 'Seasoned beef with salsa' },
-        { _id: '8', name: 'Chicken Burrito', price: 2200, image: '/images/chicken-burrito.jpg', description: 'Grilled chicken with rice and beans' }
-      ]
-    },
-    {
-      _id: '5',
-      name: 'Noodle House',
-      description: 'Asian noodles and stir-fry dishes',
-      image: '/images/noodle-house.jpg',
-      rating: 4.7,
-      reviewCount: 123,
-      cuisine: 'Asian',
-      deliveryFee: 350,
-      minimumOrder: 1600,
-      estimatedDeliveryTime: 18,
-      isOpen: true,
-      distance: 0.9,
-      address: 'University Mall, Block E',
-      isFavorite: false,
-      featuredItems: [
-        { _id: '9', name: 'Pad Thai', price: 2800, image: '/images/pad-thai.jpg', description: 'Stir-fried rice noodles with shrimp' },
-        { _id: '10', name: 'Beef Noodles', price: 3200, image: '/images/beef-noodles.jpg', description: 'Beef broth with hand-pulled noodles' }
-      ]
+  // Fetch restaurants from API based on filters
+  const fetchRestaurants = async () => {
+    try {
+      setIsLoading(true);
+      const params = new URLSearchParams();
+      if (searchTerm) params.set('search', searchTerm);
+      if (selectedCuisine) params.set('cuisine', selectedCuisine);
+      if (sortBy) params.set('sortBy', sortBy);
+      if (priceRange) params.set('priceRange', priceRange);
+
+      const res = await fetch(`/api/students/restaurants?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load restaurants');
+
+      setRestaurants(data.restaurants || []);
+      setFilteredRestaurants(data.restaurants || []);
+    } catch (error) {
+      console.error('Error fetching restaurants:', error);
+      setRestaurants([]);
+      setFilteredRestaurants([]);
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
   useEffect(() => {
     // Get user from localStorage
@@ -189,48 +116,15 @@ export default function RestaurantsPage() {
       setCart(JSON.parse(savedCart));
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setRestaurants(mockRestaurants);
-      setFilteredRestaurants(mockRestaurants);
-      setIsLoading(false);
-    }, 1000);
+    // Initial fetch
+    fetchRestaurants();
   }, []);
 
+  // Refetch when filters change
   useEffect(() => {
-    // Filter and sort restaurants
-    let filtered = restaurants.filter(restaurant => {
-      const matchesSearch = restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           restaurant.cuisine.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           restaurant.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCuisine = selectedCuisine === 'all' || restaurant.cuisine === selectedCuisine;
-      const matchesPrice = priceRange === 'all' || 
-        (priceRange === 'low' && restaurant.deliveryFee <= 300) ||
-        (priceRange === 'medium' && restaurant.deliveryFee > 300 && restaurant.deliveryFee <= 500) ||
-        (priceRange === 'high' && restaurant.deliveryFee > 500);
-      return matchesSearch && matchesCuisine && matchesPrice;
-    });
-
-    // Sort filtered results
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return a.name.localeCompare(b.name);
-        case 'rating':
-          return b.rating - a.rating;
-        case 'distance':
-          return a.distance - b.distance;
-        case 'deliveryTime':
-          return a.estimatedDeliveryTime - b.estimatedDeliveryTime;
-        case 'deliveryFee':
-          return a.deliveryFee - b.deliveryFee;
-        default:
-          return 0;
-      }
-    });
-
-    setFilteredRestaurants(filtered);
-  }, [restaurants, searchTerm, selectedCuisine, sortBy, priceRange]);
+    fetchRestaurants();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, selectedCuisine, sortBy, priceRange]);
 
   useEffect(() => {
     // Save cart to localStorage
@@ -239,27 +133,41 @@ export default function RestaurantsPage() {
 
   const toggleFavorite = async (restaurantId: string) => {
     try {
-      const isFavorite = restaurants.find(r => r._id === restaurantId)?.isFavorite;
-      const method = isFavorite ? 'DELETE' : 'POST';
-      
-      const response = await fetch(`/api/students/favorites/${restaurantId}`, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const target = restaurants.find(r => r._id === restaurantId);
+      const isFavorite = !!target?.isFavorite;
+
+      let response: Response;
+      if (isFavorite) {
+        response = await fetch(`/api/students/favorites/${restaurantId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+          },
+        });
+      } else {
+        response = await fetch('/api/students/favorites', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+          },
+          body: JSON.stringify({ restaurantId }),
+        });
+      }
 
       if (response.ok) {
         setRestaurants(restaurants.map(r => 
           r._id === restaurantId ? { ...r, isFavorite: !r.isFavorite } : r
         ));
+        setFilteredRestaurants(filteredRestaurants.map(r => 
+          r._id === restaurantId ? { ...r, isFavorite: !r.isFavorite } : r
+        ));
+      } else {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to update favorites');
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
-      // For demo, toggle in local state
-      setRestaurants(restaurants.map(r => 
-        r._id === restaurantId ? { ...r, isFavorite: !r.isFavorite } : r
-      ));
     }
   };
 

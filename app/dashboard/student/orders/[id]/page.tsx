@@ -1,6 +1,7 @@
 'use client';
+// Updated: Removed mock data, now fetches real data from /api/students/orders/[id]
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -75,105 +76,77 @@ export default function OrderTracking() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Mock order data
-  const mockOrder: Order = {
-    id: '1',
-    orderNumber: 'ORD-123456789',
-    restaurantName: 'Campus Delight',
-    restaurantPhone: '+234 801 234 5678',
-    status: 'in_transit',
-    total: 3200,
-    deliveryFee: 200,
-    subtotal: 3000,
-    createdAt: '2024-01-15T14:30:00Z',
-    estimatedDeliveryTime: '2024-01-15T15:15:00Z',
-    items: [
-      {
-        id: '1',
-        name: 'Jollof Rice with Chicken',
-        quantity: 2,
-        price: 1200,
-        image: '/images/jollof-rice.jpg'
-      },
-      {
-        id: '2',
-        name: 'Plantain',
-        quantity: 1,
-        price: 300,
-        image: '/images/plantain.jpg'
-      },
-      {
-        id: '3',
-        name: 'Zobo',
-        quantity: 2,
-        price: 200,
-        image: '/images/zobo.jpg'
-      }
-    ],
-    deliveryAddress: 'Block A, Room 205, University Campus',
-    paymentMethod: 'Credit Card',
-    riderName: 'John Doe',
-    riderPhone: '+234 802 345 6789',
-    riderPhoto: '/images/rider.jpg',
-    trackingCode: 'TRK123456',
-    specialInstructions: 'Please call when arriving'
+  const statusFlow = ['pending','accepted','preparing','ready','picked_up','in_transit','delivered'] as const;
+
+  const deriveTracking = (status: string): TrackingStep[] => {
+    const currentIndex = statusFlow.indexOf(status as any);
+    const defs: Array<{ id: string; title: string; description: string; icon: any }> = [
+      { id: '1', title: 'Order Placed', description: 'Your order has been received', icon: Package },
+      { id: '2', title: 'Restaurant Confirmed', description: 'Restaurant has confirmed your order', icon: CheckCircle },
+      { id: '3', title: 'Preparing', description: 'Your food is being prepared', icon: Clock },
+      { id: '4', title: 'Ready for Pickup', description: 'Order is ready for pickup', icon: Package },
+      { id: '5', title: 'Rider Picked Up', description: 'Rider has collected your order', icon: Truck },
+      { id: '6', title: 'In Transit', description: 'Your order is on its way', icon: Navigation },
+      { id: '7', title: 'Delivered', description: 'Order has been delivered', icon: CheckCircle },
+    ];
+    return defs.map((d, idx) => ({
+      id: d.id,
+      title: d.title,
+      description: d.description,
+      status: idx < currentIndex ? 'completed' : idx === currentIndex ? 'current' : 'pending',
+      icon: d.icon,
+    }));
   };
 
-  const trackingSteps: TrackingStep[] = [
-    {
-      id: '1',
-      title: 'Order Placed',
-      description: 'Your order has been received',
-      status: 'completed',
-      time: '14:30',
-      icon: Package
-    },
-    {
-      id: '2',
-      title: 'Restaurant Confirmed',
-      description: 'Restaurant has confirmed your order',
-      status: 'completed',
-      time: '14:32',
-      icon: CheckCircle
-    },
-    {
-      id: '3',
-      title: 'Preparing',
-      description: 'Your food is being prepared',
-      status: 'completed',
-      time: '14:35',
-      icon: Clock
-    },
-    {
-      id: '4',
-      title: 'Rider Picked Up',
-      description: 'Rider has collected your order',
-      status: 'current',
-      time: '14:45',
-      icon: Truck
-    },
-    {
-      id: '5',
-      title: 'Out for Delivery',
-      description: 'Your order is on its way',
-      status: 'pending',
-      icon: Navigation
-    },
-    {
-      id: '6',
-      title: 'Delivered',
-      description: 'Order has been delivered',
-      status: 'pending',
-      icon: CheckCircle
-    }
-  ];
-
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setOrder(mockOrder);
-      setIsLoading(false);
-    }, 1000);
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        const res = await fetch(`/api/students/orders/${orderId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+          },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to load order');
+
+        const o = data.order;
+        const mapped: Order = {
+          id: o._id,
+          orderNumber: o.orderNumber,
+          restaurantName: o.restaurant?.name || 'Restaurant',
+          restaurantPhone: o.restaurant?.phone || '',
+          status: o.status,
+          total: o.total,
+          deliveryFee: o.deliveryFee,
+          subtotal: o.subtotal,
+          createdAt: o.createdAt,
+          estimatedDeliveryTime: o.estimatedDeliveryTime,
+          items: (o.items || []).map((it: any, idx: number) => ({
+            id: it.itemId || String(idx),
+            name: it.name,
+            quantity: it.quantity,
+            price: it.price,
+            image: '',
+          })),
+          deliveryAddress: o.deliveryAddress,
+          paymentMethod: o.paymentMethod,
+          riderName: o.rider?.name,
+          riderPhone: o.rider?.phone,
+          riderPhoto: '',
+          trackingCode: o.trackingCode || o.orderNumber,
+          specialInstructions: o.deliveryInstructions,
+        };
+
+        setOrder(mapped);
+      } catch (e) {
+        console.error(e);
+        setOrder(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
   }, [orderId]);
 
   const refreshOrder = () => {
@@ -246,6 +219,8 @@ export default function OrderTracking() {
       </DashboardLayout>
     );
   }
+
+  const trackingSteps = useMemo(() => deriveTracking(order?.status || 'pending'), [order?.status]);
 
   return (
     <DashboardLayout userRole="student" userName="Student">

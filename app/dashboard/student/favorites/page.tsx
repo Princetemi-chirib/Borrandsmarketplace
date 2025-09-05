@@ -1,4 +1,5 @@
 'use client';
+// Updated: Removed mock data, now fetches real data from /api/students/favorites
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -64,66 +65,27 @@ export default function FavoritesPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
 
-  // Mock data for demonstration
-  const mockFavorites: Restaurant[] = [
-    {
-      _id: '1',
-      name: 'Pizza Palace',
-      description: 'Authentic Italian pizza with fresh ingredients',
-      image: '/images/pizza-palace.jpg',
-      rating: 4.8,
-      reviewCount: 156,
-      cuisine: 'Italian',
-      deliveryFee: 500,
-      minimumOrder: 2000,
-      estimatedDeliveryTime: 25,
-      isOpen: true,
-      distance: 1.2,
-      address: 'University Mall, Block A',
-      featuredItems: [
-        { name: 'Margherita Pizza', price: 3500, image: '/images/margherita.jpg' },
-        { name: 'Pepperoni Pizza', price: 4000, image: '/images/pepperoni.jpg' }
-      ]
-    },
-    {
-      _id: '2',
-      name: 'Burger House',
-      description: 'Juicy burgers and crispy fries',
-      image: '/images/burger-house.jpg',
-      rating: 4.6,
-      reviewCount: 89,
-      cuisine: 'American',
-      deliveryFee: 300,
-      minimumOrder: 1500,
-      estimatedDeliveryTime: 20,
-      isOpen: true,
-      distance: 0.8,
-      address: 'Food Court, Block B',
-      featuredItems: [
-        { name: 'Classic Burger', price: 2500, image: '/images/classic-burger.jpg' },
-        { name: 'Chicken Burger', price: 2200, image: '/images/chicken-burger.jpg' }
-      ]
-    },
-    {
-      _id: '3',
-      name: 'Sushi Express',
-      description: 'Fresh sushi and Japanese cuisine',
-      image: '/images/sushi-express.jpg',
-      rating: 4.9,
-      reviewCount: 234,
-      cuisine: 'Japanese',
-      deliveryFee: 600,
-      minimumOrder: 3000,
-      estimatedDeliveryTime: 30,
-      isOpen: true,
-      distance: 2.1,
-      address: 'University Mall, Block C',
-      featuredItems: [
-        { name: 'California Roll', price: 3000, image: '/images/california-roll.jpg' },
-        { name: 'Salmon Nigiri', price: 2500, image: '/images/salmon-nigiri.jpg' }
-      ]
+  const fetchFavorites = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch('/api/students/favorites', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load favorites');
+      const list: Restaurant[] = data.favorites || [];
+      setFavorites(list);
+      setFilteredFavorites(list);
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
+      setFavorites([]);
+      setFilteredFavorites([]);
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
   useEffect(() => {
     // Get user from localStorage
@@ -142,12 +104,7 @@ export default function FavoritesPage() {
       setCart(JSON.parse(savedCart));
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setFavorites(mockFavorites);
-      setFilteredFavorites(mockFavorites);
-      setIsLoading(false);
-    }, 1000);
+    fetchFavorites();
   }, []);
 
   useEffect(() => {

@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import BackArrow from '@/components/ui/BackArrow';
 import { 
   Clock, 
   CheckCircle, 
@@ -21,10 +23,23 @@ import {
 } from 'lucide-react';
 
 export default function RestaurantOrders() {
+  const [user, setUser] = useState<any>(null);
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
 
   const statuses = ['All', 'Pending', 'Confirmed', 'Preparing', 'Ready', 'Delivered', 'Cancelled'];
+  
+  useEffect(() => {
+    // Get user from localStorage
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        setUser(JSON.parse(userData));
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+    }
+  }, []);
   
   const orders = [
     {
@@ -159,31 +174,42 @@ export default function RestaurantOrders() {
     }
   };
 
+  const userName = user?.name || 'Restaurant';
+  const displayName = userName === 'Restaurant' ? 'Restaurant' : userName;
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+    <DashboardLayout userRole="restaurant" userName={displayName}>
+      <div className="space-y-4">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between"
+        >
+          <div className="flex items-center space-x-3">
+            <BackArrow href="/dashboard/restaurant" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-              <p className="text-gray-600 mt-1">Manage incoming orders and track delivery status</p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <button className="flex items-center space-x-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-accent transition-colors">
-                <RefreshCw className="h-4 w-4" />
-                <span>Refresh</span>
-              </button>
+              <p className="text-gray-600">Manage incoming orders and track delivery status</p>
             </div>
           </div>
-        </div>
-      </div>
+          <div className="flex items-center space-x-3">
+            <button className="flex items-center space-x-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-accent transition-colors">
+              <RefreshCw className="h-4 w-4" />
+              <span>Refresh</span>
+            </button>
+          </div>
+        </motion.div>
 
-      {/* Filters and Search */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex space-x-2">
+        {/* Filters and Search */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+        >
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            <div className="flex flex-wrap gap-2">
               {statuses.map((status) => (
                 <button
                   key={status}
@@ -209,12 +235,15 @@ export default function RestaurantOrders() {
               <Eye className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
 
-      {/* Orders List */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-6">
+        {/* Orders List */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="space-y-6"
+        >
           {filteredOrders.map((order, index) => (
             <motion.div
               key={order.id}
@@ -339,17 +368,22 @@ export default function RestaurantOrders() {
           ))}
 
           {filteredOrders.length === 0 && (
-            <div className="text-center py-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-center py-12"
+            >
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Package className="h-8 w-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
               <p className="text-gray-600">No orders match your current filters</p>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
 

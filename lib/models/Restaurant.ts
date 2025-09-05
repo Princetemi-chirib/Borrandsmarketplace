@@ -6,7 +6,6 @@ export interface IRestaurant extends Document {
   description: string;
   address: string;
   phone: string;
-  email: string;
   website?: string;
   university: string;
   cuisine: string[];
@@ -20,6 +19,8 @@ export interface IRestaurant extends Document {
   bannerImage?: string;
   isApproved: boolean;
   isActive: boolean;
+  phoneVerified: boolean;
+  whatsappVerified: boolean;
   operatingHours: {
     monday: { open: string; close: string; isOpen: boolean };
     tuesday: { open: string; close: string; isOpen: boolean };
@@ -138,11 +139,13 @@ const restaurantSchema = new Schema({
     required: [true, 'Phone number is required'],
     trim: true
   },
-  email: {
-    type: String,
-    required: [true, 'Email is required'],
-    lowercase: true,
-    trim: true
+  phoneVerified: {
+    type: Boolean,
+    default: false
+  },
+  whatsappVerified: {
+    type: Boolean,
+    default: false
   },
   website: {
     type: String,
@@ -203,6 +206,28 @@ const restaurantSchema = new Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  phoneVerified: {
+    type: Boolean,
+    default: false
+  },
+  whatsappVerified: {
+    type: Boolean,
+    default: false
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  approvedAt: {
+    type: Date
+  },
+  rejectedAt: {
+    type: Date
+  },
+  rejectionReason: {
+    type: String
   },
   operatingHours: {
     monday: {
