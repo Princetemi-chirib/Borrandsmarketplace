@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import connectDB from '@/lib/db';
 import { verifyToken } from '@/lib/auth';
 import User from '@/lib/models/User';
 
@@ -29,7 +29,7 @@ export async function DELETE(
 
     // Remove from favorites
     if (user.favorites) {
-      user.favorites = user.favorites.filter(id => id.toString() !== restaurantId);
+      user.favorites = user.favorites.filter((id: any) => id.toString() !== restaurantId);
       await user.save();
     }
 

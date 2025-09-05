@@ -130,10 +130,9 @@ export default function RestaurantAnalytics() {
   }
 
   const userName = user?.name || 'Restaurant';
-  const displayName = userName === 'Restaurant' ? 'Restaurant' : userName;
 
   return (
-    <DashboardLayout userRole="restaurant" userName={displayName}>
+    <DashboardLayout userRole="restaurant" userName={userName}>
       <div className="space-y-4">
         {/* Header */}
         <motion.div
@@ -152,7 +151,7 @@ export default function RestaurantAnalytics() {
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               {periods.map((period) => (
                 <option key={period.value} value={period.value}>
@@ -160,12 +159,13 @@ export default function RestaurantAnalytics() {
                 </option>
               ))}
             </select>
-            <button className="flex items-center space-x-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-accent transition-colors">
-              <Download className="h-4 w-4" />
-              <span>Export</span>
+            <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <Download className="h-4 w-4 mr-2" />
+              Export
             </button>
           </div>
         </motion.div>
+
         {/* Key Metrics */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -173,23 +173,25 @@ export default function RestaurantAnalytics() {
           transition={{ delay: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
         >
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          {/* Total Revenue */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-gray-900">₦{(analyticsData.totalRevenue / 1000000).toFixed(1)}M</p>
+                <p className="text-2xl font-bold text-gray-900">₦{analyticsData.totalRevenue.toLocaleString()}</p>
                 <div className="flex items-center mt-1">
                   <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
                   <span className="text-sm text-green-600">+{analyticsData.monthlyGrowth}%</span>
                 </div>
               </div>
-              <div className="p-3 bg-green-100 rounded-lg">
+              <div className="p-3 bg-green-100 rounded-full">
                 <DollarSign className="h-6 w-6 text-green-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          {/* Total Orders */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Orders</p>
@@ -199,13 +201,14 @@ export default function RestaurantAnalytics() {
                   <span className="text-sm text-green-600">+{analyticsData.weeklyGrowth}%</span>
                 </div>
               </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
+              <div className="p-3 bg-blue-100 rounded-full">
                 <ShoppingBag className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          {/* Average Order Value */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
@@ -215,198 +218,28 @@ export default function RestaurantAnalytics() {
                   <span className="text-sm text-green-600">+5.2%</span>
                 </div>
               </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
+              <div className="p-3 bg-purple-100 rounded-full">
                 <Target className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          {/* Customer Count */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Customer Rating</p>
-                <p className="text-2xl font-bold text-gray-900">{analyticsData.averageRating}/5</p>
+                <p className="text-sm font-medium text-gray-600">Customers</p>
+                <p className="text-2xl font-bold text-gray-900">{analyticsData.customerCount}</p>
                 <div className="flex items-center mt-1">
-                  <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                  <span className="text-sm text-gray-600">{analyticsData.customerCount} reviews</span>
+                  <Users className="h-4 w-4 text-blue-500 mr-1" />
+                  <span className="text-sm text-gray-600">active</span>
                 </div>
               </div>
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <Star className="h-6 w-6 text-yellow-600" />
+              <div className="p-3 bg-blue-100 rounded-full">
+                <Users className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </div>
-        </motion.div>
-
-        {/* Charts Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-        >
-          {/* Revenue Chart */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Daily Revenue</h3>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-brand-primary rounded-full"></div>
-                <span className="text-sm text-gray-600">Revenue</span>
-              </div>
-            </div>
-            <div className="h-64 flex items-end justify-between space-x-2">
-              {analyticsData.dailyRevenue.map((day, index) => (
-                <div key={day.date} className="flex flex-col items-center flex-1">
-                  <div
-                    className="w-full bg-brand-primary rounded-t"
-                    style={{ height: `${(day.revenue / 80000) * 200}px` }}
-                  ></div>
-                  <span className="text-xs text-gray-600 mt-2">{day.date}</span>
-                  <span className="text-xs text-gray-500">₦{(day.revenue / 1000).toFixed(0)}k</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Peak Hours Chart */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Peak Hours</h3>
-              <Clock className="h-5 w-5 text-gray-400" />
-            </div>
-            <div className="space-y-3">
-              {analyticsData.peakHours.map((hour, index) => (
-                <div key={hour.hour} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">{hour.hour}</span>
-                  <div className="flex items-center space-x-3 flex-1 mx-4">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-orange-500 h-2 rounded-full"
-                        style={{ width: `${(hour.orders / 35) * 100}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900 w-8">{hour.orders}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Top Items and Performance */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-        >
-          {/* Top Selling Items */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Top Selling Items</h3>
-              <Award className="h-5 w-5 text-gray-400" />
-            </div>
-            <div className="space-y-4">
-              {analyticsData.topItems.map((item, index) => (
-                <div key={item.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-brand-primary text-white rounded-full flex items-center justify-center text-sm font-bold">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{item.name}</p>
-                      <p className="text-sm text-gray-600">{item.orders} orders</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-gray-900">₦{item.revenue.toLocaleString()}</p>
-                    <p className="text-sm text-gray-600">revenue</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Performance Metrics */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Performance Metrics</h3>
-              <Activity className="h-5 w-5 text-gray-400" />
-            </div>
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">Order Completion Rate</p>
-                  <p className="text-sm text-gray-600">Orders successfully delivered</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-green-600">{analyticsData.completionRate}%</p>
-                  <div className="w-20 bg-gray-200 rounded-full h-2 mt-1">
-                    <div
-                      className="bg-green-500 h-2 rounded-full"
-                      style={{ width: `${analyticsData.completionRate}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">Customer Satisfaction</p>
-                  <p className="text-sm text-gray-600">Average rating from customers</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-yellow-600">{analyticsData.averageRating}/5</p>
-                  <div className="flex items-center mt-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`h-4 w-4 ${
-                          star <= Math.floor(analyticsData.averageRating)
-                            ? 'text-yellow-400 fill-current'
-                            : 'text-gray-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">Total Customers</p>
-                  <p className="text-sm text-gray-600">Unique customers served</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-blue-600">{analyticsData.customerCount}</p>
-                  <div className="flex items-center mt-1">
-                    <Users className="h-4 w-4 text-blue-500 mr-1" />
-                    <span className="text-sm text-gray-600">customers</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
         </motion.div>
       </div>
     </DashboardLayout>

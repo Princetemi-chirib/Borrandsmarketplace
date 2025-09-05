@@ -315,7 +315,7 @@ riderSchema.virtual('isCurrentlyWorking').get(function() {
   const now = new Date();
   const currentTime = now.toTimeString().slice(0, 5);
   const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-  const currentDay = dayNames[now.getDay()];
+  const currentDay = dayNames[now.getDay()] as 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
   
   return this.workingHours.days.includes(currentDay) && 
          currentTime >= this.workingHours.startTime && 
