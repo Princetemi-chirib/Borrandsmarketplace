@@ -26,98 +26,62 @@ export default function RestaurantOrders() {
   const [user, setUser] = useState<any>(null);
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const statuses = ['All', 'Pending', 'Confirmed', 'Preparing', 'Ready', 'Delivered', 'Cancelled'];
   
   useEffect(() => {
-    // Get user from localStorage
     try {
       const userData = localStorage.getItem('user');
-      if (userData) {
-        setUser(JSON.parse(userData));
-      }
-    } catch (error) {
-      console.error('Error parsing user data:', error);
+      if (userData) setUser(JSON.parse(userData));
+    } catch {}
+  }, []);
+
+  const normalizeUiToApiStatus = (ui:string) => {
+    const map:any = { Confirmed: 'accepted' };
+    return (map[ui] || ui).toLowerCase();
+  };
+
+  const loadOrders = async () => {
+    try {
+      setLoading(true);
+      const statusParam = selectedStatus === 'All' ? 'all' : normalizeUiToApiStatus(selectedStatus);
+      const res = await fetch(`/api/orders?status=${statusParam}`, { credentials: 'include' });
+      const json = await res.json();
+      if (res.ok && json.orders) setOrders(json.orders);
+      else setError(json.message || 'Failed to load orders');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    loadOrders();
+  }, [selectedStatus]);
+
+  // Subscribe to server-sent events for real-time updates
+  useEffect(() => {
+    let es: EventSource | null = null;
+    try {
+      const token = localStorage.getItem('token');
+      const url = token ? `/api/orders/stream?token=${encodeURIComponent(token)}` : '/api/orders/stream';
+      es = new EventSource(url);
+      const onUpdate = () => loadOrders();
+      es.addEventListener('order.updated', onUpdate);
+      es.addEventListener('connected', () => {});
+      es.addEventListener('ping', () => {});
+    } catch {}
+    return () => { if (es) es.close(); };
   }, []);
   
-  const orders = [
-    {
-      id: 'ORD-001',
-      customer: 'John Doe',
-      customerPhone: '+234 801 234 5678',
-      items: [
-        { name: 'Jollof Rice with Chicken', quantity: 1, price: '₦1,200' },
-        { name: 'Plantain', quantity: 2, price: '₦300' }
-      ],
-      total: '₦1,800',
-      status: 'preparing',
-      orderTime: '14:30',
-      estimatedDelivery: '15:00',
-      deliveryAddress: 'Block A, Room 205, University Campus',
-      specialInstructions: 'Extra spicy please',
-      paymentMethod: 'Card',
-      orderNumber: 'ORD-001'
-    },
-    {
-      id: 'ORD-002',
-      customer: 'Jane Smith',
-      customerPhone: '+234 802 345 6789',
-      items: [
-        { name: 'Margherita Pizza (Large)', quantity: 1, price: '₦2,500' },
-        { name: 'Coca Cola', quantity: 1, price: '₦200' }
-      ],
-      total: '₦2,700',
-      status: 'pending',
-      orderTime: '14:45',
-      estimatedDelivery: '15:15',
-      deliveryAddress: 'Block B, Room 312, University Campus',
-      specialInstructions: '',
-      paymentMethod: 'Mobile Money',
-      orderNumber: 'ORD-002'
-    },
-    {
-      id: 'ORD-003',
-      customer: 'Mike Johnson',
-      customerPhone: '+234 803 456 7890',
-      items: [
-        { name: 'Classic Burger', quantity: 2, price: '₦1,800' },
-        { name: 'French Fries', quantity: 1, price: '₦500' }
-      ],
-      total: '₦4,100',
-      status: 'ready',
-      orderTime: '14:15',
-      estimatedDelivery: '14:45',
-      deliveryAddress: 'Block C, Room 108, University Campus',
-      specialInstructions: 'No onions',
-      paymentMethod: 'Card',
-      orderNumber: 'ORD-003'
-    },
-    {
-      id: 'ORD-004',
-      customer: 'Sarah Wilson',
-      customerPhone: '+234 804 567 8901',
-      items: [
-        { name: 'Chocolate Cake Slice', quantity: 1, price: '₦800' },
-        { name: 'Cappuccino', quantity: 1, price: '₦400' }
-      ],
-      total: '₦1,200',
-      status: 'delivered',
-      orderTime: '13:30',
-      estimatedDelivery: '14:00',
-      deliveryAddress: 'Library, Ground Floor, University Campus',
-      specialInstructions: '',
-      paymentMethod: 'Card',
-      orderNumber: 'ORD-004',
-      rating: 5,
-      review: 'Great food, fast delivery!'
-    }
-  ];
+  const fmt = (n:number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(n);
 
-  const filteredOrders = orders.filter(order => {
+  const filteredOrders = orders.filter((order:any) => {
     const matchesStatus = selectedStatus === 'All' || order.status === selectedStatus.toLowerCase();
-    const matchesSearch = order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (order.customerName || order.customer || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (order.orderNumber || '').toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -125,7 +89,7 @@ export default function RestaurantOrders() {
     switch (status) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'confirmed':
+      case 'accepted':
         return 'bg-blue-100 text-blue-800';
       case 'preparing':
         return 'bg-orange-100 text-orange-800';
@@ -144,7 +108,7 @@ export default function RestaurantOrders() {
     switch (status) {
       case 'pending':
         return <Clock className="h-4 w-4" />;
-      case 'confirmed':
+      case 'accepted':
         return <CheckCircle className="h-4 w-4" />;
       case 'preparing':
         return <Package className="h-4 w-4" />;
@@ -159,19 +123,20 @@ export default function RestaurantOrders() {
     }
   };
 
-  const getNextAction = (status: string) => {
+  const nextActionFor = (status: string) => {
     switch (status) {
-      case 'pending':
-        return { action: 'Confirm Order', color: 'bg-blue-600 hover:bg-blue-700' };
-      case 'confirmed':
-        return { action: 'Start Preparing', color: 'bg-orange-600 hover:bg-orange-700' };
-      case 'preparing':
-        return { action: 'Mark Ready', color: 'bg-green-600 hover:bg-green-700' };
-      case 'ready':
-        return { action: 'Assign Rider', color: 'bg-purple-600 hover:bg-purple-700' };
-      default:
-        return null;
+      case 'pending': return { label: 'Confirm Order', color: 'bg-blue-600 hover:bg-blue-700', next: 'accepted' };
+      case 'accepted': return { label: 'Start Preparing', color: 'bg-orange-600 hover:bg-orange-700', next: 'preparing' };
+      case 'preparing': return { label: 'Mark Ready', color: 'bg-green-600 hover:bg-green-700', next: 'ready' };
+      case 'ready': return { label: 'Mark Picked Up', color: 'bg-purple-600 hover:bg-purple-700', next: 'picked_up' };
+      case 'picked_up': return { label: 'Mark Delivered', color: 'bg-emerald-600 hover:bg-emerald-700', next: 'delivered' };
+      default: return null;
     }
+  };
+
+  const updateOrderStatus = async (orderId:string, newStatus:string) => {
+    const res = await fetch(`/api/orders/${orderId}`, { method:'PATCH', headers:{ 'Content-Type': 'application/json' }, credentials:'include', body: JSON.stringify({ status: newStatus }) });
+    if (res.ok) await loadOrders();
   };
 
   const userName = user?.name || 'Restaurant';
@@ -261,12 +226,12 @@ export default function RestaurantOrders() {
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">Order #{order.orderNumber}</h3>
-                      <p className="text-sm text-gray-600">Placed at {order.orderTime}</p>
+                      <p className="text-sm text-gray-600">Placed at {new Date(order.createdAt).toLocaleTimeString()}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-gray-900">{order.total}</div>
-                    <div className="text-sm text-gray-600">Est. delivery: {order.estimatedDelivery}</div>
+                    <div className="text-lg font-bold text-gray-900">{fmt(order.total)}</div>
+                    <div className="text-sm text-gray-600">Est. delivery: {order.estimatedDeliveryTime} min</div>
                   </div>
                 </div>
               </div>
@@ -278,11 +243,11 @@ export default function RestaurantOrders() {
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-2">
                       <User className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm font-medium text-gray-900">{order.customer}</span>
+                      <span className="text-sm font-medium text-gray-900">{order.customerName || 'Customer'}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Phone className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">{order.customerPhone}</span>
+                      <span className="text-sm text-gray-600">{order.customerPhone || ''}</span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -297,13 +262,13 @@ export default function RestaurantOrders() {
 
                 {/* Order Items */}
                 <div className="space-y-3 mb-4">
-                  {order.items.map((item, itemIndex) => (
+                  {order.items.map((item:any, itemIndex:number) => (
                     <div key={itemIndex} className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <span className="text-sm text-gray-600">×{item.quantity}</span>
                         <span className="text-gray-900">{item.name}</span>
                       </div>
-                      <span className="text-gray-900 font-medium">{item.price}</span>
+                      <span className="text-gray-900 font-medium">{fmt(item.price)}</span>
                     </div>
                   ))}
                 </div>
@@ -349,10 +314,10 @@ export default function RestaurantOrders() {
                     </button>
                   </div>
                   <div className="flex space-x-2">
-                    {getNextAction(order.status) && (
-                      <button className={`flex items-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors ${getNextAction(order.status)!.color}`}>
+                    {nextActionFor(order.status) && (
+                      <button onClick={() => updateOrderStatus(order._id, nextActionFor(order.status)!.next)} className={`flex items-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors ${nextActionFor(order.status)!.color}`}>
                         <Check className="h-4 w-4" />
-                        <span className="text-sm">{getNextAction(order.status)!.action}</span>
+                        <span className="text-sm">{nextActionFor(order.status)!.label}</span>
                       </button>
                     )}
                     {order.status === 'pending' && (

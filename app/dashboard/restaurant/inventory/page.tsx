@@ -60,109 +60,40 @@ export default function InventoryManagement() {
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<{ name: string; category: string; currentStock: number; minStockLevel: number; maxStockLevel: number; unit: string; costPerUnit: number; lastRestocked?: string; supplier?: string; expiryDate?: string; location?: string }>({
+    name: '',
+    category: '',
+    currentStock: 0,
+    minStockLevel: 0,
+    maxStockLevel: 0,
+    unit: '',
+    costPerUnit: 0,
+    lastRestocked: '',
+    supplier: '',
+    expiryDate: '',
+    location: ''
+  });
 
-  // Mock data
-  const mockInventoryItems: InventoryItem[] = [
-    {
-      _id: '1',
-      name: 'Chicken Breast',
-      category: 'Meat',
-      currentStock: 15,
-      minStockLevel: 10,
-      maxStockLevel: 50,
-      unit: 'kg',
-      costPerUnit: 1200,
-      lastRestocked: '2024-01-10',
-      supplier: 'Fresh Foods Ltd',
-      status: 'in_stock',
-      expiryDate: '2024-01-25',
-      location: 'Freezer A1'
-    },
-    {
-      _id: '2',
-      name: 'Tomatoes',
-      category: 'Vegetables',
-      currentStock: 5,
-      minStockLevel: 8,
-      maxStockLevel: 30,
-      unit: 'kg',
-      costPerUnit: 300,
-      lastRestocked: '2024-01-12',
-      supplier: 'Green Valley Farms',
-      status: 'low_stock',
-      expiryDate: '2024-01-20',
-      location: 'Refrigerator B2'
-    },
-    {
-      _id: '3',
-      name: 'Cooking Oil',
-      category: 'Pantry',
-      currentStock: 0,
-      minStockLevel: 5,
-      maxStockLevel: 20,
-      unit: 'liters',
-      costPerUnit: 800,
-      lastRestocked: '2024-01-05',
-      supplier: 'Oil Distributors',
-      status: 'out_of_stock',
-      location: 'Shelf C3'
-    },
-    {
-      _id: '4',
-      name: 'Rice',
-      category: 'Grains',
-      currentStock: 25,
-      minStockLevel: 10,
-      maxStockLevel: 100,
-      unit: 'kg',
-      costPerUnit: 500,
-      lastRestocked: '2024-01-08',
-      supplier: 'Grain Suppliers',
-      status: 'in_stock',
-      location: 'Storage D1'
-    },
-    {
-      _id: '5',
-      name: 'Onions',
-      category: 'Vegetables',
-      currentStock: 3,
-      minStockLevel: 5,
-      maxStockLevel: 25,
-      unit: 'kg',
-      costPerUnit: 200,
-      lastRestocked: '2024-01-11',
-      supplier: 'Fresh Produce Co',
-      status: 'low_stock',
-      location: 'Refrigerator B1'
+  // Load inventory and alerts from live APIs
+  const loadInventory = async () => {
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem('token') || '';
+      const headers: any = token ? { Authorization: `Bearer ${token}` } : {};
+      const [itemsRes, alertsRes] = await Promise.all([
+        fetch('/api/inventory', { headers, credentials: 'include' }),
+        fetch('/api/inventory/alerts', { headers, credentials: 'include' })
+      ]);
+      const itemsJson = await itemsRes.json();
+      const alertsJson = await alertsRes.json();
+      if (itemsRes.ok && itemsJson.items) setInventoryItems(itemsJson.items);
+      if (alertsRes.ok && alertsJson.alerts) setStockAlerts(alertsJson.alerts);
+    } finally {
+      setIsLoading(false);
     }
-  ];
-
-  const mockStockAlerts: StockAlert[] = [
-    {
-      _id: '1',
-      itemName: 'Cooking Oil',
-      currentStock: 0,
-      minLevel: 5,
-      priority: 'high',
-      daysUntilOut: 0
-    },
-    {
-      _id: '2',
-      itemName: 'Tomatoes',
-      currentStock: 5,
-      minLevel: 8,
-      priority: 'medium',
-      daysUntilOut: 2
-    },
-    {
-      _id: '3',
-      itemName: 'Onions',
-      currentStock: 3,
-      minLevel: 5,
-      priority: 'medium',
-      daysUntilOut: 1
-    }
-  ];
+  };
 
   const categories = ['All', 'Meat', 'Vegetables', 'Pantry', 'Grains', 'Dairy', 'Beverages'];
   const statuses = ['All', 'in_stock', 'low_stock', 'out_of_stock'];
@@ -177,13 +108,7 @@ export default function InventoryManagement() {
     } catch (error) {
       console.error('Error parsing user data:', error);
     }
-
-    // Simulate API call
-    setTimeout(() => {
-      setInventoryItems(mockInventoryItems);
-      setStockAlerts(mockStockAlerts);
-      setIsLoading(false);
-    }, 1000);
+    loadInventory();
   }, []);
 
   const filteredItems = inventoryItems.filter(item => {
@@ -238,6 +163,87 @@ export default function InventoryManagement() {
     return Math.min((current / max) * 100, 100);
   };
 
+  const openCreate = () => {
+    setEditingItem(null);
+    setForm({ name: '', category: '', currentStock: 0, minStockLevel: 0, maxStockLevel: 0, unit: '', costPerUnit: 0, lastRestocked: '', supplier: '', expiryDate: '', location: '' });
+    setShowAddModal(true);
+  };
+
+  const openEdit = (item: InventoryItem) => {
+    setEditingItem(item);
+    setForm({
+      name: item.name || '',
+      category: item.category || '',
+      currentStock: item.currentStock || 0,
+      minStockLevel: item.minStockLevel || 0,
+      maxStockLevel: item.maxStockLevel || 0,
+      unit: item.unit || '',
+      costPerUnit: item.costPerUnit || 0,
+      lastRestocked: item.lastRestocked ? String(item.lastRestocked).slice(0,10) : '',
+      supplier: item.supplier || '',
+      expiryDate: item.expiryDate ? String(item.expiryDate).slice(0,10) : '',
+      location: item.location || ''
+    } as any);
+    setShowAddModal(true);
+  };
+
+  const submitForm = async () => {
+    if (!form.name.trim() || !form.category.trim() || !form.unit.trim()) return;
+    try {
+      setSaving(true);
+      const token = localStorage.getItem('token') || '';
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const payload: any = {
+        name: form.name,
+        category: form.category,
+        currentStock: Number(form.currentStock) || 0,
+        minStockLevel: Number(form.minStockLevel) || 0,
+        maxStockLevel: Number(form.maxStockLevel) || 0,
+        unit: form.unit,
+        costPerUnit: Number(form.costPerUnit) || 0,
+        supplier: form.supplier || undefined,
+        location: form.location || undefined,
+      };
+      if (form.lastRestocked) payload.lastRestocked = new Date(form.lastRestocked).toISOString();
+      if (form.expiryDate) payload.expiryDate = new Date(form.expiryDate).toISOString();
+
+      if (editingItem) {
+        const res = await fetch(`/api/inventory/${editingItem._id}`, { method: 'PATCH', headers, credentials: 'include', body: JSON.stringify(payload) });
+        const json = await res.json();
+        if (res.ok && json.item) {
+          setInventoryItems(prev => prev.map(it => (it._id === editingItem._id ? json.item : it)) as any);
+        }
+      } else {
+        const res = await fetch('/api/inventory', { method: 'POST', headers, credentials: 'include', body: JSON.stringify(payload) });
+        const json = await res.json();
+        if (res.ok && json.item) {
+          setInventoryItems(prev => [json.item, ...prev] as any);
+        }
+      }
+      // refresh alerts
+      try {
+        const token2 = localStorage.getItem('token') || '';
+        const headers2: any = token2 ? { Authorization: `Bearer ${token2}` } : {};
+        const alertsRes = await fetch('/api/inventory/alerts', { headers: headers2, credentials: 'include' });
+        const alertsJson = await alertsRes.json();
+        if (alertsRes.ok && alertsJson.alerts) setStockAlerts(alertsJson.alerts);
+      } catch {}
+      setShowAddModal(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteItem = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token') || '';
+      const headers: any = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`/api/inventory/${id}`, { method: 'DELETE', headers, credentials: 'include' });
+      if (res.ok) setInventoryItems(prev => prev.filter(x => x._id !== id));
+    } catch {}
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout userRole="restaurant" userName={user?.name || 'Restaurant'}>
@@ -277,7 +283,7 @@ export default function InventoryManagement() {
               <span>Export</span>
             </button>
             <button 
-              onClick={() => setShowAddModal(true)}
+              onClick={openCreate}
               className="flex items-center space-x-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-accent transition-colors"
             >
               <Plus className="h-4 w-4" />
@@ -378,7 +384,7 @@ export default function InventoryManagement() {
               </select>
             </div>
             <div className="flex items-center space-x-2">
-              <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <button onClick={loadInventory} className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <RefreshCw className="h-4 w-4" />
                 <span>Refresh</span>
               </button>
@@ -479,10 +485,10 @@ export default function InventoryManagement() {
                         <button className="text-blue-600 hover:text-blue-900">
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button className="text-indigo-600 hover:text-indigo-900">
+                        <button onClick={() => openEdit(item)} className="text-indigo-600 hover:text-indigo-900">
                           <Edit className="h-4 w-4" />
                         </button>
-                        <button className="text-red-600 hover:text-red-900">
+                        <button onClick={() => deleteItem(item._id)} className="text-red-600 hover:text-red-900">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -509,6 +515,71 @@ export default function InventoryManagement() {
           )}
         </motion.div>
       </div>
+      <InventoryModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        form={form}
+        setForm={setForm as any}
+        onSubmit={submitForm}
+        saving={saving}
+        editing={Boolean(editingItem)}
+      />
     </DashboardLayout>
   );
 }
+
+// Add/Edit Modal
+// (inline within same file; kept simple and minimal styles)
+
+function InventoryModal({ open, onClose, form, setForm, onSubmit, saving, editing }:{ open:boolean; onClose:()=>void; form:any; setForm:(f:any)=>void; onSubmit:()=>void; saving:boolean; editing:boolean }){
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center sm:justify-center">
+      <div className="bg-white w-full sm:max-w-2xl sm:rounded-xl sm:shadow-xl p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">{editing? 'Edit Item':'Add Item'}</h3>
+          <button onClick={onClose} className="px-3 py-1.5 border rounded-lg">Close</button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input value={form.name} onChange={(e)=>setForm({ ...form, name: e.target.value })} placeholder="e.g., Chicken Breast" className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <input value={form.category} onChange={(e)=>setForm({ ...form, category: e.target.value })} placeholder="e.g., Meat" className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Current stock</label>
+            <input type="number" value={form.currentStock} onChange={(e)=>setForm({ ...form, currentStock: Number(e.target.value||0) })} placeholder="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Min stock</label>
+            <input type="number" value={form.minStockLevel} onChange={(e)=>setForm({ ...form, minStockLevel: Number(e.target.value||0) })} placeholder="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Max stock</label>
+            <input type="number" value={form.maxStockLevel} onChange={(e)=>setForm({ ...form, maxStockLevel: Number(e.target.value||0) })} placeholder="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+            <input value={form.unit} onChange={(e)=>setForm({ ...form, unit: e.target.value })} placeholder="e.g., kg, pcs" className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cost per unit</label>
+            <input type="number" value={form.costPerUnit} onChange={(e)=>setForm({ ...form, costPerUnit: Number(e.target.value||0) })} placeholder="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <input type="date" value={form.lastRestocked||''} onChange={(e)=>setForm({ ...form, lastRestocked: e.target.value })} className="px-3 py-2 border border-gray-300 rounded-lg" />
+          <input value={form.supplier||''} onChange={(e)=>setForm({ ...form, supplier: e.target.value })} placeholder="Supplier (optional)" className="px-3 py-2 border border-gray-300 rounded-lg" />
+          <input type="date" value={form.expiryDate||''} onChange={(e)=>setForm({ ...form, expiryDate: e.target.value })} className="px-3 py-2 border border-gray-300 rounded-lg" />
+          <input value={form.location||''} onChange={(e)=>setForm({ ...form, location: e.target.value })} placeholder="Location (e.g., Freezer A1)" className="px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <div className="flex items-center gap-2 mt-4">
+          <button onClick={onSubmit} disabled={saving} className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-accent disabled:opacity-50">{saving? 'Saving...': (editing? 'Save changes':'Create item')}</button>
+          <button onClick={onClose} className="px-4 py-2 border rounded-lg">Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+

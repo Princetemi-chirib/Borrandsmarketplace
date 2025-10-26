@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
+import dbConnect from '@/lib/db';
 import { verifyToken } from '@/lib/auth';
 import User from '@/lib/models/User';
 import Order from '@/lib/models/Order';
 import Restaurant from '@/lib/models/Restaurant';
-import { sendWhatsAppOTP } from '@/lib/whatsapp';
+import { sendWhatsAppNotification } from '@/lib/whatsapp';
+
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    await connectDB();
+    await dbConnect();
     
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
@@ -66,7 +69,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await connectDB();
+    await dbConnect();
     
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
@@ -112,7 +115,7 @@ export async function POST(request: NextRequest) {
     const orderItems = [];
 
     for (const item of items) {
-      const menuItem = restaurant.menu.find((menuItem: any) => menuItem._id.toString() === item.itemId);
+      const menuItem = restaurant.menu.find(menuItem => menuItem._id.toString() === item.itemId);
       if (!menuItem) {
         return NextResponse.json({ error: `Menu item ${item.name} not found` }, { status: 400 });
       }
@@ -163,7 +166,7 @@ export async function POST(request: NextRequest) {
 
     // Send notification to restaurant
     try {
-      await sendWhatsAppOTP(
+      await sendWhatsAppNotification(
         restaurant.phone,
         `New order received! Order #${order.orderNumber} for ₦${total.toLocaleString()}. Please check your dashboard.`
       );

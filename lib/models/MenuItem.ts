@@ -3,12 +3,15 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 export interface IMenuItem extends Document {
   restaurantId: Types.ObjectId;
   categoryId: Types.ObjectId;
+  packId?: Types.ObjectId;
   name: string;
   description: string;
+  priceDescription?: string;
   price: number;
   originalPrice?: number;
   image: string;
   isAvailable: boolean;
+  isPublished: boolean;
   isFeatured: boolean;
   isVegetarian: boolean;
   isVegan: boolean;
@@ -70,6 +73,11 @@ const menuItemSchema = new Schema({
     ref: 'Category',
     required: true
   },
+  packId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Pack',
+    required: false
+  },
   name: {
     type: String,
     required: [true, 'Item name is required'],
@@ -81,6 +89,11 @@ const menuItemSchema = new Schema({
     required: [true, 'Description is required'],
     trim: true,
     maxlength: [500, 'Description cannot exceed 500 characters']
+  },
+  priceDescription: {
+    type: String,
+    trim: true,
+    maxlength: [100, 'Price description cannot exceed 100 characters']
   },
   price: {
     type: Number,
@@ -96,6 +109,10 @@ const menuItemSchema = new Schema({
     required: [true, 'Image is required']
   },
   isAvailable: {
+    type: Boolean,
+    default: true
+  },
+  isPublished: {
     type: Boolean,
     default: true
   },
@@ -137,6 +154,11 @@ const menuItemSchema = new Schema({
     type: String,
     trim: true
   }],
+  sortOrder: {
+    type: Number,
+    default: 0,
+    min: [0, 'Sort order cannot be negative']
+  },
   rating: {
     type: Number,
     default: 0,
@@ -198,6 +220,7 @@ menuItemSchema.methods.toggleAvailability = function() {
 
 // Index for better query performance
 menuItemSchema.index({ restaurantId: 1, categoryId: 1 });
+menuItemSchema.index({ restaurantId: 1, categoryId: 1, sortOrder: 1 });
 menuItemSchema.index({ restaurantId: 1, isAvailable: 1 });
 menuItemSchema.index({ restaurantId: 1, isFeatured: 1 });
 menuItemSchema.index({ name: 'text', description: 'text' });

@@ -157,10 +157,7 @@ export default function HomePage() {
   ];
 
   const universities = [
-    'University of Lagos', 'Covenant University', 'University of Ibadan', 
-    'Ahmadu Bello University', 'University of Nigeria', 'Obafemi Awolowo University',
-    'University of Benin', 'University of Port Harcourt', 'Federal University of Technology',
-    'Lagos State University', 'University of Calabar', 'University of Jos'
+    'Baze University', 'Veritas University'
   ];
 
   const howItWorks = [

@@ -184,7 +184,7 @@ export default function MyOrders() {
               {/* Order Items */}
               <div className="p-6">
                 <div className="space-y-3 mb-4">
-                  {order.items.map((item: any, itemIndex: number) => (
+                  {order.items.map((item, itemIndex) => (
                     <div key={itemIndex} className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <span className="text-sm text-gray-600">×{item.quantity}</span>
@@ -226,7 +226,7 @@ export default function MyOrders() {
                   <div className="mb-6">
                     <h4 className="text-sm font-medium text-gray-900 mb-3">Order Progress</h4>
                     <div className="space-y-3">
-                      {order.trackingSteps.map((step: any, stepIndex: number) => (
+                      {order.trackingSteps.map((step, stepIndex) => (
                         <div key={stepIndex} className="flex items-center space-x-3">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
                             step.completed ? 'bg-green-500' : 'bg-gray-200'

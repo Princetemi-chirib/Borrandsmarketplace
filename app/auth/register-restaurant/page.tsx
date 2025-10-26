@@ -9,9 +9,7 @@ import {
   ChefHat, 
   MapPin, 
   Phone, 
-  Globe, 
   Clock, 
-  Truck, 
   DollarSign, 
   User,
   Eye,
@@ -29,10 +27,8 @@ interface RestaurantFormData {
   cuisine: string;
   address: string;
   phone: string;
-  website: string;
   
   // Business Details
-  deliveryFee: number;
   minimumOrder: number;
   estimatedDeliveryTime: number;
   university: string;
@@ -51,10 +47,8 @@ const cuisineOptions = [
 ];
 
 const universityOptions = [
-  'University of Lagos', 'University of Ibadan', 'Obafemi Awolowo University',
-  'University of Nigeria', 'Ahmadu Bello University', 'University of Benin',
-  'University of Calabar', 'University of Jos', 'University of Maiduguri',
-  'University of Port Harcourt', 'Other'
+  'Baze University',
+  'Veritas University'
 ];
 
 export default function RestaurantRegistration() {
@@ -77,8 +71,6 @@ export default function RestaurantRegistration() {
     cuisine: '',
     address: '',
     phone: '',
-    website: '',
-    deliveryFee: 0,
     minimumOrder: 0,
     estimatedDeliveryTime: 30,
     university: '',
@@ -150,7 +142,6 @@ export default function RestaurantRegistration() {
         },
         body: JSON.stringify({
           ...formData,
-          website: formData.website || undefined
         }),
       });
 
@@ -352,7 +343,7 @@ export default function RestaurantRegistration() {
                       type="text"
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                       placeholder="e.g., Pizza Palace, Campus Delight"
                     />
                   </div>
@@ -365,7 +356,7 @@ export default function RestaurantRegistration() {
                       value={formData.description}
                       onChange={(e) => handleInputChange('description', e.target.value)}
                       rows={4}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                       placeholder="Describe your restaurant, specialties, and what makes you unique..."
                     />
                   </div>
@@ -377,7 +368,7 @@ export default function RestaurantRegistration() {
                     <select
                       value={formData.cuisine}
                       onChange={(e) => handleInputChange('cuisine', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900"
                     >
                       <option value="">Select cuisine type</option>
                       {cuisineOptions.map((cuisine) => (
@@ -394,7 +385,7 @@ export default function RestaurantRegistration() {
                       type="text"
                       value={formData.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                       placeholder="e.g., University Mall, Block A, Floor 2"
                     />
                   </div>
@@ -422,7 +413,7 @@ export default function RestaurantRegistration() {
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                         placeholder="+234 801 234 5678"
                       />
                     </div>
@@ -430,21 +421,7 @@ export default function RestaurantRegistration() {
 
 
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Website (Optional)
-                    </label>
-                    <div className="relative">
-                      <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                      <input
-                        type="url"
-                        value={formData.website}
-                        onChange={(e) => handleInputChange('website', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                        placeholder="https://www.yourrestaurant.com"
-                      />
-                    </div>
-                  </div>
+                  
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -453,7 +430,7 @@ export default function RestaurantRegistration() {
                     <select
                       value={formData.university}
                       onChange={(e) => handleInputChange('university', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900"
                     >
                       <option value="">Select university</option>
                       {universityOptions.map((university) => (
@@ -462,22 +439,7 @@ export default function RestaurantRegistration() {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Delivery Fee (₦)
-                    </label>
-                    <div className="relative">
-                      <Truck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                      <input
-                        type="number"
-                        value={formData.deliveryFee}
-                        onChange={(e) => handleInputChange('deliveryFee', parseInt(e.target.value) || 0)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                        placeholder="500"
-                        min="0"
-                      />
-                    </div>
-                  </div>
+                  
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -489,7 +451,7 @@ export default function RestaurantRegistration() {
                         type="number"
                         value={formData.minimumOrder}
                         onChange={(e) => handleInputChange('minimumOrder', parseInt(e.target.value) || 0)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                         placeholder="2000"
                         min="0"
                       />
@@ -506,7 +468,7 @@ export default function RestaurantRegistration() {
                         type="number"
                         value={formData.estimatedDeliveryTime}
                         onChange={(e) => handleInputChange('estimatedDeliveryTime', parseInt(e.target.value) || 30)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                         placeholder="30"
                         min="15"
                         max="120"
@@ -535,7 +497,7 @@ export default function RestaurantRegistration() {
                       type="text"
                       value={formData.ownerName}
                       onChange={(e) => handleInputChange('ownerName', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                       placeholder="John Doe"
                     />
                   </div>
@@ -550,7 +512,7 @@ export default function RestaurantRegistration() {
                       type="tel"
                       value={formData.ownerPhone}
                       onChange={(e) => handleInputChange('ownerPhone', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                       placeholder="+234 801 234 5678"
                     />
                   </div>
@@ -564,7 +526,7 @@ export default function RestaurantRegistration() {
                         type={showPassword ? 'text' : 'password'}
                         value={formData.ownerPassword}
                         onChange={(e) => handleInputChange('ownerPassword', e.target.value)}
-                                              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                       placeholder="Create a strong password"
                       />
                       <button
@@ -586,7 +548,7 @@ export default function RestaurantRegistration() {
                         type={showConfirmPassword ? 'text' : 'password'}
                         value={formData.confirmPassword}
                         onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                                              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                       placeholder="Confirm your password"
                       />
                       <button
@@ -657,7 +619,7 @@ export default function RestaurantRegistration() {
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
                       placeholder="Enter 6-digit OTP"
-                      className="flex-1 px-4 py-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono"
+                      className="flex-1 px-4 py-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono text-gray-900 placeholder-gray-400"
                       maxLength={6}
                       disabled={!otpSent}
                     />

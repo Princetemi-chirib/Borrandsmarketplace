@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
+import dbConnect from '@/lib/db';
 import { verifyToken } from '@/lib/auth';
 import User from '@/lib/models/User';
+
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
 
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectDB();
+    await dbConnect();
     
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
@@ -29,7 +32,7 @@ export async function DELETE(
 
     // Remove from favorites
     if (user.favorites) {
-      user.favorites = user.favorites.filter((id: any) => id.toString() !== restaurantId);
+      user.favorites = user.favorites.filter(id => id.toString() !== restaurantId);
       await user.save();
     }
 

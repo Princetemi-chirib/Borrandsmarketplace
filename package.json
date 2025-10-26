@@ -8,7 +8,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "migrate": "tsx scripts/migrate.ts migrate",
+    "migrate:status": "tsx scripts/migrate.ts status",
+    "migrate:rollback": "tsx scripts/migrate.ts rollback",
+    "migrate:data": "tsx scripts/migrate-data.ts",
+    "db:health": "curl http://localhost:3000/api/health/db"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.0",
@@ -27,6 +32,7 @@
     "mongodb": "^6.19.0",
     "mongoose": "^8.0.0",
     "next": "^14.0.0",
+    "node-fetch": "^3.3.2",
     "paystack": "^2.0.0",
     "postcss": "^8.4.0",
     "react": "^18.2.0",
@@ -44,6 +50,7 @@
     "@types/bcryptjs": "^2.4.0",
     "@types/jsonwebtoken": "^9.0.0",
     "eslint": "^8.0.0",
-    "eslint-config-next": "^14.0.0"
+    "eslint-config-next": "^14.0.0",
+    "tsx": "^4.0.0"
   }
 }

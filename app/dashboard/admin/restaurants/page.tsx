@@ -544,11 +544,11 @@ export default function AdminRestaurants() {
                         <p className="text-gray-900">{selectedRestaurant.phone}</p>
                       </div>
                       
-                      {(selectedRestaurant as any).website && (
+                      {selectedRestaurant.website && (
                         <div>
                           <label className="block text-sm font-medium text-gray-600">Website</label>
-                          <a href={(selectedRestaurant as any).website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700">
-                            {(selectedRestaurant as any).website}
+                          <a href={selectedRestaurant.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700">
+                            {selectedRestaurant.website}
                           </a>
                         </div>
                       )}

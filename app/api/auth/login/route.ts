@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import User from '@/lib/models/User';
-import { generateToken } from '@/lib/auth';
+import { generateToken, setAuthCookieOnResponse } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,7 +10,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { phone, password } = body;
-
+    
     // Require phone/password for this endpoint; OTP login handled by /api/auth/verify-otp
     if (!phone || !password) {
       return NextResponse.json(
@@ -43,7 +44,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const isPasswordValid = await user.comparePassword(password);
+    // Use bcrypt directly since user.comparePassword method isn't available
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    
     if (!isPasswordValid) {
       return NextResponse.json(
         { success: false, message: 'Invalid phone or password' },
@@ -59,7 +62,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const token = generateToken(user);
+    const token = generateToken(user as any);
 
     const userResponse = {
       _id: user._id,
@@ -72,11 +75,13 @@ export async function POST(request: NextRequest) {
       createdAt: user.createdAt
     };
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       message: 'Login successful',
-      data: { user: userResponse, token }
+      data: { user: userResponse }
     });
+    setAuthCookieOnResponse(res, token);
+    return res;
 
   } catch (error: any) {
     console.error('Login error:', error);

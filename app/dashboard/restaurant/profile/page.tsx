@@ -76,57 +76,9 @@ export default function RestaurantProfile() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('basic');
   const [showImageUpload, setShowImageUpload] = useState(false);
+  const [error, setError] = useState<string>('');
 
-  // Mock data
-  const mockProfile: RestaurantProfile = {
-    _id: '1',
-    name: 'Taste of Nigeria',
-    description: 'Authentic Nigerian cuisine with a modern twist. We serve the best jollof rice, suya, and traditional dishes in the city.',
-    cuisine: 'Nigerian',
-    phone: '+234 801 234 5678',
-    email: 'info@tasteofnigeria.com',
-    address: '123 University Road',
-    city: 'Lagos',
-    state: 'Lagos State',
-    zipCode: '100001',
-    coordinates: {
-      lat: 6.5244,
-      lng: 3.3792
-    },
-    businessHours: [
-      { day: 'Monday', open: '08:00', close: '22:00', isOpen: true },
-      { day: 'Tuesday', open: '08:00', close: '22:00', isOpen: true },
-      { day: 'Wednesday', open: '08:00', close: '22:00', isOpen: true },
-      { day: 'Thursday', open: '08:00', close: '22:00', isOpen: true },
-      { day: 'Friday', open: '08:00', close: '23:00', isOpen: true },
-      { day: 'Saturday', open: '09:00', close: '23:00', isOpen: true },
-      { day: 'Sunday', open: '10:00', close: '21:00', isOpen: true }
-    ],
-    images: [
-      '/images/restaurant-1.jpg',
-      '/images/restaurant-2.jpg',
-      '/images/restaurant-3.jpg'
-    ],
-    logo: '/images/restaurant-logo.jpg',
-    rating: 4.6,
-    reviewCount: 128,
-    isVerified: true,
-    deliveryRadius: 5,
-    deliveryFee: 500,
-    minimumOrder: 1000,
-    estimatedDeliveryTime: 30,
-    paymentMethods: ['Card', 'Mobile Money', 'Cash on Delivery'],
-    features: ['Free Delivery', 'Fast Service', 'Fresh Ingredients', 'Halal Options'],
-    socialMedia: {
-      facebook: 'https://facebook.com/tasteofnigeria',
-      instagram: 'https://instagram.com/tasteofnigeria',
-      twitter: 'https://twitter.com/tasteofnigeria'
-    },
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-15'
-  };
-
-  const tabs = [
+  const tabs: Array<{ id: string; label: string; icon: any }> = [
     { id: 'basic', label: 'Basic Info', icon: User },
     { id: 'hours', label: 'Business Hours', icon: Clock },
     { id: 'delivery', label: 'Delivery Settings', icon: MapPin },
@@ -136,27 +88,86 @@ export default function RestaurantProfile() {
   ];
 
   useEffect(() => {
-    // Get user from localStorage
     try {
       const userData = localStorage.getItem('user');
       if (userData) {
         setUser(JSON.parse(userData));
       }
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-    }
+    } catch {}
 
-    // Simulate API call
-    setTimeout(() => {
-      setProfile(mockProfile);
-      setIsLoading(false);
-    }, 1000);
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        setError('');
+        const token = localStorage.getItem('token') || '';
+        const res = await fetch('/api/restaurant/profile', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message || 'Failed to load profile');
+        const p = json.profile;
+        const mapped: RestaurantProfile = {
+          _id: p._id,
+          name: p.name || '',
+          description: p.description || '',
+          cuisine: Array.isArray(p.cuisine) ? p.cuisine.join(', ') : (p.cuisine || ''),
+          phone: p.phone || '',
+          email: (p as any).email || '',
+          address: p.address || '',
+          city: '',
+          state: '',
+          zipCode: '',
+          coordinates: { lat: 0, lng: 0 },
+          businessHours: Object.keys(p.operatingHours || {}).map((d: any) => ({ day: d[0].toUpperCase()+d.slice(1), open: p.operatingHours[d].open, close: p.operatingHours[d].close, isOpen: p.operatingHours[d].isOpen })),
+          images: [p.image, p.bannerImage].filter(Boolean),
+          logo: p.image || '',
+          rating: p.rating || 0,
+          reviewCount: p.reviewCount || 0,
+          isVerified: p.isApproved || false,
+          deliveryRadius: 0,
+          deliveryFee: p.deliveryFee || 0,
+          minimumOrder: p.minimumOrder || 0,
+          estimatedDeliveryTime: p.estimatedDeliveryTime || 0,
+          paymentMethods: p.paymentMethods || [],
+          features: p.features || [],
+          socialMedia: {},
+          createdAt: p.createdAt || new Date().toISOString(),
+          updatedAt: p.updatedAt || new Date().toISOString(),
+        };
+        setProfile(mapped);
+      } catch (e: any) {
+        setError(e?.message || 'Failed to load profile');
+        setProfile(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    load();
   }, []);
 
-  const handleSave = () => {
-    // Simulate save operation
-    setIsEditing(false);
-    // Here you would typically make an API call to save the profile
+  const handleSave = async () => {
+    if (!profile) return;
+    try {
+      const token = localStorage.getItem('token') || '';
+      const body: any = {
+        name: profile.name,
+        description: profile.description,
+        address: profile.address,
+        phone: profile.phone,
+        website: '',
+        university: '',
+        cuisine: profile.cuisine.split(',').map(s => s.trim()).filter(Boolean),
+        image: profile.logo,
+        bannerImage: profile.images?.[0] || ''
+      };
+      const res = await fetch('/api/restaurant/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json', ...(token? { Authorization: `Bearer ${token}` }: {}) }, body: JSON.stringify(body) });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.message || 'Failed to save');
+      }
+      setIsEditing(false);
+    } catch (e) {
+      // optionally show error toast
+    }
   };
 
   const handleCancel = () => {
@@ -267,7 +278,7 @@ export default function RestaurantProfile() {
 
               {/* Navigation Tabs */}
               <nav className="space-y-2">
-                {tabs.map((tab) => {
+                {tabs.map((tab: { id: string; label: string; icon: any }) => {
                   const Icon = tab.icon;
                   return (
                     <button
@@ -706,5 +717,3 @@ export default function RestaurantProfile() {
     </DashboardLayout>
   );
 }
-
-

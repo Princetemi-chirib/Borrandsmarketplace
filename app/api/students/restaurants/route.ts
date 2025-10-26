@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
+import dbConnect from '@/lib/db';
 import { verifyToken } from '@/lib/auth';
 import User from '@/lib/models/User';
 import Restaurant from '@/lib/models/Restaurant';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
-    await connectDB();
+    await dbConnect();
     
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {

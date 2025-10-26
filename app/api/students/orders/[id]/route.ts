@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
+import dbConnect from '@/lib/db';
 import { verifyToken } from '@/lib/auth';
 import User from '@/lib/models/User';
 import Order from '@/lib/models/Order';
+
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectDB();
+    await dbConnect();
     
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
@@ -55,7 +58,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectDB();
+    await dbConnect();
     
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {

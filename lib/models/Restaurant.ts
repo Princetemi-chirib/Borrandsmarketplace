@@ -207,6 +207,14 @@ const restaurantSchema = new Schema({
     type: Boolean,
     default: true
   },
+  phoneVerified: {
+    type: Boolean,
+    default: false
+  },
+  whatsappVerified: {
+    type: Boolean,
+    default: false
+  },
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],

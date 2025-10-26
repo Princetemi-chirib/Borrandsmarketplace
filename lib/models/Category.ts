@@ -12,7 +12,7 @@ export interface ICategory extends Document {
   updatedAt: Date;
 }
 
-const categorySchema = new Schema({
+const categorySchema = new Schema<ICategory>({
   restaurantId: {
     type: Schema.Types.ObjectId,
     ref: 'Restaurant',
@@ -52,27 +52,23 @@ const categorySchema = new Schema({
   toObject: { virtuals: true }
 });
 
-// Method to increment item count
-categorySchema.methods.incrementItemCount = function() {
+categorySchema.methods.incrementItemCount = function(this: any) {
   this.itemCount += 1;
   return this.save();
 };
 
-// Method to decrement item count
-categorySchema.methods.decrementItemCount = function() {
+categorySchema.methods.decrementItemCount = function(this: any) {
   this.itemCount = Math.max(0, this.itemCount - 1);
   return this.save();
 };
 
-// Method to update item count
-categorySchema.methods.updateItemCount = function(count: number) {
+categorySchema.methods.updateItemCount = function(this: any, count: number) {
   this.itemCount = Math.max(0, count);
   return this.save();
 };
 
-// Index for better query performance
 categorySchema.index({ restaurantId: 1, isActive: 1 });
 categorySchema.index({ restaurantId: 1, sortOrder: 1 });
 categorySchema.index({ name: 'text' });
 
-export default mongoose.models.Category || mongoose.model<ICategory>('Category', categorySchema);
+export default (mongoose.models.Category as mongoose.Model<ICategory>) || mongoose.model<ICategory>('Category', categorySchema);

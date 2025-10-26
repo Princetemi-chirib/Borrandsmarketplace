@@ -106,18 +106,16 @@ export default function RestaurantSettings() {
   const fetchRestaurantData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/restaurants/my-restaurant', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      const response = await fetch('/api/restaurant/settings', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
 
       if (response.ok) {
         const data = await response.json();
-        setRestaurant(data.restaurant);
-        setFormData(data.restaurant);
+        setRestaurant(data.settings);
+        setFormData(data.settings);
       } else {
-        console.error('Failed to fetch restaurant data');
+        console.error('Failed to fetch restaurant settings');
       }
     } catch (error) {
       console.error('Error fetching restaurant data:', error);
@@ -188,19 +186,26 @@ export default function RestaurantSettings() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/restaurants/update-settings', {
-        method: 'PUT',
+      const response = await fetch('/api/restaurant/settings', {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          operatingHours: formData?.operatingHours,
+          deliveryFee: formData?.deliveryFee,
+          minimumOrder: formData?.minimumOrder,
+          estimatedDeliveryTime: formData?.estimatedDeliveryTime,
+          features: formData?.features,
+          paymentMethods: formData?.paymentMethods,
+        }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setRestaurant(data.restaurant);
-        setFormData(data.restaurant);
+        setRestaurant(data.settings);
+        setFormData(data.settings);
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
       } else {

@@ -114,7 +114,14 @@ export default function LoginPage() {
           router.push('/dashboard');
         }
       } else {
-        toast.error(result.message || 'Login failed');
+        console.error('Login failed:', result);
+        if (result.requiresVerification) {
+          toast.error('Please verify your phone number first. Try using OTP login.');
+        } else if (result.message.includes('Invalid phone or password')) {
+          toast.error('Invalid phone number or password. Please check your credentials.');
+        } else {
+          toast.error(result.message || 'Login failed');
+        }
       }
     } catch (error) {
       toast.error('An error occurred during login');
@@ -143,6 +150,52 @@ export default function LoginPage() {
             <p className="mt-2 text-sm text-gray-600">
               Sign in to your Borrands Marketplace account
             </p>
+            
+            {/* Development Test Credentials */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs font-semibold text-blue-800 mb-1">Test Credentials:</p>
+                <p className="text-xs text-blue-700">Phone: +2347055699437</p>
+                <p className="text-xs text-blue-700">Use OTP Login (existing user)</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue('phone', '+2347055699437');
+                    setLoginMethod('otp');
+                  }}
+                  className="text-xs text-blue-600 hover:text-blue-800 underline mt-1"
+                >
+                  Fill Test Phone (Use OTP)
+                </button>
+                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-xs text-yellow-800 font-medium">Quick Access:</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Simulate successful login for development
+                      const testUser = {
+                        _id: '507f1f77bcf86cd799439011',
+                        name: 'Test Restaurant',
+                        phone: '+2347055699437',
+                        role: 'restaurant',
+                        university: 'University of Lagos',
+                        isVerified: true,
+                        isActive: true,
+                        createdAt: new Date().toISOString()
+                      };
+                      
+                      localStorage.setItem('user', JSON.stringify(testUser));
+                      localStorage.setItem('token', 'dev-test-token');
+                      toast.success('Development login successful!');
+                      router.push('/dashboard/restaurant');
+                    }}
+                    className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 mt-1"
+                  >
+                    🚀 Skip Login (Dev Only)
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Login Method Toggle */}
@@ -184,7 +237,7 @@ export default function LoginPage() {
           <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
             {/* Phone Number */}
             <div>
-              <label htmlFor="phone" className="form-label">
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
                 Phone Number
               </label>
               <div className="relative">
@@ -201,12 +254,13 @@ export default function LoginPage() {
                       message: 'Please enter a valid phone number'
                     }
                   })}
-                  className={`form-input pl-10 ${errors.phone ? 'border-error-500' : ''}`}
-                  placeholder="Enter your phone number"
+                  className={`block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 text-base ${errors.phone ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
+                  placeholder="Enter your phone number (e.g., +2348999888777)"
+                  autoComplete="tel"
                 />
               </div>
               {errors.phone && (
-                <p className="form-error flex items-center">
+                <p className="mt-2 text-sm text-red-600 flex items-center">
                   <AlertCircle className="h-4 w-4 mr-1" />
                   {errors.phone.message}
                 </p>
@@ -216,7 +270,7 @@ export default function LoginPage() {
             {/* Password Login */}
             {loginMethod === 'password' && (
               <div>
-                <label htmlFor="password" className="form-label">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
                 <div className="relative">
@@ -229,8 +283,9 @@ export default function LoginPage() {
                     {...register('password', { 
                       required: loginMethod === 'password' ? 'Password is required' : false
                     })}
-                    className={`form-input pl-10 pr-10 ${errors.password ? 'border-error-500' : ''}`}
+                    className={`block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 text-base ${errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
                     placeholder="Enter your password"
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"
@@ -245,7 +300,7 @@ export default function LoginPage() {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="form-error flex items-center">
+                  <p className="mt-2 text-sm text-red-600 flex items-center">
                     <AlertCircle className="h-4 w-4 mr-1" />
                     {errors.password.message}
                   </p>
@@ -256,7 +311,7 @@ export default function LoginPage() {
             {/* OTP Login */}
             {loginMethod === 'otp' && (
               <div>
-                <label htmlFor="otpCode" className="form-label">
+                <label htmlFor="otpCode" className="block text-sm font-medium text-gray-700 mb-2">
                   OTP Code
                 </label>
                 <div className="space-y-3">
@@ -275,12 +330,13 @@ export default function LoginPage() {
                           message: 'Please enter a 6-digit code'
                         }
                       })}
-                      className={`form-input pl-10 ${errors.otpCode ? 'border-error-500' : ''}`}
-                      placeholder="Enter 6-digit code"
+                      className={`block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 text-base text-center tracking-widest ${errors.otpCode ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
+                      placeholder="000000"
+                      autoComplete="one-time-code"
                     />
                   </div>
                   {errors.otpCode && (
-                    <p className="form-error flex items-center">
+                    <p className="mt-2 text-sm text-red-600 flex items-center">
                       <AlertCircle className="h-4 w-4 mr-1" />
                       {errors.otpCode.message}
                     </p>

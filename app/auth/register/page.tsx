@@ -25,7 +25,7 @@ interface RegisterFormData {
   phone: string;
   password?: string;
   confirmPassword?: string;
-  role: 'student' | 'restaurant' | 'rider';
+  role: 'student';
   university: string;
   studentId?: string;
   department?: string;
@@ -34,17 +34,8 @@ interface RegisterFormData {
 }
 
 const universities = [
-  'University of Lagos',
-  'University of Ibadan',
-  'Covenant University',
-  'University of Nigeria',
-  'Obafemi Awolowo University',
-  'University of Benin',
-  'Ahmadu Bello University',
-  'University of Port Harcourt',
-  'Federal University of Technology, Akure',
-  'University of Calabar',
-  'Other'
+  'Baze University',
+  'Veritas University'
 ];
 
 const roles = [
@@ -54,26 +45,12 @@ const roles = [
     description: 'Order food and track deliveries',
     icon: User,
     color: 'bg-blue-500'
-  },
-  {
-    id: 'restaurant',
-    title: 'Restaurant',
-    description: 'Manage orders and grow your business',
-    icon: Store,
-    color: 'bg-green-500'
-  },
-  {
-    id: 'rider',
-    title: 'Rider',
-    description: 'Deliver orders and earn money',
-    icon: Truck,
-    color: 'bg-orange-500'
   }
 ];
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [selectedRole, setSelectedRole] = useState<string>('');
+  const [selectedRole, setSelectedRole] = useState<string>('student');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -151,10 +128,6 @@ export default function RegisterPage() {
   };
 
   const onSubmit = async (data: RegisterFormData) => {
-    if (!selectedRole) {
-      toast.error('Please select a role');
-      return;
-    }
 
     if (data.password && data.password !== data.confirmPassword) {
       toast.error('Passwords do not match');
@@ -297,36 +270,17 @@ export default function RegisterPage() {
           </div>
 
           <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-            {/* Role Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                I am a...
-              </label>
-              <div className="grid grid-cols-1 gap-3">
-                {roles.map((role) => (
-                  <div
-                    key={role.id}
-                    className={`relative cursor-pointer rounded-lg border-2 p-4 transition-all ${
-                      selectedRole === role.id
-                        ? 'border-primary-500 bg-primary-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => setSelectedRole(role.id)}
-                  >
-                    <div className="flex items-center">
-                      <div className={`w-10 h-10 ${role.color} rounded-lg flex items-center justify-center mr-3`}>
-                        <role.icon className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-sm font-medium text-gray-900">{role.title}</h3>
-                        <p className="text-xs text-gray-500">{role.description}</p>
-                      </div>
-                      {selectedRole === role.id && (
-                        <CheckCircle className="h-5 w-5 text-primary-500" />
-                      )}
-                    </div>
-                  </div>
-                ))}
+            {/* Student Registration Notice */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
+                  <User className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-blue-900">Student Registration</h3>
+                  <p className="text-xs text-blue-700">You are registering as a student to order food and track deliveries</p>
+                </div>
+                <CheckCircle className="h-5 w-5 text-blue-500" />
               </div>
             </div>
 

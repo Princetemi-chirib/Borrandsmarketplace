@@ -76,14 +76,11 @@ export default function CheckoutPage() {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
-  const getDeliveryFee = () => {
-    // Calculate delivery fee based on restaurant
-    const uniqueRestaurants = Array.from(new Set(cart.map(item => item.restaurantId)));
-    return uniqueRestaurants.length * 500; // ₦500 per restaurant
-  };
+  const getServiceCharge = () => 150; // Fixed service charge
+  const getDeliveryFee = () => 500; // Fixed delivery fee
 
   const getTotal = () => {
-    return getCartTotal() + getDeliveryFee();
+    return getCartTotal() + getServiceCharge() + getDeliveryFee();
   };
 
   const synthesizeEmailFromPhone = (phone: string) => {
@@ -173,7 +170,7 @@ export default function CheckoutPage() {
       }, {} as Record<string, any>);
 
       const orderPromises = Object.values(ordersByRestaurant).map(async (orderData: any) => {
-        const response = await fetch('/api/students/orders', {
+        const response = await fetch('/api/orders', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -184,8 +181,7 @@ export default function CheckoutPage() {
             items: orderData.items,
             deliveryAddress: deliveryAddress.address,
             deliveryInstructions: deliveryAddress.instructions,
-            paymentMethod,
-            estimatedDeliveryTime: 30 // Default 30 minutes
+            paymentMethod
           }),
         });
 
@@ -399,6 +395,10 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-medium">₦{getCartTotal().toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Service Charge</span>
+                  <span className="font-medium">₦{getServiceCharge().toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Delivery Fee</span>

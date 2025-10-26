@@ -3,6 +3,9 @@ import dbConnect from '@/lib/db';
 import Restaurant from '@/lib/models/Restaurant';
 import User from '@/lib/models/User';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 // GET /api/restaurants/my-restaurant - Get current user's restaurant
 export async function GET(request: NextRequest) {
   try {
