@@ -1,0 +1,347 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                        String       @id @default(cuid())
+  name                      String
+  email                     String       @unique
+  phone                     String?
+  password                  String
+  role                      UserRole     @default(STUDENT)
+  university                String
+  studentId                 String?
+  department                String?
+  level                     String?
+  profileImage              String?
+  isVerified                Boolean      @default(false)
+  isActive                  Boolean      @default(true)
+  emailVerified             Boolean      @default(false)
+  phoneVerified             Boolean      @default(false)
+  whatsappVerified          Boolean      @default(false)
+  lastLogin                 DateTime?
+  loginCount                Int          @default(0)
+  otpCode                   String?
+  otpExpiresAt              DateTime?
+  otpAttempts               Int          @default(0)
+  lastOtpSentAt             DateTime?
+  addresses                 String       @db.LongText
+  preferences               String       @db.LongText
+  wallet                    String       @db.LongText
+  stats                     String       @db.LongText
+  createdAt                 DateTime     @default(now())
+  updatedAt                 DateTime     @updatedAt
+  orders                    Order[]
+  restaurant                Restaurant?
+  rider                     Rider?
+  restaurants_userfavorites Restaurant[] @relation("userfavorites")
+
+  @@map("users")
+}
+
+model Restaurant {
+  id                    String          @id @default(cuid())
+  userId                String          @unique
+  name                  String
+  description           String
+  address               String
+  phone                 String
+  website               String?
+  university            String
+  cuisine               String          @db.LongText
+  rating                Float           @default(0)
+  reviewCount           Int             @default(0)
+  isOpen                Boolean         @default(true)
+  deliveryFee           Float
+  minimumOrder          Float
+  estimatedDeliveryTime Int
+  image                 String          @default("/images/default-restaurant.jpg")
+  bannerImage           String?
+  isApproved            Boolean         @default(false)
+  isActive              Boolean         @default(true)
+  phoneVerified         Boolean         @default(false)
+  whatsappVerified      Boolean         @default(false)
+  status                String          @default("pending")
+  approvedAt            DateTime?
+  rejectedAt            DateTime?
+  rejectionReason       String?
+  operatingHours        String          @db.LongText
+  location              String          @db.LongText
+  distance              Float?
+  features              String          @db.LongText
+  paymentMethods        String          @db.LongText
+  stats                 String          @db.LongText
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  categories            Category[]
+  inventoryItems        InventoryItem[]
+  menuItems             MenuItem[]
+  optionGroups          OptionGroup[]
+  orders                Order[]
+  packs                 Pack[]
+  user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stockAlerts           StockAlert[]
+  users_userfavorites   User[]          @relation("userfavorites")
+
+  @@map("restaurants")
+}
+
+model Rider {
+  id                  String      @id @default(cuid())
+  userId              String      @unique
+  name                String
+  phone               String
+  email               String
+  vehicleType         VehicleType
+  vehicleNumber       String
+  vehicleModel        String?
+  vehicleColor        String?
+  licenseNumber       String?
+  insuranceNumber     String?
+  profileImage        String?
+  isOnline            Boolean     @default(false)
+  isAvailable         Boolean     @default(true)
+  isVerified          Boolean     @default(false)
+  isActive            Boolean     @default(true)
+  currentAddress      String?
+  rating              Float       @default(0)
+  reviewCount         Int         @default(0)
+  totalDeliveries     Int         @default(0)
+  totalEarnings       Float       @default(0)
+  averageDeliveryTime Int         @default(30)
+  completionRate      Float       @default(100)
+  currentLocation     String      @db.LongText
+  workingHours        String      @db.LongText
+  documents           String      @db.LongText
+  stats               String      @db.LongText
+  preferences         String      @db.LongText
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  orders              Order[]
+  user                User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("riders")
+}
+
+model Order {
+  id                    String        @id @default(cuid())
+  studentId             String
+  restaurantId          String
+  riderId               String?
+  subtotal              Float
+  deliveryFee           Float
+  total                 Float
+  status                OrderStatus   @default(PENDING)
+  paymentStatus         PaymentStatus @default(PENDING)
+  paymentMethod         PaymentMethod
+  deliveryAddress       String
+  deliveryInstructions  String?
+  estimatedDeliveryTime Int
+  actualDeliveryTime    DateTime?
+  orderNumber           String        @unique
+  notes                 String?
+  rating                Int?
+  review                String?
+  ratedAt               DateTime?
+  cancelledAt           DateTime?
+  items                 String        @db.LongText
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  restaurant            Restaurant    @relation(fields: [restaurantId], references: [id])
+  rider                 Rider?        @relation(fields: [riderId], references: [id])
+  student               User          @relation(fields: [studentId], references: [id])
+
+  @@index([restaurantId], map: "orders_restaurantId_fkey")
+  @@index([riderId], map: "orders_riderId_fkey")
+  @@index([studentId], map: "orders_studentId_fkey")
+  @@map("orders")
+}
+
+model Category {
+  id           String     @id @default(cuid())
+  restaurantId String
+  name         String
+  description  String?
+  image        String?
+  isActive     Boolean    @default(true)
+  sortOrder    Int        @default(0)
+  itemCount    Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  menuItems    MenuItem[]
+
+  @@index([restaurantId], map: "categories_restaurantId_fkey")
+  @@map("categories")
+}
+
+model MenuItem {
+  id               String        @id @default(cuid())
+  restaurantId     String
+  categoryId       String
+  packId           String?
+  name             String
+  description      String
+  priceDescription String?
+  price            Float
+  originalPrice    Float?
+  image            String
+  isAvailable      Boolean       @default(true)
+  isPublished      Boolean       @default(true)
+  isFeatured       Boolean       @default(false)
+  isVegetarian     Boolean       @default(false)
+  isVegan          Boolean       @default(false)
+  isSpicy          Boolean       @default(false)
+  preparationTime  Int           @default(15)
+  sortOrder        Int           @default(0)
+  rating           Float         @default(0)
+  reviewCount      Int           @default(0)
+  orderCount       Int           @default(0)
+  allergens        String        @db.LongText
+  nutritionalInfo  String        @db.LongText
+  ingredients      String        @db.LongText
+  tags             String        @db.LongText
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  category         Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  pack             Pack?         @relation(fields: [packId], references: [id])
+  restaurant       Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  optionGroups     OptionGroup[]
+
+  @@index([categoryId], map: "menu_items_categoryId_fkey")
+  @@index([packId], map: "menu_items_packId_fkey")
+  @@index([restaurantId], map: "menu_items_restaurantId_fkey")
+  @@map("menu_items")
+}
+
+model Pack {
+  id           String     @id @default(cuid())
+  restaurantId String
+  name         String
+  description  String?
+  price        Float
+  isActive     Boolean    @default(true)
+  sortOrder    Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  menuItems    MenuItem[]
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId], map: "packs_restaurantId_fkey")
+  @@map("packs")
+}
+
+model OptionGroup {
+  id           String     @id @default(cuid())
+  restaurantId String
+  itemId       String
+  name         String
+  minSelect    Int        @default(0)
+  maxSelect    Int        @default(1)
+  isActive     Boolean    @default(true)
+  sortOrder    Int        @default(0)
+  options      String     @db.LongText
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  menuItem     MenuItem   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([itemId], map: "option_groups_itemId_fkey")
+  @@index([restaurantId], map: "option_groups_restaurantId_fkey")
+  @@map("option_groups")
+}
+
+model InventoryItem {
+  id            String          @id @default(cuid())
+  restaurantId  String
+  name          String
+  category      String
+  currentStock  Int             @default(0)
+  minStockLevel Int             @default(0)
+  maxStockLevel Int             @default(0)
+  unit          String
+  costPerUnit   Float
+  lastRestocked DateTime?
+  supplier      String?
+  status        InventoryStatus @default(IN_STOCK)
+  expiryDate    DateTime?
+  location      String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  restaurant    Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  stockAlerts   StockAlert[]
+
+  @@index([restaurantId], map: "inventory_items_restaurantId_fkey")
+  @@map("inventory_items")
+}
+
+model StockAlert {
+  id            String        @id @default(cuid())
+  restaurantId  String
+  itemId        String
+  itemName      String
+  currentStock  Int
+  minLevel      Int
+  priority      AlertPriority
+  daysUntilOut  Int?
+  resolvedAt    DateTime?
+  createdAt     DateTime      @default(now())
+  inventoryItem InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  restaurant    Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([itemId], map: "stock_alerts_itemId_fkey")
+  @@index([restaurantId], map: "stock_alerts_restaurantId_fkey")
+  @@map("stock_alerts")
+}
+
+enum UserRole {
+  STUDENT
+  RESTAURANT
+  RIDER
+  ADMIN
+}
+
+enum VehicleType {
+  MOTORCYCLE
+  BICYCLE
+  CAR
+}
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  PREPARING
+  READY
+  PICKED_UP
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CARD
+  CASH
+}
+
+enum InventoryStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+}
+
+enum AlertPriority {
+  HIGH
+  MEDIUM
+  LOW
+}

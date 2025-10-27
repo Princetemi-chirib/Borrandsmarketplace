@@ -32,7 +32,7 @@ export async function DELETE(
 
     // Remove from favorites
     if (user.favorites) {
-      user.favorites = user.favorites.filter(id => id.toString() !== restaurantId);
+      user.favorites = user.favorites.filter((id: any) => id.toString() !== restaurantId);
       await user.save();
     }
 

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import User from '@/lib/models/User';
-import WhatsApp from '@/lib/whatsapp';
+import { dbConnect, prisma } from '@/lib/db-prisma';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,83 +8,92 @@ export async function POST(request: NextRequest) {
     await dbConnect();
     console.log('Database connected successfully');
 
-    // Clean up old unverified users (older than 24 hours)
-    // Temporarily disabled for debugging
-    // try {
-    //   await User.cleanupUnverifiedUsers();
-    //   console.log('Cleanup completed');
-    // } catch (cleanupError) {
-    //   console.error('Cleanup error (non-fatal):', cleanupError);
-    //   // Continue with registration even if cleanup fails
-    // }
-
     const body = await request.json();
     console.log('Request body received:', { ...body, password: body.password ? '[HIDDEN]' : undefined });
-    let { name, phone, password, role, university, studentId, department, level } = body;
+    let { name, email, password, phone, role, university, studentId, department, level } = body;
 
     // Normalize optional fields: treat empty strings as undefined
     if (studentId === '') studentId = undefined;
     if (department === '') department = undefined;
     if (level === '') level = undefined;
-    if (password === '') password = undefined;
+    if (phone === '') phone = undefined;
 
-    // Validate required fields (phone is primary, password optional)
-    if (!name || !phone || !role || !university) {
+    // Validate required fields
+    if (!name || !email || !password || !role || !university) {
       return NextResponse.json(
-        { success: false, message: 'Name, phone, role, and university are required' },
+        { success: false, message: 'Name, email, password, role, and university are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { success: false, message: 'Please enter a valid email address' },
+        { status: 400 }
+      );
+    }
+
+    // Validate password strength
+    if (password.length < 6) {
+      return NextResponse.json(
+        { success: false, message: 'Password must be at least 6 characters long' },
         { status: 400 }
       );
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ phone });
+    const existingUser = await prisma.user.findUnique({ 
+      where: { email },
+      select: { id: true, isVerified: true, emailVerified: true }
+    });
 
     if (existingUser) {
       // If user exists but is not verified, allow re-registration
-      if (!existingUser.isVerified || !existingUser.phoneVerified) {
+      if (!existingUser.isVerified || !existingUser.emailVerified) {
         // Delete the unverified user to allow fresh registration
-        await User.findByIdAndDelete(existingUser._id);
+        await prisma.user.delete({ where: { id: existingUser.id } });
       } else {
         return NextResponse.json(
-          { success: false, message: 'User with this phone already exists' },
+          { success: false, message: 'User with this email already exists' },
           { status: 400 }
         );
       }
     }
 
-    // Create new user (password optional, will be verified via OTP)
-    console.log('Creating user with data:', { name, phone, role, university, studentId, department, level });
-    const user = new User({
-      name,
-      phone,
-      password, // Optional - can be set later
-      role,
-      university,
-      studentId,
-      department,
-      level,
-      isVerified: false, // Will be verified via OTP
-      isActive: true,
-      phoneVerified: false
+    // Hash password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create new user
+    console.log('Creating user with data:', { name, email, role, university, studentId, department, level });
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        phone,
+        role: role.toUpperCase(),
+        university,
+        studentId,
+        department,
+        level,
+        isVerified: false,
+        isActive: true,
+        emailVerified: false,
+        phoneVerified: false,
+        whatsappVerified: false
+      }
     });
 
-    console.log('User object created, attempting to save...');
-    await user.save();
-    console.log('User saved successfully with ID:', user._id);
-
-    // Send welcome WhatsApp message
-    try {
-      const message = `Welcome to Borrands, ${name}! Your account has been created. Please verify your phone number to start using the platform.`;
-      await WhatsApp.sendMessage(phone, message);
-    } catch (error) {
-      console.error('WhatsApp welcome message failed:', error);
-      // Don't fail registration if WhatsApp fails
-    }
+    console.log('User created successfully with ID:', user.id);
 
     // Return success response (without password)
     const userResponse = {
-      _id: user._id,
+      id: user.id,
       name: user.name,
+      email: user.email,
       phone: user.phone,
       role: user.role,
       university: user.university,
@@ -96,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Registration successful! Please verify your phone number via OTP.',
+      message: 'Registration successful! Please verify your email address.',
       data: userResponse
     });
 
@@ -109,10 +117,10 @@ export async function POST(request: NextRequest) {
       stack: error.stack
     });
     
-    if (error.code === 11000) {
-      // This should rarely happen now due to our pre-check, but handle it gracefully
+    if (error.code === 'P2002') {
+      // Unique constraint violation
       return NextResponse.json(
-        { success: false, message: 'User with this phone already exists. Please try again.' },
+        { success: false, message: 'User with this email already exists. Please try again.' },
         { status: 400 }
       );
     }
@@ -122,13 +130,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, message: 'Invalid data provided. Please check your information.' },
         { status: 400 }
-      );
-    }
-
-    if (error.name === 'MongoError' || error.name === 'MongoServerError') {
-      return NextResponse.json(
-        { success: false, message: 'Database error. Please try again later.' },
-        { status: 500 }
       );
     }
 

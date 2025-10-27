@@ -314,10 +314,10 @@ riderSchema.virtual('isCurrentlyWorking').get(function() {
   
   const now = new Date();
   const currentTime = now.toTimeString().slice(0, 5);
-  const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const currentDay = dayNames[now.getDay()];
   
-  return this.workingHours.days.includes(currentDay) && 
+  return this.workingHours.days.includes(currentDay as any) && 
          currentTime >= this.workingHours.startTime && 
          currentTime <= this.workingHours.endTime;
 });

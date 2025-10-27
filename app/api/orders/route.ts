@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const auth = verifyAppRequest(request);
-    if (!auth || auth.role !== 'student' || !auth.userId) {
+    if (!auth || auth.role !== 'student' || !auth.sub) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
     }
 
-    const restaurant = await Restaurant.findOne({ _id: new Types.ObjectId(restaurantId), isApproved: true, isActive: true }).select('_id estimatedDeliveryTime').lean();
+    const restaurant = await Restaurant.findOne({ _id: new Types.ObjectId(restaurantId), isApproved: true, isActive: true }).select('_id estimatedDeliveryTime').lean() as any;
     if (!restaurant) return NextResponse.json({ message: 'Restaurant not found or inactive' }, { status: 404 });
 
     // Load item prices from DB to prevent tampering
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     const total = subtotal + SERVICE_CHARGE + DELIVERY_FEE;
 
     const order = await (Order as any).create({
-      student: new Types.ObjectId(auth.userId),
+      student: new Types.ObjectId(auth.sub),
       restaurant: restaurant._id,
       items: normalizedItems,
       subtotal,

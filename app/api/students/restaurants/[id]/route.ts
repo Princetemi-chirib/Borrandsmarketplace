@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectDB();
+    await dbConnect();
     
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {

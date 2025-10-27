@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     // Get connection info
     const connection = mongoose.connection;
     const dbInfo = {
-      database: connection.db.databaseName,
+      database: connection.db?.databaseName || 'unknown',
       host: connection.host,
       port: connection.port,
       readyState: connection.readyState,
@@ -59,9 +59,9 @@ export async function GET(request: NextRequest) {
       success: false,
       message: 'Database connection test failed',
       error: {
-        name: error.name,
-        message: error.message,
-        type: error.constructor.name
+        name: (error as Error).name,
+        message: (error as Error).message,
+        type: (error as Error).constructor.name
       },
       timestamp: new Date().toISOString()
     }, { status: 500 });

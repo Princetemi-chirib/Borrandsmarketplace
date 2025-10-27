@@ -58,7 +58,7 @@ const getConnectionOptions = () => {
     // Additional Production Settings
     ...(isProduction && {
       readPreference: 'secondaryPreferred', // Read from secondary if available
-      compressors: ['zlib'],               // Enable compression
+      compressors: ['zlib'] as ('zlib' | 'none' | 'snappy' | 'zstd')[], // Enable compression
     }),
   };
 };

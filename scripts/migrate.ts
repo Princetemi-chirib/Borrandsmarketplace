@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { migrationManager } from './lib/migrations/index';
-import './lib/migrations/001-initial-setup';
+import { migrationManager } from '../lib/migrations/index';
+import '../lib/migrations/001-initial-setup';
 
 async function main() {
   const command = process.argv[2];

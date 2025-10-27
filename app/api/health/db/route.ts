@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { checkDatabaseHealth } from '@/lib/db';
+import { checkDatabaseHealth } from '@/lib/db-prisma';
 
 export async function GET() {
   try {

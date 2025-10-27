@@ -114,3 +114,5 @@ dev-data/
 
 # Payment gateway keys
 .paystack-keys
+
+/generated/prisma
