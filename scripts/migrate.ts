@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
-import { migrationManager } from '../lib/migrations/index';
-import '../lib/migrations/001-initial-setup';
+import { execSync } from 'child_process';
 
 async function main() {
   const command = process.argv[2];
@@ -9,31 +8,39 @@ async function main() {
   try {
     switch (command) {
       case 'migrate':
-        await migrationManager.migrate();
+        console.log('🔄 Running Prisma migrations...');
+        execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+        console.log('✅ Migrations completed');
         break;
         
       case 'rollback':
-        const targetVersion = process.argv[3] ? parseInt(process.argv[3]) : undefined;
-        await migrationManager.rollback(targetVersion);
+        console.log('⚠️ Prisma does not support rollbacks. Use migrate:reset instead.');
+        console.log('Run: npx prisma migrate reset');
         break;
         
       case 'status':
-        await migrationManager.status();
+        console.log('📊 Checking migration status...');
+        execSync('npx prisma migrate status', { stdio: 'inherit' });
+        break;
+        
+      case 'reset':
+        console.log('🔄 Resetting database...');
+        execSync('npx prisma migrate reset', { stdio: 'inherit' });
         break;
         
       default:
         console.log(`
-🔄 Database Migration Tool
+🔄 Prisma Migration Tool
 
 Usage:
   npm run migrate          # Apply all pending migrations
   npm run migrate:status   # Show migration status
-  npm run migrate:rollback [version] # Rollback to specific version
+  npm run migrate:reset    # Reset database and apply migrations
 
 Commands:
   migrate                  Apply all pending migrations
-  rollback [version]       Rollback to specific version (or latest)
   status                   Show current migration status
+  reset                    Reset database and apply all migrations
         `);
         process.exit(1);
     }
