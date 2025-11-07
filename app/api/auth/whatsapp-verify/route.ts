@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user exists
     console.log('🔍 Looking for user with phone:', phone);
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: { phone },
       select: {
         id: true,
@@ -130,7 +130,7 @@ export async function PUT(request: NextRequest) {
 
     // Find user
     console.log('🔍 Looking for user with phone:', phone);
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: { phone },
       select: {
         id: true,

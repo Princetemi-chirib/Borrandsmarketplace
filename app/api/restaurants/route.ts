@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Check if owner phone already exists and is verified
-    const existingUser = await prisma.user.findUnique({ where: { phone: ownerPhone } });
+    const existingUser = await prisma.user.findFirst({ where: { phone: ownerPhone } });
     if (existingUser && existingUser.phoneVerified) {
       return NextResponse.json(
         { error: 'User with this phone number already exists and is verified' },
