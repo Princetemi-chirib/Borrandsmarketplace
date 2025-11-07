@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Restaurant from '@/lib/models/Restaurant';
-import User from '@/lib/models/User';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import bcrypt from 'bcryptjs';
 
 // GET /api/restaurants - Get all restaurants (for admin)
@@ -17,41 +15,45 @@ export async function GET(request: NextRequest) {
     
     const skip = (page - 1) * limit;
     
-    // Build query
-    let query: any = {};
+    // Build where clause
+    let where: any = {};
     
     if (status !== 'all') {
-      query.status = status;
+      where.status = status;
     }
     
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { cuisine: { $regex: search, $options: 'i' } },
-        { address: { $regex: search, $options: 'i' } }
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { cuisine: { contains: search, mode: 'insensitive' } },
+        { address: { contains: search, mode: 'insensitive' } }
       ];
     }
     
-    const restaurants = await Restaurant.find(query)
-      .populate('userId', 'name phone') // Fixed: populate userId instead of owner
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    
-    // Transform restaurants to include owner object for backward compatibility
-    const transformedRestaurants = restaurants.map(restaurant => {
-      const restaurantObj = restaurant.toObject();
-      return {
-        ...restaurantObj,
-        owner: restaurantObj.userId ? {
-          _id: restaurantObj.userId._id,
-          name: restaurantObj.userId.name,
-          phone: restaurantObj.userId.phone
-        } : null
-      };
+    const restaurants = await prisma.restaurant.findMany({
+      where,
+      include: {
+        user: {
+          select: { id: true, name: true, phone: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit
     });
     
-    const total = await Restaurant.countDocuments(query);
+    // Transform restaurants to include owner object for backward compatibility
+    const transformedRestaurants = restaurants.map(restaurant => ({
+      ...restaurant,
+      _id: restaurant.id,
+      owner: restaurant.user ? {
+        _id: restaurant.user.id,
+        name: restaurant.user.name,
+        phone: restaurant.user.phone
+      } : null
+    }));
+    
+    const total = await prisma.restaurant.count({ where });
     
     return NextResponse.json({
       restaurants: transformedRestaurants,
@@ -104,7 +106,9 @@ export async function POST(request: NextRequest) {
     }
     
     // Check if restaurant with same name already exists
-    const existingRestaurant = await Restaurant.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+    const existingRestaurant = await prisma.restaurant.findFirst({
+      where: { name: { equals: name, mode: 'insensitive' } }
+    });
     if (existingRestaurant) {
       return NextResponse.json(
         { error: 'Restaurant with this name already exists' },
@@ -113,7 +117,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Check if owner phone already exists and is verified
-    const existingUser = await User.findOne({ phone: ownerPhone });
+    const existingUser = await prisma.user.findUnique({ where: { phone: ownerPhone } });
     if (existingUser && existingUser.phoneVerified) {
       return NextResponse.json(
         { error: 'User with this phone number already exists and is verified' },
@@ -124,17 +128,24 @@ export async function POST(request: NextRequest) {
     // If user exists but not verified, allow re-registration (update existing)
     if (existingUser && !existingUser.phoneVerified) {
       // Update existing unverified user
-      existingUser.name = ownerName;
-      existingUser.password = await bcrypt.hash(ownerPassword, 12);
-      existingUser.role = 'restaurant';
-      existingUser.university = university;
-      existingUser.status = 'active';
-      existingUser.updatedAt = new Date();
-      await existingUser.save();
+      const hashedPassword = await bcrypt.hash(ownerPassword, 12);
+      const updatedUser = await prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
+          name: ownerName,
+          password: hashedPassword,
+          role: 'RESTAURANT',
+          university: university,
+          isActive: true,
+          updatedAt: new Date()
+        }
+      });
       
       // Check if restaurant already exists for this user
-      const existingRestaurant = await Restaurant.findOne({ userId: existingUser._id });
-      if (existingRestaurant) {
+      const existingRestaurantForUser = await prisma.restaurant.findFirst({
+        where: { userId: updatedUser.id }
+      });
+      if (existingRestaurantForUser) {
         return NextResponse.json(
           { error: 'Restaurant application already submitted for this phone number' },
           { status: 400 }
@@ -142,60 +153,61 @@ export async function POST(request: NextRequest) {
       }
       
       // Create restaurant for existing user
-      const restaurant = new Restaurant({
-        userId: existingUser._id, // Fixed: use userId instead of owner
-        name,
-        description,
-        cuisine: [cuisine], // Fixed: wrap cuisine in array
-        address,
-        phone,
-        website,
-        deliveryFee: deliveryFee || 0,
-        minimumOrder: minimumOrder || 0,
-        estimatedDeliveryTime: estimatedDeliveryTime || 30,
-        university,
-        location: coordinates ? {
-          type: 'Point',
-          coordinates: coordinates
-        } : {
-          type: 'Point',
-          coordinates: [0, 0] // Default coordinates if none provided
-        },
-        status: 'pending',
-        isOpen: false,
-        rating: 0,
-        reviewCount: 0,
-        menu: [],
-        categories: []
-      });
-      
-      console.log('Restaurant object created for existing user:', JSON.stringify(restaurant, null, 2));
+      console.log('Creating restaurant for existing user:', updatedUser.id);
       
       try {
-        await restaurant.save();
+        const restaurant = await prisma.restaurant.create({
+          data: {
+            userId: updatedUser.id,
+            name,
+            description,
+            cuisine: cuisine,
+            address,
+            phone,
+            website: website || '',
+            deliveryFee: deliveryFee || 0,
+            minimumOrder: minimumOrder || 0,
+            estimatedDeliveryTime: estimatedDeliveryTime || 30,
+            university: university || '',
+            location: coordinates ? JSON.stringify({ type: 'Point', coordinates }) : JSON.stringify({ type: 'Point', coordinates: [0, 0] }),
+            status: 'PENDING',
+            isOpen: false,
+            rating: 0,
+            reviewCount: 0,
+            categories: JSON.stringify([])
+          }
+        });
+        
         console.log('Restaurant saved successfully for existing user');
+        
+        // Update user with restaurant reference
+        const createdRestaurant = await prisma.restaurant.findUnique({
+          where: { id: restaurant.id }
+        });
+        
+        // Update user with restaurant reference
+        await prisma.user.update({
+          where: { id: updatedUser.id },
+          data: { restaurantId: restaurant.id }
+        });
+        
+        return NextResponse.json({
+          message: 'Restaurant application updated successfully. Pending admin approval.',
+          restaurant: {
+            _id: createdRestaurant?.id,
+            name: createdRestaurant?.name,
+            status: createdRestaurant?.status
+          },
+          owner: {
+            _id: updatedUser.id,
+            name: updatedUser.name,
+            phone: updatedUser.phone
+          }
+        }, { status: 201 });
       } catch (saveError) {
         console.error('Error saving restaurant for existing user:', saveError);
         throw saveError;
       }
-      
-      // Update user with restaurant reference
-      existingUser.restaurant = restaurant._id;
-      await existingUser.save();
-      
-      return NextResponse.json({
-        message: 'Restaurant application updated successfully. Pending admin approval.',
-        restaurant: {
-          _id: restaurant._id,
-          name: restaurant.name,
-          status: restaurant.status
-        },
-        owner: {
-          _id: existingUser._id,
-          name: existingUser.name,
-          phone: existingUser.phone
-        }
-      }, { status: 201 });
     }
     
     // Hash password
@@ -206,23 +218,28 @@ export async function POST(request: NextRequest) {
       phone: ownerPhone,
       role: 'restaurant',
       university,
-      status: 'active'
+      isActive: true
     });
     
     // Create owner user
-    const owner = new User({
-      name: ownerName,
-      phone: ownerPhone,
-      password: hashedPassword,
-      role: 'restaurant',
-      university,
-      status: 'active'
-    });
-    
-    console.log('User object created:', JSON.stringify(owner, null, 2));
-    
+    let owner;
     try {
-      await owner.save();
+      owner = await prisma.user.create({
+        data: {
+          name: ownerName,
+          phone: ownerPhone,
+          password: hashedPassword,
+          role: 'RESTAURANT',
+          university: university || '',
+          isActive: true,
+          isVerified: false,
+          phoneVerified: false,
+          addresses: JSON.stringify([]),
+          preferences: JSON.stringify({}),
+          wallet: JSON.stringify({ balance: 0, transactions: [] }),
+          stats: JSON.stringify({ totalOrders: 0, totalSpent: 0 })
+        }
+      });
       console.log('Owner user saved successfully');
     } catch (saveError) {
       console.error('Error saving owner user:', saveError);
@@ -230,37 +247,29 @@ export async function POST(request: NextRequest) {
     }
     
     // Create restaurant
-    const restaurant = new Restaurant({
-      userId: owner._id, // Fixed: use userId instead of owner
-      name,
-      description,
-      cuisine: [cuisine], // Fixed: wrap cuisine in array
-      address,
-      phone,
-      website,
-      deliveryFee: deliveryFee || 0,
-      minimumOrder: minimumOrder || 0,
-      estimatedDeliveryTime: estimatedDeliveryTime || 30,
-      university,
-      location: coordinates ? {
-        type: 'Point',
-        coordinates: coordinates
-      } : {
-        type: 'Point',
-        coordinates: [0, 0] // Default coordinates if none provided
-      },
-      status: 'pending',
-      isOpen: false,
-      rating: 0,
-      reviewCount: 0,
-      menu: [],
-      categories: []
-    });
-    
-    console.log('Restaurant object created:', JSON.stringify(restaurant, null, 2));
-    
+    let restaurant;
     try {
-      await restaurant.save();
+      restaurant = await prisma.restaurant.create({
+        data: {
+          userId: owner.id,
+          name,
+          description,
+          cuisine: cuisine,
+          address,
+          phone,
+          website: website || '',
+          deliveryFee: deliveryFee || 0,
+          minimumOrder: minimumOrder || 0,
+          estimatedDeliveryTime: estimatedDeliveryTime || 30,
+          university: university || '',
+          location: coordinates ? JSON.stringify({ type: 'Point', coordinates }) : JSON.stringify({ type: 'Point', coordinates: [0, 0] }),
+          status: 'PENDING',
+          isOpen: false,
+          rating: 0,
+          reviewCount: 0,
+          categories: JSON.stringify([])
+        }
+      });
       console.log('Restaurant saved successfully');
     } catch (saveError) {
       console.error('Error saving restaurant:', saveError);
@@ -268,18 +277,20 @@ export async function POST(request: NextRequest) {
     }
     
     // Update owner with restaurant reference
-    owner.restaurant = restaurant._id;
-    await owner.save();
+    await prisma.user.update({
+      where: { id: owner.id },
+      data: { restaurantId: restaurant.id }
+    });
     
     return NextResponse.json({
       message: 'Restaurant created successfully. Pending admin approval.',
       restaurant: {
-        _id: restaurant._id,
+        _id: restaurant.id,
         name: restaurant.name,
         status: restaurant.status
       },
       owner: {
-        _id: owner._id,
+        _id: owner.id,
         name: owner.name,
         phone: owner.phone
       }

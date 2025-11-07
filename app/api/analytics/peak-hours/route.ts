@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Order from '@/lib/models/Order';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
 
 export async function GET(request: NextRequest) {
@@ -14,15 +13,26 @@ export async function GET(request: NextRequest) {
     const days = Math.min(parseInt(searchParams.get('days') || '7', 10), 90);
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-    const rows = await Order.aggregate([
-      { $match: { restaurant: auth.restaurantId, createdAt: { $gte: since } } },
-      { $project: { h: { $hour: '$createdAt' } } },
-      { $group: { _id: '$h', orders: { $sum: 1 } } },
-      { $project: { _id: 0, hour: { $concat: [ { $toString: '$_id' }, ':00' ] }, orders: 1 } },
-      { $sort: { hour: 1 } }
-    ]);
+    const orders = await prisma.order.findMany({
+      where: {
+        restaurantId: auth.restaurantId,
+        createdAt: { gte: since }
+      },
+      select: { createdAt: true }
+    });
 
-    return NextResponse.json({ peakHours: rows });
+    // Group by hour
+    const hourMap = new Map<number, number>();
+    orders.forEach(order => {
+      const hour = order.createdAt.getHours();
+      hourMap.set(hour, (hourMap.get(hour) || 0) + 1);
+    });
+
+    const peakHours = Array.from(hourMap.entries())
+      .map(([hour, orders]) => ({ hour: `${hour}:00`, orders }))
+      .sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
+
+    return NextResponse.json({ peakHours });
   } catch (e: any) {
     return NextResponse.json({ message: 'Failed to load peak hours' }, { status: 500 });
   }

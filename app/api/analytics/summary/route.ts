@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Order from '@/lib/models/Order';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
 
 function rangeToMs(range: string) {
@@ -25,33 +24,30 @@ export async function GET(request: NextRequest) {
     const range = searchParams.get('range') || '7d';
     const since = new Date(Date.now() - rangeToMs(range));
 
-    // Only paid/completed revenue should count
-    const match: any = { restaurant: auth.restaurantId, createdAt: { $gte: since } };
-
-    const [agg] = await Order.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'paid'] }, '$total', 0] } },
-          totalOrders: { $sum: 1 },
-          deliveredOrders: { $sum: { $cond: [{ $eq: ['$status', 'delivered'] }, 1, 0] } },
-          customers: { $addToSet: '$student' }
-        }
+    const orders = await prisma.order.findMany({
+      where: {
+        restaurantId: auth.restaurantId,
+        createdAt: { gte: since }
       },
-      {
-        $project: {
-          _id: 0,
-          totalRevenue: 1,
-          totalOrders: 1,
-          averageOrderValue: { $cond: [{ $gt: ['$totalOrders', 0] }, { $divide: ['$totalRevenue', '$totalOrders'] }, 0] },
-          completionRate: { $cond: [{ $gt: ['$totalOrders', 0] }, { $multiply: [{ $divide: ['$deliveredOrders', '$totalOrders'] }, 100] }, 0] },
-          customerCount: { $size: '$customers' }
-        }
-      }
-    ]);
+      select: { total: true, paymentStatus: true, status: true, studentId: true }
+    });
 
-    const data = agg || { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0, completionRate: 0, customerCount: 0 };
+    const totalRevenue = orders
+      .filter(o => o.paymentStatus === 'PAID')
+      .reduce((sum, o) => sum + o.total, 0);
+    
+    const totalOrders = orders.length;
+    const deliveredOrders = orders.filter(o => o.status === 'DELIVERED').length;
+    const uniqueCustomers = new Set(orders.map(o => o.studentId)).size;
+
+    const data = {
+      totalRevenue,
+      totalOrders,
+      averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
+      completionRate: totalOrders > 0 ? (deliveredOrders / totalOrders) * 100 : 0,
+      customerCount: uniqueCustomers
+    };
+
     return NextResponse.json(data);
   } catch (e: any) {
     return NextResponse.json({ message: 'Failed to load analytics summary' }, { status: 500 });

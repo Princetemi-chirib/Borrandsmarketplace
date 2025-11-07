@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import InventoryItem from '@/lib/models/InventoryItem';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
 import { sendWhatsApp } from '@/lib/services/whatsapp';
 
@@ -11,8 +10,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
     await dbConnect();
-    const items = await InventoryItem.find({ restaurantId: auth.restaurantId }).lean();
-    const low = items.filter((it: any) => it.status === 'low_stock' || it.status === 'out_of_stock');
+    const items = await prisma.inventoryItem.findMany({
+      where: { restaurantId: auth.restaurantId }
+    });
+    const low = items.filter(it => it.status === 'LOW_STOCK' || it.status === 'OUT_OF_STOCK');
 
     // TODO: Look up restaurant contact phone; using env fallback for now
     const toPhone = process.env.RESTAURANT_WHATSAPP_TO;
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     let sent = 0;
     for (const it of low) {
-      const body = it.status === 'out_of_stock'
+      const body = it.status === 'OUT_OF_STOCK'
         ? `⚠️ Stock alert: ${it.name} is OUT OF STOCK.`
         : `⚠️ Stock alert: ${it.name} is LOW (current: ${it.currentStock}, min: ${it.minStockLevel}).`;
       try { await sendWhatsApp(toPhone as string, body); sent++; } catch {}

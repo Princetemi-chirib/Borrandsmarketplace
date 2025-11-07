@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import User from '@/lib/models/User';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import { sendWhatsAppOTP } from '@/lib/whatsapp';
 
 // POST /api/auth/whatsapp-verify - Send WhatsApp OTP
@@ -22,8 +21,18 @@ export async function POST(request: NextRequest) {
 
     // Check if user exists
     console.log('🔍 Looking for user with phone:', phone);
-    const user = await User.findOne({ phone }).select('+otpCode +otpExpiresAt +otpAttempts +lastOtpSentAt');
-    console.log('🔍 User lookup result:', user ? `Found user: ${user._id}` : 'User not found');
+    const user = await prisma.user.findUnique({
+      where: { phone },
+      select: {
+        id: true,
+        phone: true,
+        otpCode: true,
+        otpExpiresAt: true,
+        otpAttempts: true,
+        lastOtpSentAt: true
+      }
+    });
+    console.log('🔍 User lookup result:', user ? `Found user: ${user.id}` : 'User not found');
     
     if (!user) {
       return NextResponse.json(
@@ -45,20 +54,17 @@ export async function POST(request: NextRequest) {
       otpAttempts: user.otpAttempts
     });
     
-    user.otpCode = otp;
-    user.otpExpiresAt = otpExpiresAt;
-    user.otpAttempts = 0;
-    user.lastOtpSentAt = new Date();
-    
-    console.log('🔧 After setting - User OTP fields:', {
-      otpCode: user.otpCode,
-      otpExpiresAt: user.otpExpiresAt,
-      otpAttempts: user.otpAttempts
-    });
-    
     console.log('💾 Saving OTP to database...');
-    const savedUser = await user.save();
-    console.log('✅ OTP saved to user:', savedUser._id, 'OTP stored:', !!savedUser.otpCode);
+    const savedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        otpCode: otp,
+        otpExpiresAt: otpExpiresAt,
+        otpAttempts: 0,
+        lastOtpSentAt: new Date()
+      }
+    });
+    console.log('✅ OTP saved to user:', savedUser.id, 'OTP stored:', !!savedUser.otpCode);
     
     // Double-check the saved user
     console.log('🔍 Verifying saved user OTP fields:', {
@@ -124,8 +130,22 @@ export async function PUT(request: NextRequest) {
 
     // Find user
     console.log('🔍 Looking for user with phone:', phone);
-    const user = await User.findOne({ phone }).select('+otpCode +otpExpiresAt +otpAttempts +lastOtpSentAt');
-    console.log('🔍 User lookup result:', user ? `Found user: ${user._id}` : 'User not found');
+    const user = await prisma.user.findUnique({
+      where: { phone },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        role: true,
+        otpCode: true,
+        otpExpiresAt: true,
+        otpAttempts: true,
+        phoneVerified: true,
+        whatsappVerified: true,
+        isVerified: true
+      }
+    });
+    console.log('🔍 User lookup result:', user ? `Found user: ${user.id}` : 'User not found');
     
     if (!user) {
       return NextResponse.json(
@@ -158,7 +178,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Check OTP attempts
-    if (user.otpAttempts >= 3) {
+    if ((user.otpAttempts || 0) >= 3) {
       return NextResponse.json(
         { error: 'Too many OTP attempts. Please request a new OTP.' },
         { status: 400 }
@@ -167,8 +187,10 @@ export async function PUT(request: NextRequest) {
 
     // Verify OTP
     if (user.otpCode !== otp) {
-      user.otpAttempts += 1;
-      await user.save();
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { otpAttempts: (user.otpAttempts || 0) + 1 }
+      });
       
       return NextResponse.json(
         { error: 'Invalid OTP' },
@@ -177,24 +199,28 @@ export async function PUT(request: NextRequest) {
     }
 
     // OTP is valid - mark phone and WhatsApp as verified
-    user.phoneVerified = true;
-    user.whatsappVerified = true;
-    user.isVerified = true;
-    user.otpCode = undefined;
-    user.otpExpiresAt = undefined;
-    user.otpAttempts = 0;
-    await user.save();
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        phoneVerified: true,
+        whatsappVerified: true,
+        isVerified: true,
+        otpCode: null,
+        otpExpiresAt: null,
+        otpAttempts: 0
+      }
+    });
 
     return NextResponse.json({
       message: 'Phone and WhatsApp verified successfully',
       user: {
-        _id: user._id,
-        name: user.name,
-        phone: user.phone,
-        role: user.role,
-        phoneVerified: user.phoneVerified,
-        whatsappVerified: user.whatsappVerified,
-        isVerified: user.isVerified
+        _id: updatedUser.id,
+        name: updatedUser.name,
+        phone: updatedUser.phone,
+        role: updatedUser.role,
+        phoneVerified: updatedUser.phoneVerified,
+        whatsappVerified: updatedUser.whatsappVerified,
+        isVerified: updatedUser.isVerified
       }
     });
 
