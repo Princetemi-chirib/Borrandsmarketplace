@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Pack from '@/lib/models/Pack';
-import { Types } from 'mongoose';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
-
-async function getRestaurantId() {
-  return process.env.DEMO_RESTAURANT_ID || '000000000000000000000000';
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,9 +10,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
     const restaurantId = auth.restaurantId;
-    const packs = await Pack.find({ restaurantId: new Types.ObjectId(restaurantId) })
-      .sort({ sortOrder: 1, createdAt: -1 })
-      .lean();
+    const packs = await prisma.pack.findMany({
+      where: { restaurantId },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }]
+    });
     return NextResponse.json({ packs });
   } catch (e: any) {
     return NextResponse.json({ message: 'Failed to load packs' }, { status: 500 });
@@ -35,7 +30,9 @@ export async function POST(request: NextRequest) {
     const restaurantId = auth.restaurantId;
     const body = await request.json();
     const { name, description, price, isActive } = body;
-    const pack = await (Pack as any).create({ restaurantId, name, description, price, isActive: Boolean(isActive) });
+    const pack = await prisma.pack.create({
+      data: { restaurantId, name, description, price, isActive: Boolean(isActive) }
+    });
     return NextResponse.json({ pack }, { status: 201 });
   } catch (e: any) {
     return NextResponse.json({ message: e.message || 'Failed to create pack' }, { status: 400 });
