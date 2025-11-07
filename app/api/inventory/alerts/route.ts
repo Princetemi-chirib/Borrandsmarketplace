@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import InventoryItem from '@/lib/models/InventoryItem';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
 
 export async function GET(request: NextRequest) {
@@ -10,16 +9,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
     await dbConnect();
-    const items = await InventoryItem.find({ restaurantId: auth.restaurantId }).lean();
+    const items = await prisma.inventoryItem.findMany({
+      where: { restaurantId: auth.restaurantId }
+    });
     const alerts = items
-      .filter((it: any) => it.status === 'low_stock' || it.status === 'out_of_stock')
-      .map((it: any) => ({
-        _id: String(it._id),
+      .filter(it => it.status === 'LOW_STOCK' || it.status === 'OUT_OF_STOCK')
+      .map(it => ({
+        id: it.id,
         itemName: it.name,
         currentStock: it.currentStock,
         minLevel: it.minStockLevel,
-        priority: it.status === 'out_of_stock' ? 'high' : 'medium',
-        daysUntilOut: it.status === 'out_of_stock' ? 0 : undefined,
+        priority: it.status === 'OUT_OF_STOCK' ? 'HIGH' : 'MEDIUM',
+        daysUntilOut: it.status === 'OUT_OF_STOCK' ? 0 : undefined,
       }));
     return NextResponse.json({ alerts });
   } catch (e: any) {

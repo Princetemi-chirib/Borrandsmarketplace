@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import User from '@/lib/models/User';
-import Restaurant from '@/lib/models/Restaurant';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_change_me';
 
 export async function POST() {
   try {
+    await dbConnect();
+    
+    return NextResponse.json({
+      message: 'Seed route temporarily disabled during MongoDB to MySQL migration',
+      status: 'skipped'
+    });
+    
+    /* MongoDB seed code - to be converted to Prisma
     await dbConnect();
 
     // Create student user

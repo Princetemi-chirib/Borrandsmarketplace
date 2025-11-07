@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Order from '@/lib/models/Order';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
 
 export async function GET(request: NextRequest) {
@@ -14,14 +13,27 @@ export async function GET(request: NextRequest) {
     const days = Math.min(parseInt(searchParams.get('days') || '7', 10), 90);
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-    const rows = await Order.aggregate([
-      { $match: { restaurant: auth.restaurantId, createdAt: { $gte: since }, paymentStatus: 'paid' } },
-      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, revenue: { $sum: '$total' } } },
-      { $project: { _id: 0, date: '$_id', revenue: 1 } },
-      { $sort: { date: 1 } }
-    ]);
+    const orders = await prisma.order.findMany({
+      where: {
+        restaurantId: auth.restaurantId,
+        createdAt: { gte: since },
+        paymentStatus: 'PAID'
+      },
+      select: { createdAt: true, total: true }
+    });
 
-    return NextResponse.json({ dailyRevenue: rows });
+    // Group by date
+    const dailyMap = new Map<string, number>();
+    orders.forEach(order => {
+      const date = order.createdAt.toISOString().split('T')[0];
+      dailyMap.set(date, (dailyMap.get(date) || 0) + order.total);
+    });
+
+    const dailyRevenue = Array.from(dailyMap.entries())
+      .map(([date, revenue]) => ({ date, revenue }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    return NextResponse.json({ dailyRevenue });
   } catch (e: any) {
     return NextResponse.json({ message: 'Failed to load daily revenue' }, { status: 500 });
   }

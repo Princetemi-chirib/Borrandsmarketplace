@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import User from '@/lib/models/User';
+import { dbConnect, prisma } from '@/lib/db-prisma';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     const { email, password, name, phone, role, university } = await request.json();
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await prisma.user.findUnique({ where: { email: email || 'rabiutemi@gmail.com' } });
     if (existingUser) {
       return NextResponse.json(
         { success: false, message: 'User with this email already exists' },
@@ -17,23 +17,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create new user
-    const user = new User({
-      name: name || 'Rabi Utemi',
-      email: email || 'rabiutemi@gmail.com',
-      password: password || 'Amanillah@12',
-      phone: phone || '+2348012345678',
-      role: role || 'student',
-      university: university || 'University of Lagos',
-      isVerified: true,
-      isActive: true
-    });
+    const hashedPassword = await bcrypt.hash(password || 'Amanillah@12', 12);
 
-    await user.save();
+    // Create new user
+    const user = await prisma.user.create({
+      data: {
+        name: name || 'Rabi Utemi',
+        email: email || 'rabiutemi@gmail.com',
+        password: hashedPassword,
+        phone: phone || '+2348012345678',
+        role: role?.toUpperCase() || 'STUDENT',
+        university: university || 'University of Lagos',
+        isVerified: true,
+        isActive: true,
+        emailVerified: true,
+        phoneVerified: true,
+        whatsappVerified: false,
+        addresses: JSON.stringify([]),
+        preferences: JSON.stringify({}),
+        wallet: JSON.stringify({ balance: 0, transactions: [] }),
+        stats: JSON.stringify({})
+      }
+    });
 
     // Return user without password
     const userResponse = {
-      _id: user._id,
+      id: user.id,
       name: user.name,
       email: user.email,
       phone: user.phone,
