@@ -21,7 +21,13 @@ export async function GET(
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, role: true, favorites: true }
+      select: { 
+        id: true, 
+        role: true,
+        restaurants_userfavorites: {
+          select: { id: true }
+        }
+      }
     });
     
     if (!user || user.role !== 'STUDENT') {
@@ -48,7 +54,6 @@ export async function GET(
         distance: true,
         address: true,
         phone: true,
-        email: true,
         website: true
       }
     });
@@ -57,19 +62,14 @@ export async function GET(
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
     }
 
-    // Parse favorites (if JSON string)
-    let favoritesArray: string[] = [];
-    if (user.favorites) {
-      try {
-        favoritesArray = typeof user.favorites === 'string' ? JSON.parse(user.favorites) : user.favorites;
-      } catch {}
-    }
+    // Get favorites IDs
+    const favoritesIds = user.restaurants_userfavorites.map(f => f.id);
 
     // Add favorite status
     const restaurantWithFavorite = {
       ...restaurant,
       _id: restaurant.id,
-      isFavorite: favoritesArray.includes(restaurant.id) || false
+      isFavorite: favoritesIds.includes(restaurant.id) || false
     };
 
     return NextResponse.json({ restaurant: restaurantWithFavorite });

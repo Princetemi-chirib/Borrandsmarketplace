@@ -24,9 +24,9 @@ export async function GET(request: NextRequest) {
     
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { cuisine: { contains: search, mode: 'insensitive' } },
-        { address: { contains: search, mode: 'insensitive' } }
+        { name: { contains: search } },
+        { cuisine: { contains: search } },
+        { address: { contains: search } }
       ];
     }
     
@@ -109,8 +109,7 @@ export async function POST(request: NextRequest) {
     const existingRestaurant = await prisma.restaurant.findFirst({
       where: { 
         name: { 
-          contains: name,
-          mode: 'insensitive'
+          contains: name
         }
       }
     });
@@ -179,29 +178,21 @@ export async function POST(request: NextRequest) {
             isOpen: false,
             rating: 0,
             reviewCount: 0,
-            categories: JSON.stringify([])
+            operatingHours: JSON.stringify({}),
+            features: JSON.stringify([]),
+            paymentMethods: JSON.stringify([]),
+            stats: JSON.stringify({})
           }
         });
         
         console.log('Restaurant saved successfully for existing user');
-        
-        // Update user with restaurant reference
-        const createdRestaurant = await prisma.restaurant.findUnique({
-          where: { id: restaurant.id }
-        });
-        
-        // Update user with restaurant reference
-        await prisma.user.update({
-          where: { id: updatedUser.id },
-          data: { restaurantId: restaurant.id }
-        });
-        
+
         return NextResponse.json({
           message: 'Restaurant application updated successfully. Pending admin approval.',
           restaurant: {
-            _id: createdRestaurant?.id,
-            name: createdRestaurant?.name,
-            status: createdRestaurant?.status
+            _id: restaurant.id,
+            name: restaurant.name,
+            status: restaurant.status
           },
           owner: {
             _id: updatedUser.id,
@@ -232,6 +223,7 @@ export async function POST(request: NextRequest) {
       owner = await prisma.user.create({
         data: {
           name: ownerName,
+          email: `${ownerPhone}@restaurant.temp`,
           phone: ownerPhone,
           password: hashedPassword,
           role: 'RESTAURANT',
@@ -272,7 +264,10 @@ export async function POST(request: NextRequest) {
           isOpen: false,
           rating: 0,
           reviewCount: 0,
-          categories: JSON.stringify([])
+          operatingHours: JSON.stringify({}),
+          features: JSON.stringify([]),
+          paymentMethods: JSON.stringify([]),
+          stats: JSON.stringify({})
         }
       });
       console.log('Restaurant saved successfully');
@@ -280,13 +275,7 @@ export async function POST(request: NextRequest) {
       console.error('Error saving restaurant:', saveError);
       throw saveError;
     }
-    
-    // Update owner with restaurant reference
-    await prisma.user.update({
-      where: { id: owner.id },
-      data: { restaurantId: restaurant.id }
-    });
-    
+
     return NextResponse.json({
       message: 'Restaurant created successfully. Pending admin approval.',
       restaurant: {

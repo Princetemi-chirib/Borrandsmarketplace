@@ -2,19 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyToken } from '@/lib/auth';
 
-// Force dynamic rendering for this route
-export const dynamic = 'force-dynamic';
-
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     await dbConnect();
-    
+
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'No token provided' }, { status: 401 });
     }
 
     const decoded = verifyToken(token);
@@ -24,7 +21,7 @@ export async function DELETE(
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, role: true, favorites: true }
+      select: { id: true, role: true }
     });
     
     if (!user || user.role !== 'STUDENT') {
@@ -33,19 +30,14 @@ export async function DELETE(
 
     const restaurantId = params.id;
 
-    // Parse favorites
-    let favoritesArray: string[] = [];
-    if (user.favorites) {
-      try {
-        favoritesArray = typeof user.favorites === 'string' ? JSON.parse(user.favorites) : user.favorites;
-      } catch {}
-    }
-
-    // Remove from favorites
-    favoritesArray = favoritesArray.filter(id => id !== restaurantId);
+    // Remove from favorites using Prisma relation
     await prisma.user.update({
       where: { id: user.id },
-      data: { favorites: JSON.stringify(favoritesArray) }
+      data: {
+        restaurants_userfavorites: {
+          disconnect: { id: restaurantId }
+        }
+      }
     });
 
     return NextResponse.json({ message: 'Removed from favorites' });

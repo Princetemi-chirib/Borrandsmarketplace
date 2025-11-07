@@ -102,13 +102,13 @@ export default function LoginPage() {
         localStorage.setItem('user', JSON.stringify(result.data.user));
         
         const user = result.data.user;
-        if (user.role === 'student') {
+        if (user.role === 'STUDENT') {
           router.push('/dashboard/student');
-        } else if (user.role === 'restaurant') {
+        } else if (user.role === 'RESTAURANT') {
           router.push('/dashboard/restaurant');
-        } else if (user.role === 'rider') {
+        } else if (user.role === 'RIDER') {
           router.push('/dashboard/rider');
-        } else if (user.role === 'admin') {
+        } else if (user.role === 'ADMIN') {
           router.push('/dashboard/admin');
         } else {
           router.push('/dashboard');

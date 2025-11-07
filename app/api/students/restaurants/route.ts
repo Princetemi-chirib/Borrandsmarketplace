@@ -21,7 +21,13 @@ export async function GET(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, role: true, favorites: true }
+      select: { 
+        id: true, 
+        role: true,
+        restaurants_userfavorites: {
+          select: { id: true }
+        }
+      }
     });
     
     if (!user || user.role !== 'STUDENT') {
@@ -42,14 +48,14 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { cuisine: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
+        { name: { contains: search } },
+        { cuisine: { contains: search } },
+        { description: { contains: search } }
       ];
     }
 
     if (cuisine && cuisine !== 'all') {
-      where.cuisine = { contains: cuisine, mode: 'insensitive' };
+      where.cuisine = { contains: cuisine };
     }
 
     if (priceRange && priceRange !== 'all') {
@@ -115,18 +121,14 @@ export async function GET(request: NextRequest) {
     const total = await prisma.restaurant.count({ where });
 
     // Parse favorites (if JSON string)
-    let favoritesArray: string[] = [];
-    if (user.favorites) {
-      try {
-        favoritesArray = typeof user.favorites === 'string' ? JSON.parse(user.favorites) : user.favorites;
-      } catch {}
-    }
+    // Get favorites IDs
+    const favoritesIds = user.restaurants_userfavorites.map(f => f.id);
 
     // Add favorite status for each restaurant
     const restaurantsWithFavorites = restaurants.map(restaurant => ({
       ...restaurant,
       _id: restaurant.id,
-      isFavorite: favoritesArray.includes(restaurant.id) || false
+      isFavorite: favoritesIds.includes(restaurant.id) || false
     }));
 
     return NextResponse.json({
