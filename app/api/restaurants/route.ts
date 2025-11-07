@@ -107,7 +107,12 @@ export async function POST(request: NextRequest) {
     
     // Check if restaurant with same name already exists
     const existingRestaurant = await prisma.restaurant.findFirst({
-      where: { name: { equals: name, mode: 'insensitive' } }
+      where: { 
+        name: { 
+          contains: name,
+          mode: 'insensitive'
+        }
+      }
     });
     if (existingRestaurant) {
       return NextResponse.json(
