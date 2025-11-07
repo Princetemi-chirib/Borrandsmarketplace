@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
+    "postinstall": "prisma generate",
     "migrate": "tsx scripts/migrate.ts migrate",
     "migrate:status": "tsx scripts/migrate.ts status",
     "migrate:rollback": "tsx scripts/migrate.ts rollback",
