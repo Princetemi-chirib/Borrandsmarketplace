@@ -5,7 +5,7 @@ import { verifyAppRequest } from '@/lib/auth-app';
 export async function GET(request: NextRequest) {
   try {
     const auth = verifyAppRequest(request);
-    if (!auth || auth.role !== 'restaurant' || !auth.restaurantId) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    if (!auth || auth.role !== 'RESTAURANT' || !auth.restaurantId) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const doc = await prisma.restaurant.findUnique({ where: { id: auth.restaurantId } });
     if (!doc) return NextResponse.json({ message: 'Not found' }, { status: 404 });
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const auth = verifyAppRequest(request);
-    if (!auth || auth.role !== 'restaurant' || !auth.restaurantId) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    if (!auth || auth.role !== 'RESTAURANT' || !auth.restaurantId) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const body = await request.json();
     const allowed = ['name','description','address','phone','website','university','cuisine','image','bannerImage'];

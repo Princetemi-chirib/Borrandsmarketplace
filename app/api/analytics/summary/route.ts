@@ -15,7 +15,7 @@ function rangeToMs(range: string) {
 export async function GET(request: NextRequest) {
   try {
     const auth = verifyAppRequest(request);
-    if (!auth || auth.role !== 'restaurant' || !auth.restaurantId) {
+    if (!auth || auth.role !== 'RESTAURANT' || !auth.restaurantId) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
     await dbConnect();

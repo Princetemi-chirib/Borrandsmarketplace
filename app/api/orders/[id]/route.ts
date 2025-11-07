@@ -23,7 +23,7 @@ function isValidTransition(prev: OrderStatus, next: OrderStatus): boolean {
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const auth = verifyAppRequest(request);
-    if (!auth || auth.role !== 'restaurant' || !auth.restaurantId) {
+    if (!auth || auth.role !== 'RESTAURANT' || !auth.restaurantId) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
     await dbConnect();
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const auth = verifyAppRequest(request);
-    if (!auth || auth.role !== 'restaurant' || !auth.restaurantId) {
+    if (!auth || auth.role !== 'RESTAURANT' || !auth.restaurantId) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
     await dbConnect();

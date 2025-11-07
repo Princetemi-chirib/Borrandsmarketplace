@@ -7,7 +7,7 @@ const ALLOWED_STATUSES = new Set(['PENDING','ACCEPTED','PREPARING','READY','PICK
 export async function GET(request: NextRequest) {
   try {
     const auth = verifyAppRequest(request);
-    if (!auth || auth.role !== 'restaurant' || !auth.restaurantId) {
+    if (!auth || auth.role !== 'RESTAURANT' || !auth.restaurantId) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const auth = verifyAppRequest(request);
-    if (!auth || auth.role !== 'student' || !auth.sub) {
+    if (!auth || auth.role !== 'STUDENT' || !auth.sub) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
