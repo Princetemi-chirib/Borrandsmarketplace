@@ -30,6 +30,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Please complete registration first' }, { status: 400 });
     }
 
+    // Ensure user exists
+    if (!user) {
+      return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
+    }
+
     // Rate limit OTP sends (60s)
     const now = Date.now();
     if (user.lastOtpSentAt && now - new Date(user.lastOtpSentAt).getTime() < 60 * 1000) {
