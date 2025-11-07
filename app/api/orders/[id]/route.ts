@@ -1,23 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Order from '@/lib/models/Order';
-import { Types } from 'mongoose';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
 import { sendWhatsApp, renderOrderTemplate } from '@/lib/services/whatsapp';
 import emitter from '@/lib/services/events';
 
-const ALLOWED_STATUSES = ['pending','accepted','preparing','ready','picked_up','delivered','cancelled'] as const;
+const ALLOWED_STATUSES = ['PENDING','ACCEPTED','PREPARING','READY','PICKED_UP','DELIVERED','CANCELLED'] as const;
 type OrderStatus = typeof ALLOWED_STATUSES[number];
 
 function isValidTransition(prev: OrderStatus, next: OrderStatus): boolean {
   const flow: Record<OrderStatus, OrderStatus[]> = {
-    pending: ['accepted','cancelled'],
-    accepted: ['preparing','cancelled'],
-    preparing: ['ready','cancelled'],
-    ready: ['picked_up','cancelled'],
-    picked_up: ['delivered'],
-    delivered: [],
-    cancelled: [],
+    PENDING: ['ACCEPTED','CANCELLED'],
+    ACCEPTED: ['PREPARING','CANCELLED'],
+    PREPARING: ['READY','CANCELLED'],
+    READY: ['PICKED_UP','CANCELLED'],
+    PICKED_UP: ['DELIVERED'],
+    DELIVERED: [],
+    CANCELLED: [],
   };
   return flow[prev]?.includes(next) || false;
 }
@@ -29,7 +27,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
     await dbConnect();
-    const order = await Order.findOne({ _id: new Types.ObjectId(params.id), restaurant: new Types.ObjectId(auth.restaurantId) }).lean();
+    const order = await prisma.order.findFirst({
+      where: { id: params.id, restaurantId: auth.restaurantId }
+    });
     if (!order) return NextResponse.json({ message: 'Not found' }, { status: 404 });
     return NextResponse.json({ order });
   } catch (e: any) {
@@ -46,12 +46,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     await dbConnect();
 
     const body = await request.json();
-    const nextStatus = (body.status || '').toLowerCase();
-    if (!ALLOWED_STATUSES.includes(nextStatus)) {
+    const nextStatus = (body.status || '').toUpperCase();
+    if (!ALLOWED_STATUSES.includes(nextStatus as any)) {
       return NextResponse.json({ message: 'Invalid status' }, { status: 400 });
     }
 
-    const order = await Order.findOne({ _id: new Types.ObjectId(params.id), restaurant: new Types.ObjectId(auth.restaurantId) });
+    const order = await prisma.order.findFirst({
+      where: { id: params.id, restaurantId: auth.restaurantId }
+    });
     if (!order) return NextResponse.json({ message: 'Not found' }, { status: 404 });
 
     const prevStatus = order.status as OrderStatus;
@@ -59,25 +61,29 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ message: `Invalid transition ${prevStatus} → ${nextStatus}` }, { status: 400 });
     }
 
-    order.status = nextStatus as any;
-    if (nextStatus === 'delivered') order.actualDeliveryTime = new Date();
-    await order.save();
+    const updateData: any = { status: nextStatus };
+    if (nextStatus === 'DELIVERED') updateData.actualDeliveryTime = new Date();
+    
+    const updatedOrder = await prisma.order.update({
+      where: { id: params.id },
+      data: updateData
+    });
 
     // Send WhatsApp notification to customer if phone is available
     try {
-      const customerPhone = (order as any).customerPhone || (order as any).deliveryPhone;
-      if (customerPhone && order.orderNumber) {
+      const customerPhone = (updatedOrder as any).customerPhone || (updatedOrder as any).deliveryPhone;
+      if (customerPhone && updatedOrder.orderNumber) {
         const tplMap: Record<string, any> = {
-          accepted: 'order_confirmed',
-          preparing: 'order_preparing',
-          ready: 'order_ready',
-          picked_up: 'order_picked_up',
-          delivered: 'order_delivered',
-          cancelled: 'order_cancelled',
+          ACCEPTED: 'order_confirmed',
+          PREPARING: 'order_preparing',
+          READY: 'order_ready',
+          PICKED_UP: 'order_picked_up',
+          DELIVERED: 'order_delivered',
+          CANCELLED: 'order_cancelled',
         };
         const tpl = tplMap[nextStatus];
         if (tpl) {
-          const msg = renderOrderTemplate(tpl, { orderNumber: order.orderNumber, restaurantName: undefined });
+          const msg = renderOrderTemplate(tpl, { orderNumber: updatedOrder.orderNumber, restaurantName: undefined });
           await sendWhatsApp(customerPhone, msg);
         }
       }
@@ -86,14 +92,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     // Emit SSE event to restaurant listeners
     try {
       emitter.emit('order.updated', {
-        restaurantId: String(order.restaurant),
-        orderId: String(order._id),
-        status: order.status,
+        restaurantId: updatedOrder.restaurantId,
+        orderId: updatedOrder.id,
+        status: updatedOrder.status,
         updatedAt: new Date().toISOString(),
       });
     } catch {}
 
-    return NextResponse.json({ order });
+    return NextResponse.json({ order: updatedOrder });
   } catch (e: any) {
     return NextResponse.json({ message: 'Failed to update order' }, { status: 400 });
   }

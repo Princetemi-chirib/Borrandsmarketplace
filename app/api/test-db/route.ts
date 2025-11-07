@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import mongoose from 'mongoose';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,50 +9,26 @@ export async function GET(request: NextRequest) {
     await dbConnect();
     console.log('✅ Database connected successfully');
     
-    // Get connection info
-    const connection = mongoose.connection;
-    const dbInfo = {
-      database: connection.db?.databaseName || 'unknown',
-      host: connection.host,
-      port: connection.port,
-      readyState: connection.readyState,
-      isConnected: connection.readyState === 1
-    };
-    
-    // Test basic operations
-    const testCollection = connection.collection('api_test');
-    const testDoc = { 
-      test: 'api_connection', 
-      timestamp: new Date(),
-      endpoint: '/api/test-db'
-    };
-    
-    // Insert test document
-    const insertResult = await testCollection.insertOne(testDoc);
-    console.log('✅ Test document inserted');
-    
-    // Read it back
-    const foundDoc = await testCollection.findOne({ _id: insertResult.insertedId });
-    console.log('✅ Test document retrieved');
-    
-    // Clean up
-    await testCollection.deleteOne({ _id: insertResult.insertedId });
-    console.log('✅ Test document cleaned up');
+    // Test basic Prisma operations
+    const userCount = await prisma.user.count();
+    const restaurantCount = await prisma.restaurant.count();
     
     return NextResponse.json({
       success: true,
-      message: 'Database connection test successful',
-      database: dbInfo,
-      operations: {
-        insert: true,
-        read: !!foundDoc,
-        delete: true
+      message: 'MySQL database connection test successful (Prisma)',
+      database: {
+        type: 'MySQL',
+        isConnected: true
+      },
+      stats: {
+        users: userCount,
+        restaurants: restaurantCount
       },
       timestamp: new Date().toISOString()
     });
     
   } catch (error) {
-    console.error('❌ Database test failed:', error);
+    console.error('❌ MySQL database test failed:', error);
     
     return NextResponse.json({
       success: false,
@@ -65,9 +40,5 @@ export async function GET(request: NextRequest) {
       },
       timestamp: new Date().toISOString()
     }, { status: 500 });
-    
-  } finally {
-    // Don't disconnect here as it might affect other operations
-    // The connection will be managed by the dbConnect function
   }
 }
