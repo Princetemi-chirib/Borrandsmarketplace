@@ -5,7 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_change_me';
 
 export interface JWTPayloadApp {
   sub: string;
-  role: 'student' | 'restaurant' | 'rider' | 'admin';
+  role: 'STUDENT' | 'RESTAURANT' | 'RIDER' | 'ADMIN';
   restaurantId?: string;
   iat?: number;
   exp?: number;
