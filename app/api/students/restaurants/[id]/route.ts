@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyToken } from '@/lib/auth';
-import User from '@/lib/models/User';
-import Restaurant from '@/lib/models/Restaurant';
 
 export async function GET(
   request: NextRequest,
@@ -21,26 +19,57 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const user = await User.findById(decoded.userId);
-    if (!user || user.role !== 'student') {
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, role: true, favorites: true }
+    });
+    
+    if (!user || user.role !== 'STUDENT') {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
     const restaurantId = params.id;
 
-    // Get restaurant with menu items
-    const restaurant = await Restaurant.findById(restaurantId)
-      .populate('menu')
-      .select('name description image rating reviewCount cuisine deliveryFee minimumOrder estimatedDeliveryTime isOpen distance address phone email website menu');
+    // Get restaurant
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        image: true,
+        rating: true,
+        reviewCount: true,
+        cuisine: true,
+        deliveryFee: true,
+        minimumOrder: true,
+        estimatedDeliveryTime: true,
+        isOpen: true,
+        distance: true,
+        address: true,
+        phone: true,
+        email: true,
+        website: true
+      }
+    });
 
     if (!restaurant) {
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
     }
 
+    // Parse favorites (if JSON string)
+    let favoritesArray: string[] = [];
+    if (user.favorites) {
+      try {
+        favoritesArray = typeof user.favorites === 'string' ? JSON.parse(user.favorites) : user.favorites;
+      } catch {}
+    }
+
     // Add favorite status
     const restaurantWithFavorite = {
-      ...restaurant.toObject(),
-      isFavorite: user.favorites?.includes(restaurant._id) || false
+      ...restaurant,
+      _id: restaurant.id,
+      isFavorite: favoritesArray.includes(restaurant.id) || false
     };
 
     return NextResponse.json({ restaurant: restaurantWithFavorite });

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Restaurant from '@/lib/models/Restaurant';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
 
 export async function GET(request: NextRequest) {
@@ -8,7 +7,10 @@ export async function GET(request: NextRequest) {
     const auth = verifyAppRequest(request);
     if (!auth || auth.role !== 'restaurant' || !auth.restaurantId) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     await dbConnect();
-    const doc = await Restaurant.findById(auth.restaurantId).select('operatingHours deliveryFee minimumOrder estimatedDeliveryTime features paymentMethods').lean();
+    const doc = await prisma.restaurant.findUnique({
+      where: { id: auth.restaurantId },
+      select: { operatingHours: true, deliveryFee: true, minimumOrder: true, estimatedDeliveryTime: true, features: true, paymentMethods: true }
+    });
     if (!doc) return NextResponse.json({ message: 'Not found' }, { status: 404 });
     return NextResponse.json({ settings: doc });
   } catch (e: any) {
@@ -24,8 +26,21 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const allowed = ['operatingHours','deliveryFee','minimumOrder','estimatedDeliveryTime','features','paymentMethods'];
     const update: Record<string, any> = {};
-    for (const key of allowed) if (key in body) update[key] = body[key];
-    const doc = await Restaurant.findByIdAndUpdate(auth.restaurantId, update, { new: true, runValidators: true }).select('operatingHours deliveryFee minimumOrder estimatedDeliveryTime features paymentMethods');
+    for (const key of allowed) {
+      if (key in body) {
+        // JSON stringify complex fields
+        if (key === 'operatingHours' || key === 'features' || key === 'paymentMethods') {
+          update[key] = typeof body[key] === 'string' ? body[key] : JSON.stringify(body[key]);
+        } else {
+          update[key] = body[key];
+        }
+      }
+    }
+    const doc = await prisma.restaurant.update({
+      where: { id: auth.restaurantId },
+      data: update,
+      select: { operatingHours: true, deliveryFee: true, minimumOrder: true, estimatedDeliveryTime: true, features: true, paymentMethods: true }
+    });
     if (!doc) return NextResponse.json({ message: 'Not found' }, { status: 404 });
     return NextResponse.json({ settings: doc });
   } catch (e: any) {

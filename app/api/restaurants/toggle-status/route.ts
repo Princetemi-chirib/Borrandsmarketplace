@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Restaurant from '@/lib/models/Restaurant';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 
 // PUT /api/restaurants/toggle-status - Toggle restaurant open/closed status
 export async function PUT(request: NextRequest) {
@@ -34,23 +33,24 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Find and update the restaurant
-    const restaurant = await Restaurant.findOneAndUpdate(
-      { userId },
-      { isOpen },
-      { new: true }
-    );
-
-    if (!restaurant) {
+    // Find the restaurant first
+    const existing = await prisma.restaurant.findFirst({ where: { userId } });
+    if (!existing) {
       return NextResponse.json(
         { error: 'Restaurant not found' },
         { status: 404 }
       );
     }
 
+    // Update the restaurant
+    const restaurant = await prisma.restaurant.update({
+      where: { id: existing.id },
+      data: { isOpen }
+    });
+
     return NextResponse.json({
       message: `Restaurant ${isOpen ? 'opened' : 'closed'} successfully`,
-      restaurant: restaurant.toObject()
+      restaurant
     });
     
   } catch (error) {

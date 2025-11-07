@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Restaurant from '@/lib/models/Restaurant';
-import User from '@/lib/models/User';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -29,10 +27,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const restaurant = await Restaurant.findOne({ userId })
-      .populate('userId', 'name phone email')
-      .populate('categories', 'name')
-      .populate('menu', 'name price category');
+    const restaurant = await prisma.restaurant.findFirst({
+      where: { userId },
+      include: {
+        user: {
+          select: { id: true, name: true, phone: true, email: true }
+        }
+      }
+    });
 
     if (!restaurant) {
       return NextResponse.json(
@@ -42,7 +44,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      restaurant: restaurant.toObject()
+      restaurant: { ...restaurant, _id: restaurant.id }
     });
     
   } catch (error) {

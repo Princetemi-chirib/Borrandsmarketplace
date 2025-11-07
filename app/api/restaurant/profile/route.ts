@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Restaurant from '@/lib/models/Restaurant';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
 
 export async function GET(request: NextRequest) {
@@ -8,7 +7,7 @@ export async function GET(request: NextRequest) {
     const auth = verifyAppRequest(request);
     if (!auth || auth.role !== 'restaurant' || !auth.restaurantId) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     await dbConnect();
-    const doc = await Restaurant.findById(auth.restaurantId).lean();
+    const doc = await prisma.restaurant.findUnique({ where: { id: auth.restaurantId } });
     if (!doc) return NextResponse.json({ message: 'Not found' }, { status: 404 });
     return NextResponse.json({ profile: doc });
   } catch (e: any) {
@@ -25,7 +24,10 @@ export async function PATCH(request: NextRequest) {
     const allowed = ['name','description','address','phone','website','university','cuisine','image','bannerImage'];
     const update: Record<string, any> = {};
     for (const key of allowed) if (key in body) update[key] = body[key];
-    const doc = await Restaurant.findByIdAndUpdate(auth.restaurantId, update, { new: true });
+    const doc = await prisma.restaurant.update({
+      where: { id: auth.restaurantId },
+      data: update
+    });
     if (!doc) return NextResponse.json({ message: 'Not found' }, { status: 404 });
     return NextResponse.json({ profile: doc });
   } catch (e: any) {

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Restaurant from '@/lib/models/Restaurant';
-import User from '@/lib/models/User';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 
 // POST /api/restaurants/[id]/approve - Approve or reject restaurant
 export async function POST(
@@ -21,7 +19,10 @@ export async function POST(
       );
     }
     
-    const restaurant = await Restaurant.findById(params.id);
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: params.id }
+    });
+    
     if (!restaurant) {
       return NextResponse.json(
         { error: 'Restaurant not found' },
@@ -29,38 +30,43 @@ export async function POST(
       );
     }
     
-    if (restaurant.status !== 'pending') {
+    if (restaurant.status !== 'PENDING') {
       return NextResponse.json(
         { error: 'Restaurant is not pending approval' },
         { status: 400 }
       );
     }
     
+    const updateData: any = {};
+    
     if (action === 'approve') {
-      restaurant.status = 'approved';
-      restaurant.isOpen = true;
-      restaurant.approvedAt = new Date();
+      updateData.status = 'APPROVED';
+      updateData.isOpen = true;
+      updateData.approvedAt = new Date();
       
       // Send approval notification to restaurant owner
       // TODO: Implement notification system
       
     } else if (action === 'reject') {
-      restaurant.status = 'rejected';
-      restaurant.rejectionReason = reason || 'Application rejected';
-      restaurant.rejectedAt = new Date();
+      updateData.status = 'REJECTED';
+      updateData.rejectionReason = reason || 'Application rejected';
+      updateData.rejectedAt = new Date();
       
       // Send rejection notification to restaurant owner
       // TODO: Implement notification system
     }
     
-    await restaurant.save();
+    const updated = await prisma.restaurant.update({
+      where: { id: params.id },
+      data: updateData
+    });
     
     return NextResponse.json({
       message: `Restaurant ${action}d successfully`,
       restaurant: {
-        _id: restaurant._id,
-        name: restaurant.name,
-        status: restaurant.status
+        _id: updated.id,
+        name: updated.name,
+        status: updated.status
       }
     });
     

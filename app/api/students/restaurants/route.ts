@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyToken } from '@/lib/auth';
-import User from '@/lib/models/User';
-import Restaurant from '@/lib/models/Restaurant';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -21,8 +19,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const user = await User.findById(decoded.userId);
-    if (!user || user.role !== 'student') {
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, role: true, favorites: true }
+    });
+    
+    if (!user || user.role !== 'STUDENT') {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
@@ -35,71 +37,96 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = (page - 1) * limit;
 
-    // Build query
-    let query: any = { isOpen: true };
+    // Build where clause
+    let where: any = { isOpen: true };
 
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { cuisine: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { cuisine: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
       ];
     }
 
     if (cuisine && cuisine !== 'all') {
-      query.cuisine = cuisine;
+      where.cuisine = { contains: cuisine, mode: 'insensitive' };
     }
 
     if (priceRange && priceRange !== 'all') {
       switch (priceRange) {
         case 'low':
-          query.deliveryFee = { $lte: 300 };
+          where.deliveryFee = { lte: 300 };
           break;
         case 'medium':
-          query.deliveryFee = { $gt: 300, $lte: 500 };
+          where.deliveryFee = { gt: 300, lte: 500 };
           break;
         case 'high':
-          query.deliveryFee = { $gt: 500 };
+          where.deliveryFee = { gt: 500 };
           break;
       }
     }
 
-    // Build sort
-    let sort: any = {};
+    // Build orderBy
+    let orderBy: any = {};
     switch (sortBy) {
       case 'name':
-        sort.name = 1;
+        orderBy.name = 'asc';
         break;
       case 'rating':
-        sort.rating = -1;
+        orderBy.rating = 'desc';
         break;
       case 'distance':
-        sort.distance = 1;
+        orderBy.distance = 'asc';
         break;
       case 'deliveryTime':
-        sort.estimatedDeliveryTime = 1;
+        orderBy.estimatedDeliveryTime = 'asc';
         break;
       case 'deliveryFee':
-        sort.deliveryFee = 1;
+        orderBy.deliveryFee = 'asc';
         break;
       default:
-        sort.name = 1;
+        orderBy.name = 'asc';
     }
 
     // Get restaurants
-    const restaurants = await Restaurant.find(query)
-      .select('name description image rating reviewCount cuisine deliveryFee minimumOrder estimatedDeliveryTime isOpen distance address')
-      .sort(sort)
-      .skip(skip)
-      .limit(limit);
+    const restaurants = await prisma.restaurant.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        image: true,
+        rating: true,
+        reviewCount: true,
+        cuisine: true,
+        deliveryFee: true,
+        minimumOrder: true,
+        estimatedDeliveryTime: true,
+        isOpen: true,
+        distance: true,
+        address: true
+      },
+      orderBy,
+      skip,
+      take: limit
+    });
 
     // Get total count for pagination
-    const total = await Restaurant.countDocuments(query);
+    const total = await prisma.restaurant.count({ where });
+
+    // Parse favorites (if JSON string)
+    let favoritesArray: string[] = [];
+    if (user.favorites) {
+      try {
+        favoritesArray = typeof user.favorites === 'string' ? JSON.parse(user.favorites) : user.favorites;
+      } catch {}
+    }
 
     // Add favorite status for each restaurant
     const restaurantsWithFavorites = restaurants.map(restaurant => ({
-      ...restaurant.toObject(),
-      isFavorite: user.favorites?.includes(restaurant._id) || false
+      ...restaurant,
+      _id: restaurant.id,
+      isFavorite: favoritesArray.includes(restaurant.id) || false
     }));
 
     return NextResponse.json({
