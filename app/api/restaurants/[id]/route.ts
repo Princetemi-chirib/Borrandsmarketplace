@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Restaurant from '@/lib/models/Restaurant';
-import User from '@/lib/models/User';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 
 // GET /api/restaurants/[id] - Get restaurant by ID
 export async function GET(
@@ -11,10 +9,14 @@ export async function GET(
   try {
     await dbConnect();
     
-    const restaurant = await Restaurant.findById(params.id)
-      .populate('owner', 'name email phone')
-      .populate('menu')
-      .populate('categories');
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: params.id },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, phone: true }
+        }
+      }
+    });
     
     if (!restaurant) {
       return NextResponse.json(
@@ -23,7 +25,19 @@ export async function GET(
       );
     }
     
-    return NextResponse.json({ restaurant });
+    // Transform for backward compatibility
+    const transformed = {
+      ...restaurant,
+      _id: restaurant.id,
+      owner: restaurant.user ? {
+        _id: restaurant.user.id,
+        name: restaurant.user.name,
+        email: restaurant.user.email,
+        phone: restaurant.user.phone
+      } : null
+    };
+    
+    return NextResponse.json({ restaurant: transformed });
     
   } catch (error) {
     console.error('Error fetching restaurant:', error);
@@ -58,33 +72,40 @@ export async function PUT(
       status
     } = body;
     
-    const restaurant = await Restaurant.findById(params.id);
-    if (!restaurant) {
+    const existing = await prisma.restaurant.findUnique({
+      where: { id: params.id }
+    });
+    
+    if (!existing) {
       return NextResponse.json(
         { error: 'Restaurant not found' },
         { status: 404 }
       );
     }
     
-    // Update fields
-    if (name) restaurant.name = name;
-    if (description) restaurant.description = description;
-    if (cuisine) restaurant.cuisine = cuisine;
-    if (address) restaurant.address = address;
-    if (phone) restaurant.phone = phone;
-    if (email) restaurant.email = email;
-    if (website) restaurant.website = website;
-    if (deliveryFee !== undefined) restaurant.deliveryFee = deliveryFee;
-    if (minimumOrder !== undefined) restaurant.minimumOrder = minimumOrder;
-    if (estimatedDeliveryTime !== undefined) restaurant.estimatedDeliveryTime = estimatedDeliveryTime;
-    if (isOpen !== undefined) restaurant.isOpen = isOpen;
-    if (status) restaurant.status = status;
+    // Build update data
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (cuisine !== undefined) updateData.cuisine = cuisine;
+    if (address !== undefined) updateData.address = address;
+    if (phone !== undefined) updateData.phone = phone;
+    if (email !== undefined) updateData.email = email;
+    if (website !== undefined) updateData.website = website;
+    if (deliveryFee !== undefined) updateData.deliveryFee = deliveryFee;
+    if (minimumOrder !== undefined) updateData.minimumOrder = minimumOrder;
+    if (estimatedDeliveryTime !== undefined) updateData.estimatedDeliveryTime = estimatedDeliveryTime;
+    if (isOpen !== undefined) updateData.isOpen = isOpen;
+    if (status !== undefined) updateData.status = status.toUpperCase();
     
-    await restaurant.save();
+    const restaurant = await prisma.restaurant.update({
+      where: { id: params.id },
+      data: updateData
+    });
     
     return NextResponse.json({
       message: 'Restaurant updated successfully',
-      restaurant
+      restaurant: { ...restaurant, _id: restaurant.id }
     });
     
   } catch (error) {
@@ -104,7 +125,11 @@ export async function DELETE(
   try {
     await dbConnect();
     
-    const restaurant = await Restaurant.findById(params.id);
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: params.id },
+      select: { userId: true }
+    });
+    
     if (!restaurant) {
       return NextResponse.json(
         { error: 'Restaurant not found' },
@@ -112,13 +137,23 @@ export async function DELETE(
       );
     }
     
-    // Delete owner user
-    if (restaurant.owner) {
-      await User.findByIdAndDelete(restaurant.owner);
-    }
+    // Delete restaurant first (cascading delete should handle relations)
+    await prisma.restaurant.delete({
+      where: { id: params.id }
+    });
     
-    // Delete restaurant
-    await Restaurant.findByIdAndDelete(params.id);
+    // Optionally delete owner user if they have no other restaurants
+    if (restaurant.userId) {
+      const otherRestaurants = await prisma.restaurant.count({
+        where: { userId: restaurant.userId }
+      });
+      
+      if (otherRestaurants === 0) {
+        await prisma.user.delete({
+          where: { id: restaurant.userId }
+        });
+      }
+    }
     
     return NextResponse.json({
       message: 'Restaurant deleted successfully'

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Order from '@/lib/models/Order';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
 
 export async function GET(request: NextRequest) {
@@ -10,7 +9,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
     await dbConnect();
-    const count = await Order.countDocuments({ restaurant: auth.restaurantId, status: 'pending' });
+    const count = await prisma.order.count({
+      where: {
+        restaurantId: auth.restaurantId,
+        status: 'PENDING'
+      }
+    });
     return NextResponse.json({ count });
   } catch (e: any) {
     return NextResponse.json({ message: 'Failed to fetch notifications count' }, { status: 500 });
