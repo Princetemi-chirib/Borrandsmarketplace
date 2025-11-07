@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import User from '@/lib/models/User';
+import { dbConnect, prisma } from '@/lib/db-prisma';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,7 +27,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ phone });
+    const existingUser = await prisma.user.findFirst({ 
+      where: { phone: phone || undefined }
+    });
     if (existingUser) {
       return NextResponse.json(
         { success: false, message: 'User with this phone already exists' },
@@ -35,29 +37,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Hash password if provided
+    const hashedPassword = password ? await bcrypt.hash(password, 12) : undefined;
+
     // Create new user
     console.log('Creating user with data:', { name, phone, role, university, studentId, department, level });
-    const user = new User({
-      name,
-      phone,
-      password,
-      role,
-      university,
-      studentId,
-      department,
-      level,
-      isVerified: false,
-      isActive: true,
-      phoneVerified: false
+    const user = await prisma.user.create({
+      data: {
+        name,
+        phone,
+        password: hashedPassword || '',
+        email: `${phone}@temp.placeholder`,
+        role: role.toUpperCase(),
+        university,
+        studentId,
+        department,
+        level,
+        isVerified: false,
+        isActive: true,
+        phoneVerified: false,
+        emailVerified: false,
+        whatsappVerified: false,
+        addresses: JSON.stringify([]),
+        preferences: JSON.stringify({}),
+        wallet: JSON.stringify({ balance: 0, transactions: [] }),
+        stats: JSON.stringify({})
+      }
     });
 
-    console.log('User object created, attempting to save...');
-    await user.save();
-    console.log('User saved successfully with ID:', user._id);
+    console.log('User saved successfully with ID:', user.id);
 
     // Return success response
     const userResponse = {
-      _id: user._id,
+      id: user.id,
       name: user.name,
       phone: user.phone,
       role: user.role,
@@ -82,24 +94,10 @@ export async function POST(request: NextRequest) {
       stack: error.stack
     });
     
-    if (error.code === 11000) {
+    if (error.code === 'P2002') {
       return NextResponse.json(
         { success: false, message: 'User with this phone already exists. Please try again.' },
         { status: 400 }
-      );
-    }
-
-    if (error.name === 'ValidationError') {
-      return NextResponse.json(
-        { success: false, message: 'Invalid data provided. Please check your information.' },
-        { status: 400 }
-      );
-    }
-
-    if (error.name === 'MongoError' || error.name === 'MongoServerError') {
-      return NextResponse.json(
-        { success: false, message: 'Database error. Please try again later.' },
-        { status: 500 }
       );
     }
 

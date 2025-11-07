@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import User from '@/lib/models/User';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import WhatsApp from '@/lib/whatsapp';
 
 function generateOtp(): string {
@@ -19,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find existing user
-    let user = await User.findOne({ phone });
+    let user = await prisma.user.findFirst({ where: { phone } });
 
     if (!user && purpose === 'login') {
       return NextResponse.json({ success: false, message: 'No account found for this phone' }, { status: 404 });
@@ -39,11 +38,15 @@ export async function POST(request: NextRequest) {
 
     // Generate and save OTP
     const code = generateOtp();
-    user.otpCode = code;
-    user.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
-    user.otpAttempts = 0;
-    user.lastOtpSentAt = new Date();
-    await user.save();
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        otpCode: code,
+        otpExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
+        otpAttempts: 0,
+        lastOtpSentAt: new Date()
+      }
+    });
 
     // Send via WhatsApp
     const message = `Your Borrands verification code is ${code}. It expires in 5 minutes.`;

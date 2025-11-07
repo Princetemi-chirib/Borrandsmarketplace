@@ -83,7 +83,11 @@ export async function POST(request: NextRequest) {
         isActive: true,
         emailVerified: false,
         phoneVerified: false,
-        whatsappVerified: false
+        whatsappVerified: false,
+        addresses: JSON.stringify([]),
+        preferences: JSON.stringify({}),
+        wallet: JSON.stringify({ balance: 0, transactions: [] }),
+        stats: JSON.stringify({})
       }
     });
 
