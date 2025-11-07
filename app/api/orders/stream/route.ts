@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const token = url.searchParams.get('token');
   const auth = token ? verifyAppTokenString(token) : verifyAppRequest(request);
-  if (!auth || auth.role !== 'restaurant' || !auth.restaurantId) {
+  if (!auth || auth.role !== 'RESTAURANT' || !auth.restaurantId) {
     return new Response('Unauthorized', { status: 401 });
   }
 

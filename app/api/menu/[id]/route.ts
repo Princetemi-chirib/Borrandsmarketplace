@@ -6,7 +6,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   try {
     await dbConnect();
     const auth = verifyAppRequest(request);
-    if (!auth || auth.role !== 'restaurant' || !auth.restaurantId) {
+    if (!auth || auth.role !== 'RESTAURANT' || !auth.restaurantId) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
     const id = params.id;
@@ -48,7 +48,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   try {
     await dbConnect();
     const auth = verifyAppRequest(request);
-    if (!auth || auth.role !== 'restaurant' || !auth.restaurantId) {
+    if (!auth || auth.role !== 'RESTAURANT' || !auth.restaurantId) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
     const id = params.id;
