@@ -65,7 +65,13 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    const token = generateToken(updatedUser);
+    // Create a user object compatible with generateToken (expects _id)
+    const userForToken = {
+      ...updatedUser,
+      _id: updatedUser.id
+    } as any;
+    
+    const token = generateToken(userForToken);
 
     const userResponse = {
       id: updatedUser.id,
