@@ -12,7 +12,7 @@ export interface User {
   updatedAt: Date;
 }
 
-export type UserRole = 'student' | 'restaurant' | 'rider' | 'admin';
+export type UserRole = 'STUDENT' | 'RESTAURANT' | 'RIDER' | 'ADMIN';
 
 export interface Restaurant {
   _id: string;
