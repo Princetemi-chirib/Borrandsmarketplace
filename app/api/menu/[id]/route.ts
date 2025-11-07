@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import MenuItem from '@/lib/models/MenuItem';
-import { Types } from 'mongoose';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
-import Category from '@/lib/models/Category';
-import Pack from '@/lib/models/Pack';
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -20,15 +16,28 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     for (const key of allowed) if (key in body) update[key] = body[key];
 
     if (update.categoryId) {
-      const catOk = await Category.findOne({ _id: new Types.ObjectId(update.categoryId), restaurantId: new Types.ObjectId(auth.restaurantId) }).select('_id');
+      const catOk = await prisma.category.findFirst({
+        where: { id: update.categoryId, restaurantId: auth.restaurantId },
+        select: { id: true }
+      });
       if (!catOk) return NextResponse.json({ message: 'Invalid categoryId' }, { status: 400 });
     }
     if (update.packId) {
-      const packOk = await Pack.findOne({ _id: new Types.ObjectId(update.packId), restaurantId: new Types.ObjectId(auth.restaurantId) }).select('_id');
+      const packOk = await prisma.pack.findFirst({
+        where: { id: update.packId, restaurantId: auth.restaurantId },
+        select: { id: true }
+      });
       if (!packOk) return NextResponse.json({ message: 'Invalid packId' }, { status: 400 });
     }
-    const item = await MenuItem.findOneAndUpdate({ _id: new Types.ObjectId(id), restaurantId: new Types.ObjectId(auth.restaurantId) }, update, { new: true });
-    if (!item) return NextResponse.json({ message: 'Not found' }, { status: 404 });
+    
+    const result = await prisma.menuItem.updateMany({
+      where: { id, restaurantId: auth.restaurantId },
+      data: update
+    });
+    
+    if (result.count === 0) return NextResponse.json({ message: 'Not found' }, { status: 404 });
+    
+    const item = await prisma.menuItem.findUnique({ where: { id } });
     return NextResponse.json({ item });
   } catch (e: any) {
     return NextResponse.json({ message: e.message || 'Failed to update item' }, { status: 400 });
@@ -43,8 +52,10 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
     const id = params.id;
-    const res = await MenuItem.findOneAndDelete({ _id: new Types.ObjectId(id), restaurantId: new Types.ObjectId(auth.restaurantId) });
-    if (!res) return NextResponse.json({ message: 'Not found' }, { status: 404 });
+    const res = await prisma.menuItem.deleteMany({
+      where: { id, restaurantId: auth.restaurantId }
+    });
+    if (res.count === 0) return NextResponse.json({ message: 'Not found' }, { status: 404 });
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ message: e.message || 'Failed to delete item' }, { status: 400 });

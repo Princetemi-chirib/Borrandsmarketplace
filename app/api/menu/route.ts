@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import MenuItem from '@/lib/models/MenuItem';
-import { Types } from 'mongoose';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
-import Category from '@/lib/models/Category';
-import Pack from '@/lib/models/Pack';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,9 +10,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
     const restaurantId = auth.restaurantId;
-    const items = await MenuItem.find({ restaurantId: new Types.ObjectId(restaurantId) })
-      .sort({ sortOrder: 1, createdAt: -1 })
-      .lean();
+    const items = await prisma.menuItem.findMany({
+      where: { restaurantId },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }]
+    });
     return NextResponse.json({ items });
   } catch (e: any) {
     return NextResponse.json({ message: 'Failed to load menu' }, { status: 500 });
@@ -36,24 +33,37 @@ export async function POST(request: NextRequest) {
 
     // Validate category/pack scoping
     if (categoryId) {
-      const catOk = await Category.findOne({ _id: new Types.ObjectId(categoryId), restaurantId: new Types.ObjectId(restaurantId) }).select('_id');
+      const catOk = await prisma.category.findFirst({
+        where: { id: categoryId, restaurantId },
+        select: { id: true }
+      });
       if (!catOk) return NextResponse.json({ message: 'Invalid categoryId' }, { status: 400 });
     }
     if (packId) {
-      const packOk = await Pack.findOne({ _id: new Types.ObjectId(packId), restaurantId: new Types.ObjectId(restaurantId) }).select('_id');
+      const packOk = await prisma.pack.findFirst({
+        where: { id: packId, restaurantId },
+        select: { id: true }
+      });
       if (!packOk) return NextResponse.json({ message: 'Invalid packId' }, { status: 400 });
     }
-    const item = await (MenuItem as any).create({
-      restaurantId,
-      name,
-      description,
-      price,
-      priceDescription,
-      image,
-      isAvailable: Boolean(isAvailable),
-      isPublished: isPublished !== false,
-      packId: packId || undefined,
-      categoryId: categoryId || undefined,
+    
+    const item = await prisma.menuItem.create({
+      data: {
+        restaurantId,
+        categoryId: categoryId || '',
+        name,
+        description,
+        price,
+        priceDescription,
+        image,
+        isAvailable: Boolean(isAvailable),
+        isPublished: isPublished !== false,
+        packId: packId || null,
+        allergens: JSON.stringify([]),
+        nutritionalInfo: JSON.stringify({}),
+        ingredients: JSON.stringify([]),
+        tags: JSON.stringify([])
+      }
     });
     return NextResponse.json({ item }, { status: 201 });
   } catch (e: any) {
