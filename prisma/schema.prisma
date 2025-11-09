@@ -139,6 +139,7 @@ model Order {
   status                OrderStatus   @default(PENDING)
   paymentStatus         PaymentStatus @default(PENDING)
   paymentMethod         PaymentMethod
+  paymentReference      String?
   deliveryAddress       String
   deliveryInstructions  String?
   deliveryPhone         String?

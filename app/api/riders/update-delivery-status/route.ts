@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyToken } from '@/lib/auth';
 import { sendWhatsApp } from '@/lib/services/whatsapp';
-import { emitter } from '@/lib/services/events';
+import emitter from '@/lib/services/events';
 
 export async function PATCH(request: NextRequest) {
   try {

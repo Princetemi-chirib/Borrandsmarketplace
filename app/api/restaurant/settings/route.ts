@@ -23,7 +23,6 @@ export async function GET(request: NextRequest) {
         university: true,
         cuisine: true,
         isOpen: true,
-        acceptingOrders: true,
         deliveryFee: true,
         minimumOrder: true,
         estimatedDeliveryTime: true,
@@ -113,7 +112,6 @@ export async function PATCH(request: NextRequest) {
     if (body.university !== undefined) updateData.university = body.university;
     if (body.cuisine !== undefined) updateData.cuisine = body.cuisine;
     if (body.isOpen !== undefined) updateData.isOpen = body.isOpen;
-    if (body.acceptingOrders !== undefined) updateData.acceptingOrders = body.acceptingOrders;
     if (body.deliveryFee !== undefined) updateData.deliveryFee = body.deliveryFee;
     if (body.minimumOrder !== undefined) updateData.minimumOrder = body.minimumOrder;
     if (body.estimatedDeliveryTime !== undefined) updateData.estimatedDeliveryTime = body.estimatedDeliveryTime;

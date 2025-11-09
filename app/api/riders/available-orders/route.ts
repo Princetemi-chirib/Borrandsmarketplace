@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     // Get rider profile to check online status
     const rider = await prisma.rider.findUnique({
       where: { userId: user.id },
-      select: { id: true, isOnline: true, isAvailable: true, university: true }
+      select: { id: true, isOnline: true, isAvailable: true }
     });
 
     if (!rider) {

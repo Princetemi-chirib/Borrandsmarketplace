@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       if (transaction.status === 'success') {
         await dbConnect();
         
-        const metadata = transaction.metadata;
+        const metadata = transaction.metadata as any;
         
         if (metadata && metadata.cart && metadata.userId) {
           // Group cart items by restaurant
@@ -50,16 +50,33 @@ export async function GET(request: NextRequest) {
 
           // Create orders for each restaurant
           const orderPromises = Object.values(ordersByRestaurant).map(async (orderData: any) => {
-            const total = orderData.items.reduce((sum: number, item: any) => 
+            const subtotal = orderData.items.reduce((sum: number, item: any) => 
               sum + (item.price * item.quantity), 0
             );
+            
+            // Get restaurant to calculate delivery fee
+            const restaurant = await prisma.restaurant.findUnique({
+              where: { id: orderData.restaurantId },
+              select: { deliveryFee: true, estimatedDeliveryTime: true }
+            });
+            
+            const deliveryFee = restaurant?.deliveryFee || 0;
+            const total = subtotal + deliveryFee;
+            const estimatedDeliveryTime = restaurant?.estimatedDeliveryTime || 30;
+            
+            // Generate unique order number
+            const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
             return await prisma.order.create({
               data: {
                 studentId: metadata.userId,
                 restaurantId: orderData.restaurantId,
                 items: JSON.stringify(orderData.items),
+                subtotal: subtotal,
+                deliveryFee: deliveryFee,
                 total: total,
+                estimatedDeliveryTime: estimatedDeliveryTime,
+                orderNumber: orderNumber,
                 deliveryAddress: metadata.deliveryAddress?.address || '',
                 deliveryInstructions: metadata.deliveryAddress?.instructions || '',
                 deliveryPhone: metadata.phone || metadata.deliveryAddress?.phone || '',
