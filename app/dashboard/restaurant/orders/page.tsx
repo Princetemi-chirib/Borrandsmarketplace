@@ -48,10 +48,25 @@ export default function RestaurantOrders() {
     try {
       setLoading(true);
       const statusParam = selectedStatus === 'All' ? 'all' : normalizeUiToApiStatus(selectedStatus);
-      const res = await fetch(`/api/orders?status=${statusParam}`, { credentials: 'include' });
+      const token = localStorage.getItem('token');
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      const res = await fetch(`/api/orders?status=${statusParam}`, { headers, credentials: 'include' });
       const json = await res.json();
-      if (res.ok && json.orders) setOrders(json.orders);
-      else setError(json.message || 'Failed to load orders');
+      
+      if (res.ok && json.orders) {
+        // Normalize orders: parse items if stringified, normalize status to lowercase, map id to _id for UI
+        const normalizedOrders = json.orders.map((order: any) => ({
+          ...order,
+          _id: order.id || order._id, // Map id to _id for compatibility
+          status: order.status?.toLowerCase() || 'pending',
+          items: typeof order.items === 'string' ? JSON.parse(order.items) : order.items
+        }));
+        setOrders(normalizedOrders);
+      } else {
+        setError(json.message || 'Failed to load orders');
+      }
     } finally {
       setLoading(false);
     }
@@ -135,7 +150,18 @@ export default function RestaurantOrders() {
   };
 
   const updateOrderStatus = async (orderId:string, newStatus:string) => {
-    const res = await fetch(`/api/orders/${orderId}`, { method:'PATCH', headers:{ 'Content-Type': 'application/json' }, credentials:'include', body: JSON.stringify({ status: newStatus }) });
+    const token = localStorage.getItem('token');
+    const headers: any = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    
+    // Convert lowercase status back to uppercase for API
+    const apiStatus = newStatus.toUpperCase();
+    const res = await fetch(`/api/orders/${orderId}`, { 
+      method:'PATCH', 
+      headers, 
+      credentials:'include', 
+      body: JSON.stringify({ status: apiStatus }) 
+    });
     if (res.ok) await loadOrders();
   };
 
@@ -165,6 +191,24 @@ export default function RestaurantOrders() {
             </button>
           </div>
         </motion.div>
+
+        {/* Error Banner */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3"
+          >
+            <svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <h3 className="text-sm font-medium text-red-800">Error Loading Orders</h3>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+            </div>
+          </motion.div>
+        )}
 
         {/* Filters and Search */}
         <motion.div

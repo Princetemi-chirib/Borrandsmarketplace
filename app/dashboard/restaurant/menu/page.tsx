@@ -40,10 +40,19 @@ export default function MenuManagementPage() {
 		(async () => {
 			try {
 				setLoading(true);
-				const res = await fetch('/api/menu', { credentials: 'include' });
+				const token = localStorage.getItem('token');
+				const headers: any = {};
+				if (token) headers['Authorization'] = `Bearer ${token}`;
+				
+				const res = await fetch('/api/menu', { headers, credentials: 'include' });
 				const json = await res.json();
 				if (res.ok && json.items) {
-					setItems(json.items);
+					// Map id to _id for UI compatibility
+					const normalizedItems = json.items.map((item: any) => ({
+						...item,
+						_id: item.id || item._id
+					}));
+					setItems(normalizedItems);
 				} else {
 					setError(json.message || 'Failed to load menu');
 				}
@@ -66,9 +75,20 @@ export default function MenuManagementPage() {
 	useEffect(() => {
 		(async () => {
 			try {
-				const res = await fetch('/api/categories', { credentials: 'include' });
+				const token = localStorage.getItem('token');
+				const headers: any = {};
+				if (token) headers['Authorization'] = `Bearer ${token}`;
+				
+				const res = await fetch('/api/categories', { headers, credentials: 'include' });
 				const json = await res.json();
-				if (res.ok && json.categories) setCategories(json.categories);
+				if (res.ok && json.categories) {
+					// Map id to _id for UI compatibility
+					const normalized = json.categories.map((cat: any) => ({
+						...cat,
+						_id: cat.id || cat._id
+					}));
+					setCategories(normalized);
+				}
 			} catch {}
 		})();
 	}, []);
@@ -77,9 +97,20 @@ export default function MenuManagementPage() {
 	useEffect(() => {
 		(async () => {
 			try {
-				const res = await fetch('/api/packs', { credentials: 'include' });
+				const token = localStorage.getItem('token');
+				const headers: any = {};
+				if (token) headers['Authorization'] = `Bearer ${token}`;
+				
+				const res = await fetch('/api/packs', { headers, credentials: 'include' });
 				const json = await res.json();
-				if (res.ok && json.packs) setPacks(json.packs);
+				if (res.ok && json.packs) {
+					// Map id to _id for UI compatibility
+					const normalized = json.packs.map((pack: any) => ({
+						...pack,
+						_id: pack.id || pack._id
+					}));
+					setPacks(normalized);
+				}
 			} catch {}
 		})();
 	}, []);
@@ -201,6 +232,19 @@ export default function MenuManagementPage() {
 						<Link href="/dashboard/restaurant" className="text-sm text-brand-primary hover:text-brand-accent">Dashboard</Link>
 					</div>
 				</div>
+
+				{/* Error Banner */}
+				{error && (
+					<div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+						<svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+							<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+						</svg>
+						<div>
+							<h3 className="text-sm font-medium text-red-800">Error Loading Menu</h3>
+							<p className="text-sm text-red-700 mt-1">{error}</p>
+						</div>
+					</div>
+				)}
 
 			{/* Items Tab: Editor Card - Mobile-first stacked layout */}
 			{activeTab==='items' && (

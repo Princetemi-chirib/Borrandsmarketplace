@@ -34,19 +34,22 @@ export default function MarketplacePage() {
         {loading && <div className="text-gray-600">Loading...</div>}
         {error && <div className="text-red-600 text-sm mb-4">{error}</div>}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {restaurants.map((r:any) => (
-            <Link key={r._id} href={`/marketplace/${r._id}`} className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
-              <div className="h-36 bg-gray-100" style={{backgroundImage: `url(${r.bannerImage || r.image || ''})`, backgroundSize: 'cover', backgroundPosition: 'center'}} />
-              <div className="p-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-gray-900 truncate">{r.name}</h3>
-                  <span className="text-xs text-gray-600">⭐ {r.rating?.toFixed?.(1) || '0.0'}</span>
+          {restaurants.map((r:any) => {
+            const restaurantId = r.id || r._id;
+            return (
+              <Link key={restaurantId} href={`/marketplace/${restaurantId}`} className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+                <div className="h-36 bg-gray-100" style={{backgroundImage: `url(${r.bannerImage || r.image || ''})`, backgroundSize: 'cover', backgroundPosition: 'center'}} />
+                <div className="p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-gray-900 truncate">{r.name}</h3>
+                    <span className="text-xs text-gray-600">⭐ {r.rating?.toFixed?.(1) || '0.0'}</span>
+                  </div>
+                  <div className="text-xs text-gray-500 truncate">{(r.cuisine||[]).join(', ')}</div>
+                  <div className="mt-1 text-xs text-gray-600">ETA {r.estimatedDeliveryTime || 30} mins • Fee ₦{r.deliveryFee || 0}</div>
                 </div>
-                <div className="text-xs text-gray-500 truncate">{(r.cuisine||[]).join(', ')}</div>
-                <div className="mt-1 text-xs text-gray-600">ETA {r.estimatedDeliveryTime || 30} mins • Fee ₦{r.deliveryFee || 0}</div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
           {(!loading && restaurants.length===0) && (
             <div className="col-span-full text-center text-gray-500">No active restaurants</div>
           )}

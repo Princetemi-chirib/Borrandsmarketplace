@@ -1,0 +1,89 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { dbConnect, prisma } from '@/lib/db-prisma';
+import { verifyAppRequest } from '@/lib/auth-app';
+
+export async function GET(request: NextRequest) {
+  try {
+    const auth = verifyAppRequest(request);
+    if (!auth || auth.role !== 'RESTAURANT' || !auth.restaurantId) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    await dbConnect();
+
+    // Get all orders for this restaurant
+    const allOrders = await prisma.order.findMany({
+      where: { restaurantId: auth.restaurantId },
+      select: {
+        id: true,
+        status: true,
+        total: true,
+        createdAt: true,
+        rating: true
+      }
+    });
+
+    // Get today's date range
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Today's orders
+    const todayOrders = allOrders.filter(order => {
+      const orderDate = new Date(order.createdAt);
+      return orderDate >= today && orderDate < tomorrow;
+    });
+
+    // Calculate statistics
+    const totalOrders = allOrders.length;
+    const pendingOrders = allOrders.filter(o => o.status === 'PENDING').length;
+    const completedOrders = allOrders.filter(o => o.status === 'DELIVERED').length;
+    const totalRevenue = allOrders
+      .filter(o => o.status === 'DELIVERED')
+      .reduce((sum, order) => sum + order.total, 0);
+    const todayRevenue = todayOrders
+      .filter(o => o.status === 'DELIVERED')
+      .reduce((sum, order) => sum + order.total, 0);
+
+    // Calculate average rating
+    const ratedOrders = allOrders.filter(o => o.rating && o.rating > 0);
+    const averageRating = ratedOrders.length > 0
+      ? ratedOrders.reduce((sum, order) => sum + (order.rating || 0), 0) / ratedOrders.length
+      : 0;
+
+    // Get menu items count
+    const totalMenuItems = await prisma.menuItem.count({
+      where: { restaurantId: auth.restaurantId }
+    });
+
+    // Get low stock items count
+    const lowStockItems = await prisma.inventoryItem.count({
+      where: {
+        restaurantId: auth.restaurantId,
+        status: { in: ['LOW_STOCK', 'OUT_OF_STOCK'] }
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      stats: {
+        totalOrders,
+        pendingOrders,
+        completedOrders,
+        totalRevenue,
+        averageRating: Math.round(averageRating * 10) / 10,
+        totalMenuItems,
+        lowStockItems,
+        todayRevenue
+      }
+    });
+  } catch (error: any) {
+    console.error('Error fetching restaurant stats:', error);
+    return NextResponse.json(
+      { message: 'Failed to fetch statistics' },
+      { status: 500 }
+    );
+  }
+}
+

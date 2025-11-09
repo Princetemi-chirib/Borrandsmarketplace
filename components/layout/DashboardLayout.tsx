@@ -85,9 +85,15 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
   const navigation = navigationItems[userRole as keyof typeof navigationItems] || [];
 
   useEffect(() => {
-    // Fetch notifications count
+    // Fetch notifications count based on user role
     const fetchNotifications = async () => {
       try {
+        // Only fetch notifications for roles that have endpoints
+        if (userRole !== 'restaurant') {
+          // Skip notification fetching for non-restaurant roles until endpoints are implemented
+          return;
+        }
+        
         const response = await fetch('/api/notifications/count', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -96,6 +102,9 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
         if (response.ok) {
           const data = await response.json();
           setNotifications(data.count);
+        } else if (response.status === 401) {
+          // Unauthorized - token might be invalid
+          console.warn('Unauthorized notification fetch - token may be invalid');
         }
       } catch (error) {
         console.error('Failed to fetch notifications:', error);
@@ -103,7 +112,10 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
     };
 
     fetchNotifications();
-  }, []);
+    // Poll every 30 seconds for restaurant role
+    const interval = userRole === 'restaurant' ? setInterval(fetchNotifications, 30000) : null;
+    return () => { if (interval) clearInterval(interval); };
+  }, [userRole]);
 
   // Close sidebar when route changes on mobile
   useEffect(() => {

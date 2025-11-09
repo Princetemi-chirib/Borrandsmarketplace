@@ -88,18 +88,197 @@ export default function RiderDashboard() {
   const [activeDeliveries, setActiveDeliveries] = useState<Delivery[]>([]);
   const [recentDeliveries, setRecentDeliveries] = useState<Delivery[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(false);
+  const [error, setError] = useState<string>('');
 
-  // Mock data for demonstration
-  const mockStats = {
-    totalDeliveries: 89,
-    activeDeliveries: 2,
-    completedDeliveries: 87,
-    totalEarnings: 125000,
-    averageRating: 4.8,
-    totalDistance: 450,
-    todayEarnings: 8500,
-    weeklyEarnings: 45000
+  useEffect(() => {
+    // Get user from localStorage
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        
+        // Check rider profile to get online status
+        fetchRiderProfile();
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+    }
+
+    // Fetch dashboard data
+    fetchDashboardData();
+
+    // Set up auto-refresh every 30 seconds for active deliveries
+    const interval = setInterval(fetchDashboardData, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchRiderProfile = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('/api/riders/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.profile) {
+          setIsOnline(data.profile.isOnline);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching rider profile:', error);
+    }
+  };
+
+  const fetchDashboardData = async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Please login to continue');
+        setIsLoading(false);
+        return;
+      }
+
+      const headers: any = {
+        'Authorization': `Bearer ${token}`
+      };
+
+      // Fetch stats, active deliveries, and recent deliveries in parallel
+      const [statsResponse, activeResponse, historyResponse] = await Promise.all([
+        fetch('/api/riders/stats', { headers }),
+        fetch('/api/riders/active-deliveries', { headers }),
+        fetch('/api/riders/delivery-history?limit=10', { headers })
+      ]);
+
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        if (statsData.success && statsData.stats) {
+          setStats(statsData.stats);
+        }
+      } else {
+        console.error('Failed to fetch stats:', statsResponse.status);
+      }
+
+      if (activeResponse.ok) {
+        const activeData = await activeResponse.json();
+        if (activeData.success && activeData.deliveries) {
+          setActiveDeliveries(activeData.deliveries);
+        }
+      } else {
+        console.error('Failed to fetch active deliveries:', activeResponse.status);
+      }
+
+      if (historyResponse.ok) {
+        const historyData = await historyResponse.json();
+        if (historyData.success && historyData.deliveries) {
+          setRecentDeliveries(historyData.deliveries);
+        }
+      } else {
+        console.error('Failed to fetch delivery history:', historyResponse.status);
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setError('Failed to load dashboard data. Please refresh the page.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleToggleOnline = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const newOnlineStatus = !isOnline;
+
+      const response = await fetch('/api/riders/toggle-online', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isOnline: newOnlineStatus })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setIsOnline(data.rider.isOnline);
+          // Refresh data if going online
+          if (data.rider.isOnline) {
+            fetchDashboardData();
+          }
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to update online status');
+      }
+    } catch (error) {
+      console.error('Error toggling online status:', error);
+      setError('Failed to update online status');
+    }
+  };
+
+  const handleAcceptOrder = async (orderId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('/api/riders/accept-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ orderId })
+      });
+
+      if (response.ok) {
+        // Refresh dashboard data
+        fetchDashboardData();
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to accept order');
+      }
+    } catch (error) {
+      console.error('Error accepting order:', error);
+      alert('Failed to accept order');
+    }
+  };
+
+  const handleUpdateDeliveryStatus = async (orderId: string, status: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('/api/riders/update-delivery-status', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ orderId, status })
+      });
+
+      if (response.ok) {
+        // Refresh dashboard data
+        fetchDashboardData();
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to update delivery status');
+      }
+    } catch (error) {
+      console.error('Error updating delivery status:', error);
+      alert('Failed to update delivery status');
+    }
   };
 
   const mockActiveDeliveries: Delivery[] = [
@@ -179,21 +358,6 @@ export default function RiderDashboard() {
     }
   ];
 
-  useEffect(() => {
-    // Get user from localStorage
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-
-    // Simulate API call
-    setTimeout(() => {
-      setStats(mockStats);
-      setActiveDeliveries(mockActiveDeliveries);
-      setRecentDeliveries(mockRecentDeliveries);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -231,10 +395,6 @@ export default function RiderDashboard() {
     return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  const toggleOnlineStatus = () => {
-    setIsOnline(!isOnline);
-  };
-
   if (isLoading) {
     return (
       <DashboardLayout userRole="rider" userName={user?.name || 'Rider'}>
@@ -248,6 +408,19 @@ export default function RiderDashboard() {
   return (
     <DashboardLayout userRole="rider" userName={user?.name || 'Rider'}>
       <div className="space-y-3 sm:space-y-4">
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <h3 className="text-sm font-medium text-red-800">Error</h3>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+            </div>
+          </div>
+        )}
+
         {/* Enhanced Header - Mobile Optimized */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -293,7 +466,7 @@ export default function RiderDashboard() {
               </div>
             </div>
             <button
-              onClick={toggleOnlineStatus}
+              onClick={handleToggleOnline}
               className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
                 isOnline 
                   ? 'bg-red-600 text-white hover:bg-red-700' 

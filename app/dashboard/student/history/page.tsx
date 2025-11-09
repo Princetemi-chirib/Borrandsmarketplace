@@ -67,10 +67,26 @@ export default function OrderHistory() {
   const fetchOrderHistory = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/students/orders');
+      const token = localStorage.getItem('token');
+      const headers: any = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch('/api/students/orders', { headers });
       
       if (response.ok) {
-        const ordersData = await response.json();
+        const json = await response.json();
+        // Unwrap response - API returns { orders, pagination }
+        const rawOrders = json.orders || [];
+        
+        // Normalize: status to lowercase, parse items if stringified
+        const ordersData = rawOrders.map((order: any) => ({
+          ...order,
+          status: order.status?.toLowerCase() || 'pending',
+          items: typeof order.items === 'string' ? JSON.parse(order.items) : order.items
+        }));
+        
         setOrders(ordersData);
         
         // Compute stats from real data

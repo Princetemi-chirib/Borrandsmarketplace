@@ -57,6 +57,7 @@ export default function StudentDashboard() {
   });
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     // Get user from localStorage
@@ -72,24 +73,40 @@ export default function StudentDashboard() {
     // Fetch orders and favorites to compute stats
     const fetchDashboardData = async () => {
       try {
+        const token = localStorage.getItem('token');
+        const headers: any = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
         const [ordersResponse, favoritesResponse] = await Promise.all([
-          fetch('/api/students/orders'),
-          fetch('/api/students/favorites')
+          fetch('/api/students/orders', { headers }),
+          fetch('/api/students/favorites', { headers })
         ]);
 
         if (ordersResponse.ok && favoritesResponse.ok) {
-          const orders = await ordersResponse.json();
-          const favorites = await favoritesResponse.json();
+          const ordersData = await ordersResponse.json();
+          const favoritesData = await favoritesResponse.json();
+
+          // Unwrap API responses - they return { orders } and { favorites }
+          const orders = ordersData.orders || [];
+          const favorites = favoritesData.favorites || [];
+
+          // Normalize status to lowercase for comparison
+          const normalizedOrders = orders.map((order: any) => ({
+            ...order,
+            status: order.status?.toLowerCase() || 'pending'
+          }));
 
           // Compute stats from real data
-          const totalOrders = orders.length;
-          const activeOrders = orders.filter((order: Order) => 
+          const totalOrders = normalizedOrders.length;
+          const activeOrders = normalizedOrders.filter((order: Order) => 
             ['pending', 'accepted', 'preparing', 'ready', 'picked_up', 'in_transit'].includes(order.status)
           ).length;
-          const completedOrders = orders.filter((order: Order) => 
+          const completedOrders = normalizedOrders.filter((order: Order) => 
             order.status === 'delivered'
           ).length;
-          const totalSpent = orders.reduce((sum: number, order: Order) => sum + order.total, 0);
+          const totalSpent = normalizedOrders.reduce((sum: number, order: Order) => sum + order.total, 0);
           const favoriteRestaurants = favorites.length;
           const averageRating = favorites.length > 0 
             ? favorites.reduce((sum: number, restaurant: Restaurant) => sum + restaurant.rating, 0) / favorites.length
@@ -105,12 +122,21 @@ export default function StudentDashboard() {
           });
 
           // Get recent orders (last 3)
-          const sortedOrders = orders
+          const sortedOrders = normalizedOrders
             .sort((a: Order, b: Order) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
             .slice(0, 3);
           setRecentOrders(sortedOrders);
+        } else {
+          const errorMessage = 'Failed to load dashboard data. Please try logging in again.';
+          setError(errorMessage);
+          console.error('Failed to fetch dashboard data:', {
+            ordersStatus: ordersResponse.status,
+            favoritesStatus: favoritesResponse.status
+          });
         }
       } catch (error) {
+        const errorMessage = 'Network error while loading dashboard. Please check your connection.';
+        setError(errorMessage);
         console.error('Error fetching dashboard data:', error);
       } finally {
         setIsLoading(false);
@@ -195,6 +221,19 @@ export default function StudentDashboard() {
             Here's what's happening with your food orders today
           </p>
         </div>
+
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <h3 className="text-sm font-medium text-red-800">Error Loading Dashboard</h3>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+            </div>
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">

@@ -24,6 +24,7 @@ export async function GET(
       select: { 
         id: true, 
         role: true,
+        university: true,
         restaurants_userfavorites: {
           select: { id: true }
         }
@@ -36,9 +37,11 @@ export async function GET(
 
     const restaurantId = params.id;
 
-    // Get restaurant
+    // Get restaurant - verify it belongs to student's university
     const restaurant = await prisma.restaurant.findUnique({
-      where: { id: restaurantId },
+      where: { 
+        id: restaurantId
+      },
       select: {
         id: true,
         name: true,
@@ -54,12 +57,20 @@ export async function GET(
         distance: true,
         address: true,
         phone: true,
-        website: true
+        website: true,
+        university: true
       }
     });
 
     if (!restaurant) {
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
+    }
+
+    // Verify restaurant belongs to student's university
+    if (restaurant.university !== user.university) {
+      return NextResponse.json({ 
+        error: 'This restaurant is not available at your university' 
+      }, { status: 403 });
     }
 
     // Get favorites IDs

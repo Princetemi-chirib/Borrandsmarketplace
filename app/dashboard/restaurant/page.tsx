@@ -95,19 +95,65 @@ export default function RestaurantDashboard() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [error, setError] = useState<string>('');
 
-  // Mock data for demonstration
-  const mockStats = {
-    totalOrders: 156,
-    pendingOrders: 8,
-    completedOrders: 148,
-    totalRevenue: 1250000,
-    averageRating: 4.6,
-    totalMenuItems: 24,
-    lowStockItems: 3,
-    todayRevenue: 45000
+  useEffect(() => {
+    // Get user from localStorage
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        setUser(JSON.parse(userData));
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+    }
+
+    // Fetch real data
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      const token = localStorage.getItem('token');
+      const headers: any = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      // Fetch stats and recent orders in parallel
+      const [statsResponse, ordersResponse] = await Promise.all([
+        fetch('/api/restaurant/stats', { headers, credentials: 'include' }),
+        fetch('/api/restaurant/recent-orders?limit=5', { headers, credentials: 'include' })
+      ]);
+
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        if (statsData.success && statsData.stats) {
+          setStats(statsData.stats);
+        }
+      } else {
+        console.error('Failed to fetch stats:', statsResponse.status);
+      }
+
+      if (ordersResponse.ok) {
+        const ordersData = await ordersResponse.json();
+        if (ordersData.success && ordersData.orders) {
+          setRecentOrders(ordersData.orders);
+        }
+      } else {
+        console.error('Failed to fetch orders:', ordersResponse.status);
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setError('Failed to load dashboard data. Please refresh the page.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  // Keep mock orders as fallback for display purposes
   const mockOrders: Order[] = [
     {
       _id: '1',
@@ -193,25 +239,6 @@ export default function RestaurantDashboard() {
     }
   ];
 
-  useEffect(() => {
-    // Get user from localStorage
-    try {
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        setUser(JSON.parse(userData));
-      }
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-    }
-
-    // Simulate API call
-    setTimeout(() => {
-      setStats(mockStats);
-      setRecentOrders(mockOrders);
-      setMenuItems(mockMenuItems);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -279,6 +306,19 @@ export default function RestaurantDashboard() {
   return (
     <DashboardLayout userRole="restaurant" userName={displayName}>
       <div className="space-y-3 sm:space-y-4">
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <h3 className="text-sm font-medium text-red-800">Error Loading Dashboard</h3>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+            </div>
+          </div>
+        )}
+
         {/* Enhanced Header - Mobile Optimized */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

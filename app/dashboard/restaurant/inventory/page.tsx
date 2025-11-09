@@ -88,8 +88,26 @@ export default function InventoryManagement() {
       ]);
       const itemsJson = await itemsRes.json();
       const alertsJson = await alertsRes.json();
-      if (itemsRes.ok && itemsJson.items) setInventoryItems(itemsJson.items);
-      if (alertsRes.ok && alertsJson.alerts) setStockAlerts(alertsJson.alerts);
+      
+      if (itemsRes.ok && itemsJson.items) {
+        // Normalize: map id to _id, status to lowercase
+        const normalizedItems = itemsJson.items.map((item: any) => ({
+          ...item,
+          _id: item.id || item._id,
+          status: item.status?.toLowerCase() || 'in_stock'
+        }));
+        setInventoryItems(normalizedItems);
+      }
+      
+      if (alertsRes.ok && alertsJson.alerts) {
+        // Normalize: map id to _id, priority to lowercase
+        const normalizedAlerts = alertsJson.alerts.map((alert: any) => ({
+          ...alert,
+          _id: alert.id || alert._id,
+          priority: alert.priority?.toLowerCase() || 'medium'
+        }));
+        setStockAlerts(normalizedAlerts);
+      }
     } finally {
       setIsLoading(false);
     }

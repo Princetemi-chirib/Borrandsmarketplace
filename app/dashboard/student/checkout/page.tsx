@@ -32,6 +32,14 @@ interface DeliveryAddress {
   phone: string;
 }
 
+interface PopularLocation {
+  id: string;
+  name: string;
+  address: string;
+  description: string | null;
+  useCount: number;
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -41,6 +49,9 @@ export default function CheckoutPage() {
     instructions: '',
     phone: ''
   });
+  const [popularLocations, setPopularLocations] = useState<PopularLocation[]>([]);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [locationName, setLocationName] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash'>('card');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -70,7 +81,30 @@ export default function CheckoutPage() {
       // Redirect to restaurants if cart is empty
       router.push('/dashboard/student/restaurants');
     }
+
+    // Fetch popular delivery locations
+    fetchPopularLocations();
   }, [router]);
+
+  const fetchPopularLocations = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('/api/delivery-locations?limit=10&minUseCount=5', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPopularLocations(data.locations || []);
+      }
+    } catch (error) {
+      console.error('Error fetching popular locations:', error);
+    }
+  };
 
   const getCartTotal = () => {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
@@ -87,6 +121,29 @@ export default function CheckoutPage() {
     const digits = (phone || '').toString().replace(/\D/g, '');
     const localPart = digits.length > 2 ? digits : 'customer';
     return `${localPart}@borrands.com`;
+  };
+
+  const trackDeliveryLocation = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || !deliveryAddress.address) return;
+
+      await fetch('/api/delivery-locations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: locationName || deliveryAddress.address.substring(0, 50),
+          address: deliveryAddress.address,
+          description: deliveryAddress.instructions || ''
+        })
+      });
+    } catch (error) {
+      console.error('Error tracking delivery location:', error);
+      // Don't block checkout if this fails
+    }
   };
 
   const initializeCardPayment = async () => {
@@ -146,6 +203,9 @@ export default function CheckoutPage() {
     setError('');
 
     try {
+      // Track delivery location usage (async, don't wait for it)
+      trackDeliveryLocation();
+
       if (paymentMethod === 'card') {
         await initializeCardPayment();
         return; // Redirecting; do not proceed to create orders now
@@ -254,6 +314,38 @@ export default function CheckoutPage() {
               </h2>
               
               <div className="space-y-4">
+                {/* Popular Locations */}
+                {popularLocations.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Popular Delivery Locations
+                    </label>
+                    <div className="grid grid-cols-1 gap-2 mb-4">
+                      {popularLocations.slice(0, 5).map((location) => (
+                        <button
+                          key={location.id}
+                          type="button"
+                          onClick={() => {
+                            setDeliveryAddress(prev => ({ ...prev, address: location.address }));
+                            setLocationName(location.name);
+                          }}
+                          className="text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-brand-primary transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="font-medium text-gray-900 text-sm">{location.name}</p>
+                              <p className="text-xs text-gray-500 mt-1">{location.address}</p>
+                            </div>
+                            <span className="text-xs text-gray-400 ml-2">
+                              {location.useCount} uses
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Delivery Address *
@@ -266,6 +358,9 @@ export default function CheckoutPage() {
                     rows={3}
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    💡 Your address will be saved and suggested to other students after 5 uses
+                  </p>
                 </div>
 
                 <div>

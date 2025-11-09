@@ -22,9 +22,10 @@ import Logo from '../../../components/Logo';
 
 interface RegisterFormData {
   name: string;
+  email: string;
   phone: string;
-  password?: string;
-  confirmPassword?: string;
+  password: string;
+  confirmPassword: string;
   role: 'student';
   university: string;
   studentId?: string;
@@ -287,7 +288,7 @@ export default function RegisterPage() {
             {/* Name */}
             <div>
               <label htmlFor="name" className="form-label">
-                Full Name
+                Full Name *
               </label>
               <input
                 id="name"
@@ -307,10 +308,36 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Phone */}
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="form-label">
+                Email Address *
+              </label>
+              <input
+                id="email"
+                type="email"
+                {...register('email', { 
+                  required: 'Email is required',
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: 'Please enter a valid email address'
+                  }
+                })}
+                className={`form-input ${errors.email ? 'border-error-500' : ''}`}
+                placeholder="Enter your email address"
+              />
+              {errors.email && (
+                <p className="form-error flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            {/* WhatsApp Phone */}
             <div>
               <label htmlFor="phone" className="form-label">
-                Phone Number
+                WhatsApp Phone Number *
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -320,14 +347,14 @@ export default function RegisterPage() {
                   id="phone"
                   type="tel"
                   {...register('phone', { 
-                    required: 'Phone number is required',
+                    required: 'WhatsApp phone number is required',
                     pattern: {
                       value: /^\+?[\d\s-()]+$/,
                       message: 'Invalid phone number'
                     }
                   })}
                   className={`form-input pl-10 ${errors.phone ? 'border-error-500' : ''}`}
-                  placeholder="Enter your phone number"
+                  placeholder="+234 801 234 5678"
                 />
               </div>
               {errors.phone && (
@@ -415,20 +442,21 @@ export default function RegisterPage() {
               </>
             )}
 
-            {/* Password (Optional) */}
+            {/* Password */}
             <div>
               <label htmlFor="password" className="form-label">
-                Password (Optional)
+                Password *
               </label>
               <div className="relative">
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   {...register('password', { 
+                    required: 'Password is required',
                     minLength: { value: 6, message: 'Password must be at least 6 characters' }
                   })}
                   className={`form-input pr-10 ${errors.password ? 'border-error-500' : ''}`}
-                  placeholder="Create a password (optional)"
+                  placeholder="Create a password"
                 />
                 <button
                   type="button"
@@ -450,42 +478,41 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Confirm Password (if password provided) */}
-            {password && (
-              <div>
-                <label htmlFor="confirmPassword" className="form-label">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    {...register('confirmPassword', { 
-                      validate: value => !password || value === password || 'Passwords do not match'
-                    })}
-                    className={`form-input pr-10 ${errors.confirmPassword ? 'border-error-500' : ''}`}
-                    placeholder="Confirm your password"
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-5 w-5 text-gray-400" />
-                    ) : (
-                      <Eye className="h-5 w-5 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-                {errors.confirmPassword && (
-                  <p className="form-error flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1" />
-                    {errors.confirmPassword.message}
-                  </p>
-                )}
+            {/* Confirm Password */}
+            <div>
+              <label htmlFor="confirmPassword" className="form-label">
+                Confirm Password *
+              </label>
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  {...register('confirmPassword', { 
+                    required: 'Please confirm your password',
+                    validate: value => value === password || 'Passwords do not match'
+                  })}
+                  className={`form-input pr-10 ${errors.confirmPassword ? 'border-error-500' : ''}`}
+                  placeholder="Confirm your password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
               </div>
-            )}
+              {errors.confirmPassword && (
+                <p className="form-error flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  {errors.confirmPassword.message}
+                </p>
+              )}
+            </div>
 
             {/* Terms and Conditions */}
             <div className="flex items-start">

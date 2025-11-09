@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
       select: { 
         id: true, 
         role: true,
+        university: true,
         restaurants_userfavorites: {
           select: { id: true }
         }
@@ -43,8 +44,11 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = (page - 1) * limit;
 
-    // Build where clause
-    let where: any = { isOpen: true };
+    // Build where clause - filter by student's university
+    let where: any = { 
+      isOpen: true,
+      university: user.university  // Only show restaurants from same university
+    };
 
     if (search) {
       where.OR = [

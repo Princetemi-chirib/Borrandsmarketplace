@@ -141,6 +141,7 @@ model Order {
   paymentMethod         PaymentMethod
   deliveryAddress       String
   deliveryInstructions  String?
+  deliveryPhone         String?
   estimatedDeliveryTime Int
   actualDeliveryTime    DateTime?
   orderNumber           String        @unique
@@ -344,4 +345,20 @@ enum AlertPriority {
   HIGH
   MEDIUM
   LOW
+}
+
+model DeliveryLocation {
+  id          String   @id @default(cuid())
+  university  String
+  name        String
+  address     String
+  description String?
+  useCount    Int      @default(1)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([university, address])
+  @@index([university, useCount])
+  @@map("delivery_locations")
 }

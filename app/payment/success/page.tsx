@@ -10,6 +10,7 @@ function PaymentSuccessContent() {
   const reference = searchParams.get('reference');
   const [paymentStatus, setPaymentStatus] = useState<'loading' | 'success' | 'failed'>('loading');
   const [transactionData, setTransactionData] = useState<any>(null);
+  const [ordersCreated, setOrdersCreated] = useState<any[]>([]);
 
   useEffect(() => {
     if (reference) {
@@ -25,6 +26,17 @@ function PaymentSuccessContent() {
       if (result.success) {
         setPaymentStatus('success');
         setTransactionData(result.data);
+        
+        // Store orders if created
+        if (result.orders) {
+          setOrdersCreated(result.orders);
+          console.log(`✅ ${result.orders.length} order(s) created successfully`);
+        }
+        
+        // Clear cart from localStorage after successful payment
+        localStorage.removeItem('cart');
+        
+        console.log('✅ Payment verified and cart cleared');
       } else {
         setPaymentStatus('failed');
       }
@@ -55,9 +67,17 @@ function PaymentSuccessContent() {
             </div>
             
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-4">
               Your payment has been processed successfully.
             </p>
+            
+            {ordersCreated.length > 0 && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                <p className="text-sm font-medium text-green-800">
+                  ✅ {ordersCreated.length} order{ordersCreated.length > 1 ? 's' : ''} created successfully!
+                </p>
+              </div>
+            )}
 
             {transactionData && (
               <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
@@ -84,15 +104,23 @@ function PaymentSuccessContent() {
             )}
 
             <div className="space-y-3">
+              {ordersCreated.length > 0 && (
+                <Link
+                  href="/dashboard/student/orders"
+                  className="w-full inline-block text-center px-6 py-3 bg-brand-primary text-white rounded-lg hover:bg-brand-accent transition-colors text-base font-medium"
+                >
+                  View My Orders
+                </Link>
+              )}
               <Link
                 href="/dashboard/student"
-                className="w-full btn-primary py-3 text-base font-medium"
+                className="w-full inline-block text-center px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-base font-medium"
               >
                 Go to Dashboard
               </Link>
               <Link
                 href="/"
-                className="w-full btn-secondary py-3 text-base font-medium"
+                className="w-full inline-block text-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-base font-medium"
               >
                 Back to Home
               </Link>

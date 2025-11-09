@@ -35,14 +35,24 @@ export default function MyOrders() {
       setIsLoading(true);
       const statusParam = selectedStatus.toLowerCase() === 'all' ? 'all' : selectedStatus.toLowerCase();
       const url = `/api/students/orders?status=${encodeURIComponent(statusParam)}&limit=50`;
-      const res = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
-        },
-      });
+      const token = localStorage.getItem('token');
+      const headers: any = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const res = await fetch(url, { headers });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load orders');
-      setOrders(data.orders || []);
+      
+      // Normalize orders: status to lowercase, parse items if stringified
+      const normalizedOrders = (data.orders || []).map((order: any) => ({
+        ...order,
+        status: order.status?.toLowerCase() || 'pending',
+        items: typeof order.items === 'string' ? JSON.parse(order.items) : order.items
+      }));
+      
+      setOrders(normalizedOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
       setOrders([]);

@@ -57,19 +57,22 @@ export default function RestaurantMarketplacePage() {
           </div>
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {items.map((it:any)=> (
-            <div key={it._id} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-              <div className="h-36 bg-gray-100" style={{backgroundImage:`url(${it.image||''})`, backgroundSize:'cover', backgroundPosition:'center'}} />
-              <div className="p-4">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-gray-900 flex-1 truncate">{it.name}</h3>
-                  {it.isFeatured && <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full">Featured</span>}
+          {items.map((it:any)=> {
+            const itemId = it.id || it._id;
+            return (
+              <div key={itemId} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <div className="h-36 bg-gray-100" style={{backgroundImage:`url(${it.image||''})`, backgroundSize:'cover', backgroundPosition:'center'}} />
+                <div className="p-4">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-gray-900 flex-1 truncate">{it.name}</h3>
+                    {it.isFeatured && <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full">Featured</span>}
+                  </div>
+                  <div className="text-sm text-gray-600 line-clamp-2">{it.description}</div>
+                  <div className="mt-1 text-gray-900 font-medium">₦{it.price?.toLocaleString?.() || it.price} {it.priceDescription? <span className="text-xs text-gray-500">({it.priceDescription})</span> : null}</div>
                 </div>
-                <div className="text-sm text-gray-600 line-clamp-2">{it.description}</div>
-                <div className="mt-1 text-gray-900 font-medium">₦{it.price?.toLocaleString?.() || it.price} {it.priceDescription? <span className="text-xs text-gray-500">({it.priceDescription})</span> : null}</div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {(!loading && items.length===0) && (
             <div className="col-span-full text-center text-gray-500">No published items</div>
           )}

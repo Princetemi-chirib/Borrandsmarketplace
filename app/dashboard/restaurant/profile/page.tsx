@@ -104,8 +104,21 @@ export default function RestaurantProfile() {
         const json = await res.json();
         if (!res.ok) throw new Error(json.message || 'Failed to load profile');
         const p = json.profile;
+        
+        // Parse operatingHours if it's a JSON string
+        let operatingHoursObj = {};
+        if (typeof p.operatingHours === 'string') {
+          try {
+            operatingHoursObj = JSON.parse(p.operatingHours);
+          } catch (e) {
+            console.error('Failed to parse operatingHours:', e);
+          }
+        } else if (typeof p.operatingHours === 'object' && p.operatingHours !== null) {
+          operatingHoursObj = p.operatingHours;
+        }
+        
         const mapped: RestaurantProfile = {
-          _id: p._id,
+          _id: p.id || p._id, // Use id from Prisma, fallback to _id
           name: p.name || '',
           description: p.description || '',
           cuisine: Array.isArray(p.cuisine) ? p.cuisine.join(', ') : (p.cuisine || ''),
@@ -116,7 +129,12 @@ export default function RestaurantProfile() {
           state: '',
           zipCode: '',
           coordinates: { lat: 0, lng: 0 },
-          businessHours: Object.keys(p.operatingHours || {}).map((d: any) => ({ day: d[0].toUpperCase()+d.slice(1), open: p.operatingHours[d].open, close: p.operatingHours[d].close, isOpen: p.operatingHours[d].isOpen })),
+          businessHours: Object.keys(operatingHoursObj).map((d: any) => ({ 
+            day: d[0].toUpperCase()+d.slice(1), 
+            open: (operatingHoursObj as any)[d].open, 
+            close: (operatingHoursObj as any)[d].close, 
+            isOpen: (operatingHoursObj as any)[d].isOpen 
+          })),
           images: [p.image, p.bannerImage].filter(Boolean),
           logo: p.image || '',
           rating: p.rating || 0,

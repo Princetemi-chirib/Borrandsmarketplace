@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     const res = NextResponse.json({
       success: true,
       message: 'Login successful',
-      data: { user: userResponse }
+      data: { user: userResponse, token }
     });
     setAuthCookieOnResponse(res, token);
     return res;
