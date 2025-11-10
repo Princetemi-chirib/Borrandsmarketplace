@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 
 // Email transporter configuration
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: process.env.MAIL_HOST || 'mail.borrands.com.ng',
   port: parseInt(process.env.MAIL_PORT || '465'),
   secure: true, // use SSL

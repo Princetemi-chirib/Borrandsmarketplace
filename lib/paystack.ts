@@ -1,20 +1,29 @@
 import axios from 'axios';
 import { PaystackTransaction } from '@/types';
 
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY!;
-const PAYSTACK_PUBLIC_KEY = process.env.PAYSTACK_PUBLIC_KEY!;
+// Lazy-load credentials to avoid build-time errors
+const getPaystackCredentials = () => {
+  const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+  const PAYSTACK_PUBLIC_KEY = process.env.PAYSTACK_PUBLIC_KEY;
 
-if (!PAYSTACK_SECRET_KEY || !PAYSTACK_PUBLIC_KEY) {
-  throw new Error('Paystack credentials not properly configured');
-}
+  if (!PAYSTACK_SECRET_KEY || !PAYSTACK_PUBLIC_KEY) {
+    throw new Error('Paystack credentials not properly configured');
+  }
 
-const paystackApi = axios.create({
-  baseURL: 'https://api.paystack.co',
-  headers: {
-    Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-    'Content-Type': 'application/json',
-  },
-});
+  return { PAYSTACK_SECRET_KEY, PAYSTACK_PUBLIC_KEY };
+};
+
+const getPaystackApi = () => {
+  const { PAYSTACK_SECRET_KEY } = getPaystackCredentials();
+  
+  return axios.create({
+    baseURL: 'https://api.paystack.co',
+    headers: {
+      Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+      'Content-Type': 'application/json',
+    },
+  });
+};
 
 export class PaystackService {
   private static instance: PaystackService;
@@ -36,6 +45,7 @@ export class PaystackService {
     metadata?: any;
   }) {
     try {
+      const paystackApi = getPaystackApi();
       const response = await paystackApi.post('/transaction/initialize', {
         email: data.email,
         amount: data.amount * 100, // Convert to kobo (smallest currency unit)
@@ -64,6 +74,7 @@ export class PaystackService {
     error?: string;
   }> {
     try {
+      const paystackApi = getPaystackApi();
       const response = await paystackApi.get(`/transaction/verify/${reference}`);
       
       const transaction = response.data.data;
@@ -99,6 +110,7 @@ export class PaystackService {
     metadata?: any;
   }) {
     try {
+      const paystackApi = getPaystackApi();
       const response = await paystackApi.post('/transaction/charge_authorization', {
         email: data.email,
         amount: data.amount * 100, // Convert to kobo
@@ -126,6 +138,7 @@ export class PaystackService {
     reason?: string;
   }) {
     try {
+      const paystackApi = getPaystackApi();
       const response = await paystackApi.post('/refund', {
         transaction: data.transaction,
         amount: data.amount ? data.amount * 100 : undefined, // Convert to kobo if amount specified
@@ -147,6 +160,7 @@ export class PaystackService {
 
   async getTransaction(reference: string) {
     try {
+      const paystackApi = getPaystackApi();
       const response = await paystackApi.get(`/transaction/${reference}`);
       
       return {
@@ -178,6 +192,7 @@ export class PaystackService {
       if (params.from) queryParams.append('from', params.from);
       if (params.to) queryParams.append('to', params.to);
 
+      const paystackApi = getPaystackApi();
       const response = await paystackApi.get(`/transaction?${queryParams.toString()}`);
       
       return {
