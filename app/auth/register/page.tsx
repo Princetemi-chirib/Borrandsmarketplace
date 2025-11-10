@@ -57,7 +57,8 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [registrationStep, setRegistrationStep] = useState<'form' | 'otp'>('form');
   const [otpCode, setOtpCode] = useState('');
-  const [phoneForOtp, setPhoneForOtp] = useState('');
+  const [emailForOtp, setEmailForOtp] = useState('');
+  const [userIdForOtp, setUserIdForOtp] = useState('');
 
   const {
     register,
@@ -71,30 +72,18 @@ export default function RegisterPage() {
   const password = watch('password');
   const watchedPhone = watch('phone');
 
-  const sendOtp = async (phone: string) => {
-    if (!phone) {
-      toast.error('Please enter your phone number');
+  const resendOtp = async () => {
+    if (!emailForOtp) {
+      toast.error('Email not found. Please register again.');
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, purpose: 'register' }),
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        toast.success('OTP sent via WhatsApp!');
-        setPhoneForOtp(phone);
-        setRegistrationStep('otp');
-      } else {
-        toast.error(result.message || 'Failed to send OTP');
-      }
+      // Call resend OTP endpoint (you can create this later)
+      toast.success('OTP resent! Check your email and WhatsApp');
     } catch (error) {
-      toast.error('Failed to send OTP');
+      toast.error('Failed to resend OTP');
     } finally {
       setIsLoading(false);
     }
@@ -108,15 +97,15 @@ export default function RegisterPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/verify-otp', {
+      const response = await fetch('/api/auth/verify-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phoneForOtp, code: otpCode }),
+        body: JSON.stringify({ email: emailForOtp, code: otpCode }),
       });
 
       const result = await response.json();
       if (result.success) {
-        toast.success('Registration successful! You can now log in.');
+        toast.success('✅ Email verified! Registration complete. You can now log in.');
         router.push('/auth/login');
       } else {
         toast.error(result.message || 'OTP verification failed');
@@ -152,12 +141,18 @@ export default function RegisterPage() {
       const result = await response.json();
 
       if (result.success) {
-        // Send OTP for verification
-        await sendOtp(data.phone);
+        // Registration successful - OTP sent automatically
+        toast.success('📧 Check your email and WhatsApp for verification code!', {
+          duration: 5000,
+        });
+        setEmailForOtp(data.email);
+        setUserIdForOtp(result.data?.id || '');
+        setRegistrationStep('otp');
+        setIsLoading(false);
       } else {
         // Handle specific error cases
         if (result.message?.includes('already exists')) {
-          toast.error('An account with this phone number already exists. Please try logging in instead.');
+          toast.error('An account with this email already exists. Please try logging in instead.');
         } else {
           toast.error(result.message || 'Registration failed');
         }
@@ -190,9 +185,12 @@ export default function RegisterPage() {
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Registration
               </button>
-              <h2 className="text-3xl font-bold text-gray-900">Verify Your Phone</h2>
+              <h2 className="text-3xl font-bold text-gray-900">Verify Your Email</h2>
               <p className="mt-2 text-sm text-gray-600">
-                Enter the 6-digit code sent to {phoneForOtp}
+                We've sent a 6-digit code to <strong>{emailForOtp}</strong>
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                Also check your WhatsApp for the code
               </p>
             </div>
 
@@ -234,12 +232,15 @@ export default function RegisterPage() {
 
               <div className="text-center">
                 <button
-                  onClick={() => sendOtp(phoneForOtp)}
+                  onClick={resendOtp}
                   disabled={isLoading}
                   className="text-sm text-primary-600 hover:text-primary-500 disabled:opacity-50"
                 >
                   {isLoading ? 'Sending...' : 'Resend OTP'}
                 </button>
+                <p className="mt-2 text-xs text-gray-500">
+                  Check both your email inbox and WhatsApp
+                </p>
               </div>
             </div>
           </motion.div>

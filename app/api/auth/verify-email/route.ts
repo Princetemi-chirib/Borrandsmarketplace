@@ -6,11 +6,11 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     const body = await request.json();
-    const { email, otpCode } = body;
+    const { email, code } = body;
 
-    if (!email || !otpCode) {
+    if (!email || !code) {
       return NextResponse.json(
-        { success: false, message: 'Email and OTP code are required' },
+        { success: false, message: 'Email and verification code are required' },
         { status: 400 }
       );
     }
@@ -20,11 +20,14 @@ export async function POST(request: NextRequest) {
       where: { email },
       select: {
         id: true,
+        name: true,
         email: true,
+        role: true,
         otpCode: true,
         otpExpiresAt: true,
+        otpAttempts: true,
         emailVerified: true,
-        isVerified: true
+        isVerified: true,
       }
     });
 
@@ -36,49 +39,81 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already verified
-    if (user.emailVerified) {
+    if (user.emailVerified && user.isVerified) {
       return NextResponse.json(
-        { success: false, message: 'Email already verified' },
+        { success: false, message: 'Email already verified. Please login.' },
         { status: 400 }
       );
     }
 
-    // Check if OTP code matches
-    if (user.otpCode !== otpCode) {
+    // Check if OTP exists
+    if (!user.otpCode || !user.otpExpiresAt) {
       return NextResponse.json(
-        { success: false, message: 'Invalid OTP code' },
+        { success: false, message: 'No OTP found. Please request a new one.' },
         { status: 400 }
       );
     }
 
-    // Check if OTP is expired
-    if (!user.otpExpiresAt || user.otpExpiresAt < new Date()) {
+    // Check attempts
+    if (user.otpAttempts && user.otpAttempts >= 5) {
       return NextResponse.json(
-        { success: false, message: 'OTP code has expired' },
+        { success: false, message: 'Too many failed attempts. Please register again.' },
+        { status: 429 }
+      );
+    }
+
+    // Check if OTP expired
+    if (new Date() > user.otpExpiresAt) {
+      return NextResponse.json(
+        { success: false, message: 'OTP has expired. Please register again.' },
         { status: 400 }
       );
     }
 
-    // Update user verification status
+    // Verify OTP
+    if (user.otpCode !== code) {
+      // Increment failed attempts
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { otpAttempts: (user.otpAttempts || 0) + 1 }
+      });
+
+      return NextResponse.json(
+        { success: false, message: 'Invalid verification code' },
+        { status: 400 }
+      );
+    }
+
+    // OTP is correct - verify user
     await prisma.user.update({
       where: { id: user.id },
       data: {
         emailVerified: true,
         isVerified: true,
+        isActive: true,
         otpCode: null,
-        otpExpiresAt: null
+        otpExpiresAt: null,
+        otpAttempts: 0,
       }
     });
 
+    console.log(`✅ User ${email} verified successfully`);
+
     return NextResponse.json({
       success: true,
-      message: 'Email verified successfully'
+      message: 'Email verified successfully! You can now log in.',
+      data: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }
     });
 
   } catch (error: any) {
     console.error('Email verification error:', error);
     return NextResponse.json(
-      { success: false, message: 'Email verification failed. Please try again.' },
+      { success: false, message: 'Verification failed. Please try again.' },
       { status: 500 }
     );
   }
