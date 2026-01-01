@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
     let where: any = {};
     
     if (status !== 'all') {
-      where.status = status;
+      // Convert lowercase status to uppercase for database query (DB stores uppercase)
+      where.status = status.toUpperCase();
     }
     
     if (search) {
@@ -43,15 +44,39 @@ export async function GET(request: NextRequest) {
     });
     
     // Transform restaurants to include owner object for backward compatibility
-    const transformedRestaurants = restaurants.map(restaurant => ({
-      ...restaurant,
-      _id: restaurant.id,
-      owner: restaurant.user ? {
-        _id: restaurant.user.id,
-        name: restaurant.user.name,
-        phone: restaurant.user.phone
-      } : null
-    }));
+    // Normalize cuisine to always be an array
+    const transformedRestaurants = restaurants.map(restaurant => {
+      let cuisineArray: string[] = [];
+      if (typeof restaurant.cuisine === 'string') {
+        try {
+          // Try to parse as JSON first (in case it's a JSON string)
+          const parsed = JSON.parse(restaurant.cuisine);
+          cuisineArray = Array.isArray(parsed) ? parsed : [restaurant.cuisine];
+        } catch {
+          // If not JSON, treat as comma-separated string or single string
+          cuisineArray = restaurant.cuisine.includes(',') 
+            ? restaurant.cuisine.split(',').map(c => c.trim()).filter(c => c)
+            : [restaurant.cuisine];
+        }
+      } else if (Array.isArray(restaurant.cuisine)) {
+        cuisineArray = restaurant.cuisine;
+      }
+
+      return {
+        ...restaurant,
+        _id: restaurant.id,
+        cuisine: cuisineArray,
+        status: restaurant.status?.toLowerCase() || 'pending', // Normalize status to lowercase
+        // Filter out the old non-existent default image path
+        image: restaurant.image && restaurant.image !== '/images/default-restaurant.jpg' ? restaurant.image : '',
+        bannerImage: restaurant.bannerImage && restaurant.bannerImage !== '/images/default-restaurant.jpg' ? restaurant.bannerImage : (restaurant.bannerImage || ''),
+        owner: restaurant.user ? {
+          _id: restaurant.user.id,
+          name: restaurant.user.name,
+          phone: restaurant.user.phone
+        } : null
+      };
+    });
     
     const total = await prisma.restaurant.count({ where });
     
@@ -91,6 +116,7 @@ export async function POST(request: NextRequest) {
       minimumOrder,
       estimatedDeliveryTime,
       ownerName,
+      ownerEmail,
       ownerPhone,
       ownerPassword,
       university,
@@ -98,7 +124,7 @@ export async function POST(request: NextRequest) {
     } = body;
     
     // Validation
-    if (!name || !description || !cuisine || !address || !phone || !ownerPhone || !ownerPassword) {
+    if (!name || !description || !cuisine || !address || !phone || !ownerEmail || !ownerPhone || !ownerPassword) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -120,9 +146,18 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Check if owner email already exists and is verified
+    const existingUserByEmail = await prisma.user.findFirst({ where: { email: ownerEmail } });
+    if (existingUserByEmail && existingUserByEmail.emailVerified) {
+      return NextResponse.json(
+        { error: 'User with this email address already exists and is verified' },
+        { status: 400 }
+      );
+    }
+    
     // Check if owner phone already exists and is verified
-    const existingUser = await prisma.user.findFirst({ where: { phone: ownerPhone } });
-    if (existingUser && existingUser.phoneVerified) {
+    const existingUserByPhone = await prisma.user.findFirst({ where: { phone: ownerPhone } });
+    if (existingUserByPhone && existingUserByPhone.phoneVerified) {
       return NextResponse.json(
         { error: 'User with this phone number already exists and is verified' },
         { status: 400 }
@@ -130,13 +165,26 @@ export async function POST(request: NextRequest) {
     }
     
     // If user exists but not verified, allow re-registration (update existing)
-    if (existingUser && !existingUser.phoneVerified) {
+    // Prefer email match over phone match
+    const existingUser = existingUserByEmail || existingUserByPhone;
+    
+    // If both exist but are different users, that's an error
+    if (existingUserByEmail && existingUserByPhone && existingUserByEmail.id !== existingUserByPhone.id) {
+      return NextResponse.json(
+        { error: 'Email and phone number are associated with different accounts' },
+        { status: 400 }
+      );
+    }
+    
+    if (existingUser && (!existingUser.emailVerified || !existingUser.phoneVerified)) {
       // Update existing unverified user
       const hashedPassword = await bcrypt.hash(ownerPassword, 12);
       const updatedUser = await prisma.user.update({
         where: { id: existingUser.id },
         data: {
           name: ownerName,
+          email: ownerEmail,
+          phone: ownerPhone,
           password: hashedPassword,
           role: 'RESTAURANT',
           university: university,
@@ -211,6 +259,7 @@ export async function POST(request: NextRequest) {
     
     console.log('Creating owner user with data:', {
       name: ownerName,
+      email: ownerEmail,
       phone: ownerPhone,
       role: 'restaurant',
       university,
@@ -223,13 +272,14 @@ export async function POST(request: NextRequest) {
       owner = await prisma.user.create({
         data: {
           name: ownerName,
-          email: `${ownerPhone}@restaurant.temp`,
+          email: ownerEmail,
           phone: ownerPhone,
           password: hashedPassword,
           role: 'RESTAURANT',
           university: university || '',
           isActive: true,
           isVerified: false,
+          emailVerified: false,
           phoneVerified: false,
           addresses: JSON.stringify([]),
           preferences: JSON.stringify({}),

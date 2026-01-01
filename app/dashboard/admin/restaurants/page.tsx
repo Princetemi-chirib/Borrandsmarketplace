@@ -27,7 +27,7 @@ interface Restaurant {
   _id: string;
   name: string;
   description: string;
-  cuisine: string[]; // Fixed: cuisine is an array
+  cuisine: string[]; // Always normalized to array in API
   address: string;
   phone: string;
   status: 'pending' | 'approved' | 'rejected';
@@ -113,12 +113,19 @@ export default function AdminRestaurants() {
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(restaurant =>
-        restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        restaurant.cuisine.some(cuisine => cuisine.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        restaurant.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        restaurant.owner?.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filtered = filtered.filter(restaurant => {
+        const cuisineArray = Array.isArray(restaurant.cuisine) 
+          ? restaurant.cuisine 
+          : typeof restaurant.cuisine === 'string' 
+            ? [restaurant.cuisine] 
+            : [];
+        return (
+          restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          cuisineArray.some(cuisine => cuisine.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          restaurant.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          restaurant.owner?.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      });
     }
 
     // Status filter
@@ -400,9 +407,13 @@ export default function AdminRestaurants() {
                         <div className="space-y-1 text-sm text-gray-600">
                           <p className="flex items-center gap-2">
                             <ChefHat className="w-4 h-4" />
-                            {restaurant.cuisine.map((cuisine, i) => (
-                              <span key={i}>{cuisine}{i < restaurant.cuisine.length - 1 ? ', ' : ''}</span>
-                            ))}
+                            {Array.isArray(restaurant.cuisine) 
+                              ? restaurant.cuisine.map((cuisine, i) => (
+                                  <span key={i}>{cuisine}{i < restaurant.cuisine.length - 1 ? ', ' : ''}</span>
+                                ))
+                              : typeof restaurant.cuisine === 'string' 
+                                ? restaurant.cuisine
+                                : 'N/A'}
                           </p>
                           <p className="flex items-center gap-2">
                             <MapPin className="w-4 h-4" />
@@ -508,9 +519,15 @@ export default function AdminRestaurants() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-600">Cuisine</label>
-                        <p className="text-gray-900">{selectedRestaurant.cuisine.map((cuisine, i) => (
-                          <span key={i}>{cuisine}{i < selectedRestaurant.cuisine.length - 1 ? ', ' : ''}</span>
-                        ))}</p>
+                        <p className="text-gray-900">
+                          {Array.isArray(selectedRestaurant.cuisine)
+                            ? selectedRestaurant.cuisine.map((cuisine, i) => (
+                                <span key={i}>{cuisine}{i < selectedRestaurant.cuisine.length - 1 ? ', ' : ''}</span>
+                              ))
+                            : typeof selectedRestaurant.cuisine === 'string'
+                              ? selectedRestaurant.cuisine
+                              : 'N/A'}
+                        </p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-600">Status</label>

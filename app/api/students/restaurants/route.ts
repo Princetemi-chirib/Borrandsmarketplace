@@ -44,10 +44,11 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = (page - 1) * limit;
 
-    // Build where clause - filter by student's university
+    // Build where clause - match marketplace behavior (no university filter)
+    // Only show approved and active restaurants
     let where: any = { 
-      isOpen: true,
-      university: user.university  // Only show restaurants from same university
+      isApproved: true,
+      isActive: true
     };
 
     if (search) {
@@ -128,11 +129,12 @@ export async function GET(request: NextRequest) {
     // Get favorites IDs
     const favoritesIds = user.restaurants_userfavorites.map(f => f.id);
 
-    // Add favorite status for each restaurant
+    // Add favorite status and featuredItems for each restaurant
     const restaurantsWithFavorites = restaurants.map(restaurant => ({
       ...restaurant,
       _id: restaurant.id,
-      isFavorite: favoritesIds.includes(restaurant.id) || false
+      isFavorite: favoritesIds.includes(restaurant.id) || false,
+      featuredItems: [] // Empty array for now - can be populated with featured menu items later
     }));
 
     return NextResponse.json({

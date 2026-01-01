@@ -57,12 +57,23 @@ export default function RestaurantOrders() {
       
       if (res.ok && json.orders) {
         // Normalize orders: parse items if stringified, normalize status to lowercase, map id to _id for UI
-        const normalizedOrders = json.orders.map((order: any) => ({
-          ...order,
-          _id: order.id || order._id, // Map id to _id for compatibility
-          status: order.status?.toLowerCase() || 'pending',
-          items: typeof order.items === 'string' ? JSON.parse(order.items) : order.items
-        }));
+        const normalizedOrders = json.orders.map((order: any) => {
+          let parsedItems = order.items;
+          if (typeof order.items === 'string') {
+            try {
+              parsedItems = JSON.parse(order.items);
+            } catch (parseError) {
+              console.error('Failed to parse order items:', parseError);
+              parsedItems = []; // Default to empty array on parse error
+            }
+          }
+          return {
+            ...order,
+            _id: order.id || order._id, // Map id to _id for compatibility
+            status: order.status?.toLowerCase() || 'pending',
+            items: parsedItems
+          };
+        });
         setOrders(normalizedOrders);
       } else {
         setError(json.message || 'Failed to load orders');
@@ -79,22 +90,76 @@ export default function RestaurantOrders() {
   // Subscribe to server-sent events for real-time updates
   useEffect(() => {
     let es: EventSource | null = null;
-    try {
-      const token = localStorage.getItem('token');
-      const url = token ? `/api/orders/stream?token=${encodeURIComponent(token)}` : '/api/orders/stream';
-      es = new EventSource(url);
-      const onUpdate = () => loadOrders();
-      es.addEventListener('order.updated', onUpdate);
-      es.addEventListener('connected', () => {});
-      es.addEventListener('ping', () => {});
-    } catch {}
-    return () => { if (es) es.close(); };
+    let isMounted = true;
+    
+    const setupEventSource = () => {
+      try {
+        const token = localStorage.getItem('token');
+        const url = token ? `/api/orders/stream?token=${encodeURIComponent(token)}` : '/api/orders/stream';
+        es = new EventSource(url);
+        
+        const onUpdate = () => {
+          if (isMounted) {
+            loadOrders();
+          }
+        };
+        
+        const onError = () => {
+          if (es && isMounted) {
+            es.close();
+            es = null;
+            // Retry after 5 seconds
+            setTimeout(() => {
+              if (isMounted) {
+                setupEventSource();
+              }
+            }, 5000);
+          }
+        };
+        
+        es.addEventListener('order.updated', onUpdate);
+        es.addEventListener('connected', () => {});
+        es.addEventListener('ping', () => {});
+        es.onerror = onError;
+      } catch (error) {
+        console.error('Error setting up EventSource:', error);
+        if (es) {
+          es.close();
+          es = null;
+        }
+      }
+    };
+    
+    setupEventSource();
+    
+    return () => {
+      isMounted = false;
+      if (es) {
+        es.close();
+        es = null;
+      }
+    };
   }, []);
   
   const fmt = (n:number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(n);
 
+  const getNormalizedStatus = (status: string): string => {
+    // Map UI status labels to API status values
+    const statusMap: Record<string, string> = {
+      'All': 'all',
+      'Pending': 'pending',
+      'Confirmed': 'accepted',
+      'Preparing': 'preparing',
+      'Ready': 'ready',
+      'Delivered': 'delivered',
+      'Cancelled': 'cancelled'
+    };
+    return statusMap[status] || status.toLowerCase();
+  };
+
   const filteredOrders = orders.filter((order:any) => {
-    const matchesStatus = selectedStatus === 'All' || order.status === selectedStatus.toLowerCase();
+    const normalizedSelectedStatus = getNormalizedStatus(selectedStatus);
+    const matchesStatus = normalizedSelectedStatus === 'all' || order.status === normalizedSelectedStatus;
     const matchesSearch = (order.customerName || order.customer || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (order.orderNumber || '').toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;

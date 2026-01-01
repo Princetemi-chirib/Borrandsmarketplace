@@ -30,14 +30,23 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       if (!packOk) return NextResponse.json({ message: 'Invalid packId' }, { status: 400 });
     }
     
-    const result = await prisma.menuItem.updateMany({
+    // Use findUnique + update instead of updateMany for better error handling
+    // This avoids prepared statement issues with updateMany
+    const existingItem = await prisma.menuItem.findFirst({
       where: { id, restaurantId: auth.restaurantId },
+      select: { id: true }
+    });
+    
+    if (!existingItem) {
+      return NextResponse.json({ message: 'Not found' }, { status: 404 });
+    }
+    
+    // Update the item
+    const item = await prisma.menuItem.update({
+      where: { id },
       data: update
     });
     
-    if (result.count === 0) return NextResponse.json({ message: 'Not found' }, { status: 404 });
-    
-    const item = await prisma.menuItem.findUnique({ where: { id } });
     return NextResponse.json({ item });
   } catch (e: any) {
     return NextResponse.json({ message: e.message || 'Failed to update item' }, { status: 400 });

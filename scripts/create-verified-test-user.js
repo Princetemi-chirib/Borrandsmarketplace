@@ -71,7 +71,7 @@ async function createVerifiedTestUser() {
       deliveryFee: 500,
       minimumOrder: 1500,
       estimatedDeliveryTime: 25,
-      image: '/images/default-restaurant.jpg',
+      image: '',
       isApproved: true,
       isActive: true,
       phoneVerified: true,

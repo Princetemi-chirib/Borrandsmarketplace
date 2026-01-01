@@ -413,7 +413,7 @@ export default function CheckoutPage() {
                   />
                   <div className="ml-3 flex items-center">
                     <CreditCard className="h-5 w-5 text-gray-400 mr-2" />
-                    <span className="text-sm font-medium text-gray-900">Credit/Debit Card</span>
+                    <span className="text-sm font-medium text-gray-900">Paystack Checkout</span>
                   </div>
                 </label>
 
@@ -526,7 +526,7 @@ export default function CheckoutPage() {
                 ) : (
                   <>
                     <CheckCircle className="h-5 w-5" />
-                    <span>{paymentMethod === 'card' ? 'Pay with Card' : 'Place Order'}</span>
+                    <span>{paymentMethod === 'card' ? 'Paystack Checkout' : 'Place Order'}</span>
                   </>
                 )}
               </button>

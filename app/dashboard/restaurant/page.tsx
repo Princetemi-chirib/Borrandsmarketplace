@@ -122,10 +122,11 @@ export default function RestaurantDashboard() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      // Fetch stats and recent orders in parallel
-      const [statsResponse, ordersResponse] = await Promise.all([
+      // Fetch stats, recent orders, and menu items in parallel
+      const [statsResponse, ordersResponse, menuResponse] = await Promise.all([
         fetch('/api/restaurant/stats', { headers, credentials: 'include' }),
-        fetch('/api/restaurant/recent-orders?limit=5', { headers, credentials: 'include' })
+        fetch('/api/restaurant/recent-orders?limit=5', { headers, credentials: 'include' }),
+        fetch('/api/menu', { headers, credentials: 'include' })
       ]);
 
       if (statsResponse.ok) {
@@ -144,6 +145,20 @@ export default function RestaurantDashboard() {
         }
       } else {
         console.error('Failed to fetch orders:', ordersResponse.status);
+      }
+
+      if (menuResponse.ok) {
+        const menuData = await menuResponse.json();
+        if (menuData.items && Array.isArray(menuData.items)) {
+          // Map id to _id for UI compatibility
+          const normalizedItems = menuData.items.map((item: any) => ({
+            ...item,
+            _id: item.id || item._id
+          }));
+          setMenuItems(normalizedItems.slice(0, 3)); // Only show first 3 for preview
+        }
+      } else {
+        console.error('Failed to fetch menu items:', menuResponse.status);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -284,11 +299,6 @@ export default function RestaurantDashboard() {
     return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  const getStockStatus = (stock: number, threshold: number) => {
-    if (stock === 0) return 'text-red-600 bg-red-100 border-red-200';
-    if (stock <= threshold) return 'text-orange-600 bg-orange-100 border-orange-200';
-    return 'text-green-600 bg-green-100 border-green-200';
-  };
 
   if (isLoading) {
     return (
@@ -582,9 +592,6 @@ export default function RestaurantDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStockStatus(item.stock, item.lowStockThreshold)}`}>
-                        {item.stock} left
-                      </span>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                         {item.isAvailable ? 'Available' : 'Unavailable'}
                       </span>

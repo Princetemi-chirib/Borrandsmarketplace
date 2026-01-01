@@ -45,6 +45,17 @@ export class PaystackService {
     metadata?: any;
   }) {
     try {
+      // Check credentials first
+      try {
+        getPaystackCredentials();
+      } catch (credError: any) {
+        console.error('Paystack credentials error:', credError.message);
+        return {
+          success: false,
+          error: 'Paystack payment gateway is not configured. Please contact support.',
+        };
+      }
+
       const paystackApi = getPaystackApi();
       const response = await paystackApi.post('/transaction/initialize', {
         email: data.email,
@@ -61,9 +72,16 @@ export class PaystackService {
       };
     } catch (error: any) {
       console.error('Paystack initialization error:', error.response?.data || error.message);
+      // Check if it's a credentials error
+      if (error.message?.includes('credentials not properly configured')) {
+        return {
+          success: false,
+          error: 'Paystack payment gateway is not configured. Please contact support.',
+        };
+      }
       return {
         success: false,
-        error: error.response?.data?.message || 'Payment initialization failed',
+        error: error.response?.data?.message || error.message || 'Payment initialization failed',
       };
     }
   }

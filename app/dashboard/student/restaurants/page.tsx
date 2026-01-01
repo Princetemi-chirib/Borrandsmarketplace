@@ -37,7 +37,7 @@ interface Restaurant {
   distance: number;
   address: string;
   isFavorite: boolean;
-  featuredItems: Array<{
+  featuredItems?: Array<{
     _id: string;
     name: string;
     price: number;
@@ -416,26 +416,28 @@ export default function RestaurantsPage() {
                   </div>
 
                   {/* Featured Items */}
-                  <div className="space-y-2 mb-4">
-                    <h4 className="text-sm font-medium text-gray-900">Featured Items</h4>
-                    {restaurant.featuredItems.slice(0, 2).map((item) => (
-                      <div key={item._id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-8 h-8 bg-gray-200 rounded"></div>
-                          <div>
-                            <p className="text-sm font-medium">{item.name}</p>
-                            <p className="text-xs text-gray-500">₦{item.price}</p>
+                  {restaurant.featuredItems && restaurant.featuredItems.length > 0 && (
+                    <div className="space-y-2 mb-4">
+                      <h4 className="text-sm font-medium text-gray-900">Featured Items</h4>
+                      {restaurant.featuredItems.slice(0, 2).map((item) => (
+                        <div key={item._id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-8 h-8 bg-gray-200 rounded"></div>
+                            <div>
+                              <p className="text-sm font-medium">{item.name}</p>
+                              <p className="text-xs text-gray-500">₦{item.price}</p>
+                            </div>
                           </div>
+                          <button
+                            onClick={() => addToCart(restaurant._id, restaurant.name, item)}
+                            className="p-1 bg-brand-primary text-white rounded hover:bg-brand-accent transition-colors"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </button>
                         </div>
-                        <button
-                          onClick={() => addToCart(restaurant._id, restaurant.name, item)}
-                          className="p-1 bg-brand-primary text-white rounded hover:bg-brand-accent transition-colors"
-                        >
-                          <Plus className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Action Buttons */}
                   <div className="flex space-x-2">
@@ -446,12 +448,14 @@ export default function RestaurantsPage() {
                       <Eye className="h-4 w-4 mr-1" />
                       View Menu
                     </Link>
-                    <button
-                      onClick={() => addToCart(restaurant._id, restaurant.name, restaurant.featuredItems[0])}
-                      className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                    >
-                      <ShoppingBag className="h-4 w-4" />
-                    </button>
+                    {restaurant.featuredItems && restaurant.featuredItems.length > 0 && (
+                      <button
+                        onClick={() => addToCart(restaurant._id, restaurant.name, restaurant.featuredItems![0])}
+                        className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                      >
+                        <ShoppingBag className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </motion.div>

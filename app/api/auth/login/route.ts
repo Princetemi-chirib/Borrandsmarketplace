@@ -85,10 +85,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // For restaurant owners, fetch their restaurant ID
+    let restaurantId: string | undefined;
+    if (user.role === 'RESTAURANT') {
+      const restaurant = await prisma.restaurant.findUnique({
+        where: { userId: user.id },
+        select: { id: true }
+      });
+      if (restaurant) {
+        restaurantId = restaurant.id;
+      }
+    }
+
     // Create a user object compatible with generateToken (expects _id)
     const userForToken = {
       ...user,
-      _id: user.id
+      _id: user.id,
+      restaurantId: restaurantId
     } as any;
     
     const token = generateToken(userForToken);

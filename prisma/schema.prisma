@@ -60,7 +60,7 @@ model Restaurant {
   deliveryFee           Float
   minimumOrder          Float
   estimatedDeliveryTime Int
-  image                 String          @default("/images/default-restaurant.jpg")
+  image                 String          @default("")
   bannerImage           String?
   isApproved            Boolean         @default(false)
   isActive              Boolean         @default(true)

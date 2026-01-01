@@ -41,6 +41,8 @@ export async function POST(
     
     if (action === 'approve') {
       updateData.status = 'APPROVED';
+      updateData.isApproved = true;
+      updateData.isActive = true;
       updateData.isOpen = true;
       updateData.approvedAt = new Date();
       

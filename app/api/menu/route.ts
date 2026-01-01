@@ -31,14 +31,23 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, description, price, priceDescription, category, image, isAvailable, isPublished, packId, categoryId } = body;
 
-    // Validate category/pack scoping
-    if (categoryId) {
-      const catOk = await prisma.category.findFirst({
-        where: { id: categoryId, restaurantId },
-        select: { id: true }
-      });
-      if (!catOk) return NextResponse.json({ message: 'Invalid categoryId' }, { status: 400 });
+    // Validate categoryId is required (schema requires it)
+    if (!categoryId || (typeof categoryId === 'string' && categoryId.trim() === '')) {
+      return NextResponse.json({ message: 'categoryId is required' }, { status: 400 });
     }
+    
+    // Validate category exists and belongs to restaurant
+    const catOk = await prisma.category.findFirst({
+      where: { id: categoryId, restaurantId },
+      select: { id: true }
+    });
+    if (!catOk) {
+      return NextResponse.json({ 
+        message: 'Invalid categoryId - category not found or does not belong to your restaurant' 
+      }, { status: 400 });
+    }
+    
+    // Validate pack if provided
     if (packId) {
       const packOk = await prisma.pack.findFirst({
         where: { id: packId, restaurantId },
@@ -50,7 +59,7 @@ export async function POST(request: NextRequest) {
     const item = await prisma.menuItem.create({
       data: {
         restaurantId,
-        categoryId: categoryId || '',
+        categoryId: categoryId,
         name,
         description,
         price,

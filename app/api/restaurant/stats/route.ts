@@ -25,16 +25,16 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Get today's date range
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // Get today's date range in UTC to match database
+    const now = new Date();
+    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+    const tomorrowUTC = new Date(todayUTC);
+    tomorrowUTC.setUTCDate(tomorrowUTC.getUTCDate() + 1);
 
-    // Today's orders
+    // Today's orders (comparing UTC dates)
     const todayOrders = allOrders.filter(order => {
       const orderDate = new Date(order.createdAt);
-      return orderDate >= today && orderDate < tomorrow;
+      return orderDate >= todayUTC && orderDate < tomorrowUTC;
     });
 
     // Calculate statistics

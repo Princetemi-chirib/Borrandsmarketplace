@@ -35,6 +35,7 @@ interface RestaurantFormData {
   
   // Owner Information
   ownerName: string;
+  ownerEmail: string;
   ownerPhone: string;
   ownerPassword: string;
   confirmPassword: string;
@@ -75,6 +76,7 @@ export default function RestaurantRegistration() {
     estimatedDeliveryTime: 30,
     university: '',
     ownerName: '',
+    ownerEmail: '',
     ownerPhone: '',
     ownerPassword: '',
     confirmPassword: ''
@@ -100,8 +102,14 @@ export default function RestaurantRegistration() {
         }
         break;
       case 3:
-        if (!formData.ownerName || !formData.ownerPhone || !formData.ownerPassword) {
+        if (!formData.ownerName || !formData.ownerEmail || !formData.ownerPhone || !formData.ownerPassword) {
           setError('Please fill in all required fields');
+          return false;
+        }
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.ownerEmail)) {
+          setError('Please enter a valid email address');
           return false;
         }
         if (formData.ownerPassword !== formData.confirmPassword) {
@@ -149,13 +157,13 @@ export default function RestaurantRegistration() {
       console.log('📡 Restaurant API response:', data);
 
       if (response.ok) {
-        setSuccess('Restaurant application submitted! Please verify your phone number to complete registration.');
+        setSuccess('Restaurant application submitted! Please verify your email to complete registration.');
         setShowVerification(true);
         
         console.log('⏰ Auto-sending OTP in 1 second...');
         // Auto-send OTP after successful restaurant creation
         setTimeout(() => {
-          console.log('📱 Calling handleSendOTP...');
+          console.log('📧 Calling handleSendOTP...');
           handleSendOTP();
         }, 1000);
       } else {
@@ -171,22 +179,22 @@ export default function RestaurantRegistration() {
 
   const handleSendOTP = async () => {
     try {
-      console.log('📱 handleSendOTP called with phone:', formData.ownerPhone);
+      console.log('📧 handleSendOTP called with email:', formData.ownerEmail);
       setOtpSending(true);
       setError('');
       
-      const response = await fetch('/api/auth/whatsapp-verify', {
+      const response = await fetch('/api/auth/restaurant-email-verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          phone: formData.ownerPhone
+          email: formData.ownerEmail
         }),
       });
 
       const data = await response.json();
-      console.log('📡 WhatsApp OTP API response:', data);
+      console.log('📡 Email OTP API response:', data);
 
       if (response.ok) {
         // For development: if OTP is returned in response, auto-fill it
@@ -195,7 +203,7 @@ export default function RestaurantRegistration() {
           setOtp(data.otp);
           setSuccess('OTP sent successfully! (Development mode - OTP auto-filled)');
         } else {
-          setSuccess('OTP sent successfully! Check your WhatsApp for the verification code.');
+          setSuccess('OTP sent successfully! Check your email for the verification code.');
         }
         setOtpSent(true);
         setError('');
@@ -220,20 +228,20 @@ export default function RestaurantRegistration() {
     }
 
     console.log('🔍 Starting OTP verification...');
-    console.log('📱 Phone being verified:', formData.ownerPhone);
+    console.log('📧 Email being verified:', formData.ownerEmail);
     console.log('🔑 OTP being verified:', otp);
     
     setVerificationLoading(true);
     setError('');
 
     try {
-      const response = await fetch('/api/auth/whatsapp-verify', {
+      const response = await fetch('/api/auth/restaurant-email-verify', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          phone: formData.ownerPhone,
+          email: formData.ownerEmail,
           otp: otp
         }),
       });
@@ -242,13 +250,13 @@ export default function RestaurantRegistration() {
       console.log('📡 Verification API response:', data);
 
       if (response.ok) {
-        setSuccess('Phone number verified successfully! Your restaurant application is now complete.');
+        setSuccess('Email verified successfully! Your restaurant application is now complete.');
         setTimeout(() => {
           router.push('/auth/login');
         }, 3000);
       } else {
-        setError(data.error || 'Failed to verify OTP');
-        console.log('❌ Verification failed:', data.error);
+        setError(data.error || data.message || 'Failed to verify OTP');
+        console.log('❌ Verification failed:', data.error || data.message);
       }
     } catch (error) {
       console.error('❌ Error in handleVerifyOTP:', error);
@@ -266,50 +274,50 @@ export default function RestaurantRegistration() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 md:py-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4">
+        <div className="text-center mb-6 md:mb-8">
+          <Link href="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-3 md:mb-4 text-sm md:text-base">
             <ArrowLeft className="w-4 h-4" />
             Back to Home
           </Link>
           <Logo />
-          <h1 className="text-3xl font-bold text-gray-900 mt-4">Restaurant Registration</h1>
-          <p className="text-gray-600 mt-2">Join our platform and start serving delicious food to students</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mt-3 md:mt-4 px-4">Restaurant Registration</h1>
+          <p className="text-gray-600 mt-2 text-sm md:text-base px-4">Join our platform and start serving delicious food to students</p>
         </div>
 
         {/* Progress Steps */}
-        <div className="max-w-4xl mx-auto mb-8">
+        <div className="max-w-4xl mx-auto mb-6 md:mb-8 px-4">
           <div className="flex items-center justify-between">
             {steps.map((step, index) => (
-              <div key={step.number} className="flex items-center">
-                                 <div className={`flex items-center justify-center w-12 h-12 rounded-full border-2 ${
-                   currentStep >= step.number 
-                     ? 'border-red-500 bg-red-500 text-white' 
-                     : 'border-gray-300 text-gray-400'
-                 }`}>
+              <div key={step.number} className="flex items-center flex-1">
+                <div className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border-2 ${
+                  currentStep >= step.number 
+                    ? 'border-red-500 bg-red-500 text-white' 
+                    : 'border-gray-300 text-gray-400'
+                }`}>
                   {currentStep > step.number ? (
-                    <CheckCircle className="w-6 h-6" />
+                    <CheckCircle className="w-5 h-5 md:w-6 md:h-6" />
                   ) : (
-                    <step.icon className="w-6 h-6" />
+                    <step.icon className="w-5 h-5 md:w-6 md:h-6" />
                   )}
                 </div>
                 {index < steps.length - 1 && (
-                                     <div className={`w-24 h-1 mx-4 ${
-                     currentStep > step.number ? 'bg-red-500' : 'bg-gray-300'
-                   }`} />
+                  <div className={`flex-1 h-1 mx-2 md:mx-4 ${
+                    currentStep > step.number ? 'bg-red-500' : 'bg-gray-300'
+                  }`} />
                 )}
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-4">
+          <div className="flex justify-between mt-3 md:mt-4">
             {steps.map((step) => (
-                               <span
-                   key={step.number}
-                   className={`text-sm font-medium ${
-                     currentStep >= step.number ? 'text-red-600' : 'text-gray-400'
-                   }`}
-                 >
+              <span
+                key={step.number}
+                className={`text-xs md:text-sm font-medium text-center flex-1 px-1 ${
+                  currentStep >= step.number ? 'text-red-600' : 'text-gray-400'
+                }`}
+              >
                 {step.title}
               </span>
             ))}
@@ -323,18 +331,18 @@ export default function RestaurantRegistration() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-white rounded-2xl shadow-xl p-8"
+            className="bg-white rounded-2xl shadow-xl p-4 md:p-8"
           >
             {/* Step 1: Restaurant Details */}
             {currentStep === 1 && (
-              <div className="space-y-6">
-                <div className="text-center mb-6">
-                                     <Building2 className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold text-gray-900">Restaurant Information</h2>
-                  <p className="text-gray-600">Tell us about your restaurant</p>
+              <div className="space-y-4 md:space-y-6">
+                <div className="text-center mb-4 md:mb-6">
+                  <Building2 className="w-12 h-12 md:w-16 md:h-16 text-red-500 mx-auto mb-3 md:mb-4" />
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900">Restaurant Information</h2>
+                  <p className="text-gray-600 text-sm md:text-base">Tell us about your restaurant</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Restaurant Name *
@@ -343,7 +351,7 @@ export default function RestaurantRegistration() {
                       type="text"
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                      className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm md:text-base"
                       placeholder="e.g., Pizza Palace, Campus Delight"
                     />
                   </div>
@@ -356,7 +364,7 @@ export default function RestaurantRegistration() {
                       value={formData.description}
                       onChange={(e) => handleInputChange('description', e.target.value)}
                       rows={4}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                      className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm md:text-base resize-none"
                       placeholder="Describe your restaurant, specialties, and what makes you unique..."
                     />
                   </div>
@@ -368,7 +376,7 @@ export default function RestaurantRegistration() {
                     <select
                       value={formData.cuisine}
                       onChange={(e) => handleInputChange('cuisine', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900"
+                      className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 text-sm md:text-base"
                     >
                       <option value="">Select cuisine type</option>
                       {cuisineOptions.map((cuisine) => (
@@ -385,7 +393,7 @@ export default function RestaurantRegistration() {
                       type="text"
                       value={formData.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                      className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm md:text-base"
                       placeholder="e.g., University Mall, Block A, Floor 2"
                     />
                   </div>
@@ -395,14 +403,14 @@ export default function RestaurantRegistration() {
 
             {/* Step 2: Business Information */}
             {currentStep === 2 && (
-              <div className="space-y-6">
-                <div className="text-center mb-6">
-                  <ChefHat className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold text-gray-900">Business Details</h2>
-                  <p className="text-gray-600">Configure your delivery settings</p>
+              <div className="space-y-4 md:space-y-6">
+                <div className="text-center mb-4 md:mb-6">
+                  <ChefHat className="w-12 h-12 md:w-16 md:h-16 text-red-500 mx-auto mb-3 md:mb-4" />
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900">Business Details</h2>
+                  <p className="text-gray-600 text-sm md:text-base">Configure your delivery settings</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Phone Number *
@@ -413,7 +421,7 @@ export default function RestaurantRegistration() {
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                        className="w-full pl-10 pr-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm md:text-base"
                         placeholder="+234 801 234 5678"
                       />
                     </div>
@@ -430,7 +438,7 @@ export default function RestaurantRegistration() {
                     <select
                       value={formData.university}
                       onChange={(e) => handleInputChange('university', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900"
+                      className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 text-sm md:text-base"
                     >
                       <option value="">Select university</option>
                       {universityOptions.map((university) => (
@@ -451,7 +459,7 @@ export default function RestaurantRegistration() {
                         type="number"
                         value={formData.minimumOrder}
                         onChange={(e) => handleInputChange('minimumOrder', parseInt(e.target.value) || 0)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                        className="w-full pl-10 pr-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm md:text-base"
                         placeholder="2000"
                         min="0"
                       />
@@ -468,7 +476,7 @@ export default function RestaurantRegistration() {
                         type="number"
                         value={formData.estimatedDeliveryTime}
                         onChange={(e) => handleInputChange('estimatedDeliveryTime', parseInt(e.target.value) || 30)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                        className="w-full pl-10 pr-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm md:text-base"
                         placeholder="30"
                         min="15"
                         max="120"
@@ -481,14 +489,14 @@ export default function RestaurantRegistration() {
 
             {/* Step 3: Owner Account */}
             {currentStep === 3 && (
-              <div className="space-y-6">
-                <div className="text-center mb-6">
-                  <User className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold text-gray-900">Owner Account</h2>
-                  <p className="text-gray-600">Create your login credentials</p>
+              <div className="space-y-4 md:space-y-6">
+                <div className="text-center mb-4 md:mb-6">
+                  <User className="w-12 h-12 md:w-16 md:h-16 text-red-500 mx-auto mb-3 md:mb-4" />
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900">Owner Account</h2>
+                  <p className="text-gray-600 text-sm md:text-base">Create your login credentials</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Full Name *
@@ -497,12 +505,25 @@ export default function RestaurantRegistration() {
                       type="text"
                       value={formData.ownerName}
                       onChange={(e) => handleInputChange('ownerName', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                      className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm md:text-base"
                       placeholder="John Doe"
                     />
                   </div>
 
 
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.ownerEmail}
+                      onChange={(e) => handleInputChange('ownerEmail', e.target.value)}
+                      className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm md:text-base"
+                      placeholder="owner@restaurant.com"
+                    />
+                  </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -512,7 +533,7 @@ export default function RestaurantRegistration() {
                       type="tel"
                       value={formData.ownerPhone}
                       onChange={(e) => handleInputChange('ownerPhone', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                      className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm md:text-base"
                       placeholder="+234 801 234 5678"
                     />
                   </div>
@@ -526,8 +547,8 @@ export default function RestaurantRegistration() {
                         type={showPassword ? 'text' : 'password'}
                         value={formData.ownerPassword}
                         onChange={(e) => handleInputChange('ownerPassword', e.target.value)}
-                                              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
-                      placeholder="Create a strong password"
+                        className="w-full px-4 py-2.5 md:py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm md:text-base"
+                        placeholder="Create a strong password"
                       />
                       <button
                         type="button"
@@ -548,8 +569,8 @@ export default function RestaurantRegistration() {
                         type={showConfirmPassword ? 'text' : 'password'}
                         value={formData.confirmPassword}
                         onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                                              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
-                      placeholder="Confirm your password"
+                        className="w-full px-4 py-2.5 md:py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm md:text-base"
+                        placeholder="Confirm your password"
                       />
                       <button
                         type="button"
@@ -562,17 +583,17 @@ export default function RestaurantRegistration() {
                   </div>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4">
+                  <div className="flex items-start gap-2 md:gap-3">
                     <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm text-blue-800">
+                    <div className="text-xs md:text-sm text-blue-800">
                       <p className="font-medium mb-1">Important Information:</p>
                       <ul className="space-y-1 text-blue-700">
                         <li>• Your restaurant will be reviewed by our admin team</li>
-                        <li>• You'll receive a WhatsApp notification once approved</li>
+                        <li>• You'll receive an email notification once approved</li>
                         <li>• You can start adding menu items after approval</li>
                         <li>• Keep your login credentials safe</li>
-                        <li>• Phone verification is required to complete registration</li>
+                        <li>• Email verification is required to complete registration</li>
                       </ul>
                     </div>
                   </div>
@@ -582,28 +603,28 @@ export default function RestaurantRegistration() {
 
             {/* Error and Success Messages */}
             {error && (
-              <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                <span className="text-red-800">{error}</span>
+              <div className="flex items-start gap-2 md:gap-3 p-3 md:p-4 bg-red-50 border border-red-200 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <span className="text-red-800 text-sm md:text-base break-words">{error}</span>
               </div>
             )}
 
             {success && (
-              <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <span className="text-green-800">{success}</span>
+              <div className="flex items-start gap-2 md:gap-3 p-3 md:p-4 bg-green-50 border border-green-200 rounded-lg">
+                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <span className="text-green-800 text-sm md:text-base break-words">{success}</span>
               </div>
             )}
 
-            {/* Phone Verification Section */}
+            {/* Email Verification Section */}
             {showVerification && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 md:p-6">
                 <div className="text-center mb-4">
-                  <h3 className="text-lg font-semibold text-blue-900 mb-2">Verify Your Phone Number</h3>
-                  <p className="text-blue-700 text-sm">
+                  <h3 className="text-base md:text-lg font-semibold text-blue-900 mb-2">Verify Your Email Address</h3>
+                  <p className="text-blue-700 text-xs md:text-sm px-2">
                     {otpSent 
-                      ? 'We\'ve sent a verification code to your WhatsApp. Please enter it below to complete your registration.'
-                      : 'Sending verification code to your WhatsApp... Please wait.'
+                      ? `We've sent a verification code to ${formData.ownerEmail}. Please enter it below to complete your registration.`
+                      : `Sending verification code to ${formData.ownerEmail}... Please wait.`
                     }
                   </p>
                   {/* Development note */}
@@ -612,27 +633,27 @@ export default function RestaurantRegistration() {
                   </p>
                 </div>
                 
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
+                <div className="space-y-3 md:space-y-4">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <input
                       type="text"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
                       placeholder="Enter 6-digit OTP"
-                      className="flex-1 px-4 py-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono text-gray-900 placeholder-gray-400"
+                      className="flex-1 px-4 py-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-base md:text-lg font-mono text-gray-900 placeholder-gray-400"
                       maxLength={6}
                       disabled={!otpSent}
                     />
                     <button
                       onClick={handleSendOTP}
                       disabled={otpSending || !otpSent}
-                      className="px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
                     >
                       {otpSending ? 'Sending...' : 'Resend OTP'}
                     </button>
                   </div>
                   
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={handleVerifyOTP}
                       disabled={verificationLoading || !otp || !otpSent}
@@ -653,47 +674,47 @@ export default function RestaurantRegistration() {
             )}
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6 md:mt-8">
               <button
                 onClick={prevStep}
                 disabled={currentStep === 1}
-                className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full sm:w-auto px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm md:text-base"
               >
                 Previous
               </button>
 
               {currentStep < 3 ? (
-                                 <button
-                   onClick={nextStep}
-                   className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                 >
-                   Next Step
-                 </button>
+                <button
+                  onClick={nextStep}
+                  className="w-full sm:w-auto px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm md:text-base font-medium"
+                >
+                  Next Step
+                </button>
               ) : (
-                                 <button
-                   onClick={handleSubmit}
-                   disabled={isLoading}
-                   className="px-8 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                 >
-                   {isLoading ? 'Creating Restaurant...' : 'Create Restaurant'}
-                 </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="w-full sm:w-auto px-8 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm md:text-base font-medium"
+                >
+                  {isLoading ? 'Creating Restaurant...' : 'Create Restaurant'}
+                </button>
               )}
             </div>
           </motion.div>
 
           {/* Footer */}
-          <div className="text-center mt-8">
-            <p className="text-gray-600">
+          <div className="text-center mt-6 md:mt-8 px-4">
+            <p className="text-gray-600 text-sm md:text-base">
               Already have an account?{' '}
-                             <Link href="/auth/login" className="text-red-600 hover:text-red-700 font-medium">
-                 Sign in here
-               </Link>
+              <Link href="/auth/login" className="text-red-600 hover:text-red-700 font-medium">
+                Sign in here
+              </Link>
             </p>
-            <p className="text-gray-500 text-sm mt-2">
+            <p className="text-gray-500 text-xs md:text-sm mt-2">
               Or{' '}
-                             <Link href="/auth/register" className="text-red-600 hover:text-red-700">
-                 register as a student
-               </Link>
+              <Link href="/auth/register" className="text-red-600 hover:text-red-700">
+                register as a student
+              </Link>
             </p>
           </div>
         </div>

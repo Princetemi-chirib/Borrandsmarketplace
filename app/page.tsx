@@ -855,13 +855,6 @@ export default function HomePage() {
                   <li><Link href="#" className="hover:text-white transition-colors">Terms of Service</Link></li>
               </ul>
               </div>
-              <div>
-                <h4 className="text-lg font-semibold mb-4">Download App</h4>
-                <div className="space-y-2">
-                  <div className="bg-black text-white px-4 py-2 rounded text-sm font-medium inline-block">App Store</div>
-                  <div className="bg-black text-white px-4 py-2 rounded text-sm font-medium inline-block">Google Play</div>
-                </div>
-              </div>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">

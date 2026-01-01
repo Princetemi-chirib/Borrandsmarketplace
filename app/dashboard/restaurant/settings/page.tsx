@@ -213,6 +213,10 @@ export default function RestaurantSettings() {
         setErrorMessage(errorData.error || 'Failed to update settings');
         setShowError(true);
         setTimeout(() => setShowError(false), 5000);
+        // Revert form data on error
+        if (restaurant) {
+          setFormData(restaurant);
+        }
       }
     } catch (error) {
       console.error('Error updating settings:', error);

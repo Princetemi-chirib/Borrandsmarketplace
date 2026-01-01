@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, Pencil, Trash2, ArrowLeft, Image as ImageIcon, Save, X, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, ArrowLeft, Image as ImageIcon, Save, X, ArrowUp, ArrowDown, ToggleLeft, ToggleRight, Power } from 'lucide-react';
 
 interface MenuItemForm {
 	name: string;
@@ -34,6 +34,7 @@ export default function MenuManagementPage() {
 	const [optionGroups, setOptionGroups] = useState<Array<any>>([]);
 	const [newGroup, setNewGroup] = useState<{ name: string; minSelect: number; maxSelect: number; optionsText: string }>({ name: '', minSelect: 0, maxSelect: 1, optionsText: '' });
 	const [uploading, setUploading] = useState<boolean>(false);
+	const [togglingItemId, setTogglingItemId] = useState<string | null>(null);
 
 	// Load items from API
 	useEffect(() => {
@@ -89,7 +90,9 @@ export default function MenuManagementPage() {
 					}));
 					setCategories(normalized);
 				}
-			} catch {}
+			} catch (error) {
+				console.error('Error loading categories:', error);
+			}
 		})();
 	}, []);
 
@@ -111,7 +114,9 @@ export default function MenuManagementPage() {
 					}));
 					setPacks(normalized);
 				}
-			} catch {}
+			} catch (error) {
+				console.error('Error loading packs:', error);
+			}
 		})();
 	}, []);
 
@@ -148,16 +153,35 @@ export default function MenuManagementPage() {
 	const moveItem = async (index: number, direction: 'up' | 'down') => {
 		const targetIndex = direction === 'up' ? index - 1 : index + 1;
 		if (targetIndex < 0 || targetIndex >= items.length) return;
+		
 		const newItems = [...(items as any[])];
 		const a: any = newItems[index];
 		const b: any = newItems[targetIndex];
+		
+		// Only swap if both items have IDs (are saved)
+		if (!a?._id || !b?._id) {
+			console.warn('Cannot reorder: one or both items are not saved yet');
+			return;
+		}
+		
 		[newItems[index], newItems[targetIndex]] = [b, a];
 		setItems(newItems as any);
-		// Persist their sortOrder (use target positions)
+		
+		// Persist their sortOrder (use target positions) - await both API calls
 		try {
-			if (a?._id) await fetch(`/api/menu/${a._id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ sortOrder: targetIndex }) });
-			if (b?._id) await fetch(`/api/menu/${b._id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ sortOrder: index }) });
-		} catch {}
+			const token = localStorage.getItem('token');
+			const headers: any = { 'Content-Type': 'application/json' };
+			if (token) headers['Authorization'] = `Bearer ${token}`;
+			
+			await Promise.all([
+				fetch(`/api/menu/${a._id}`, { method: 'PATCH', headers, credentials: 'include', body: JSON.stringify({ sortOrder: targetIndex }) }),
+				fetch(`/api/menu/${b._id}`, { method: 'PATCH', headers, credentials: 'include', body: JSON.stringify({ sortOrder: index }) })
+			]);
+		} catch (error) {
+			console.error('Error updating item order:', error);
+			// Revert on error
+			setItems([...items]);
+		}
 	};
 
 	const removeItem = async (index: number) => {
@@ -168,47 +192,164 @@ export default function MenuManagementPage() {
 				setItems(prev => prev.filter((_, i) => i !== index));
 				return;
 			}
+			
+			// Confirm deletion
+			if (!confirm(`Are you sure you want to delete "${target.name}"? This action cannot be undone.`)) {
+				return;
+			}
+			
 			const id = (target as any)._id;
-			const res = await fetch(`/api/menu/${id}`, { method: 'DELETE', credentials: 'include' });
-			if (res.ok) setItems(prev => prev.filter((_, i) => i !== index));
-		} catch {}
+			const token = localStorage.getItem('token');
+			const headers: any = {};
+			if (token) headers['Authorization'] = `Bearer ${token}`;
+			
+			const res = await fetch(`/api/menu/${id}`, { method: 'DELETE', headers, credentials: 'include' });
+			if (res.ok) {
+				setItems(prev => prev.filter((_, i) => i !== index));
+			} else {
+				const json = await res.json();
+				console.error('Failed to delete item:', json.message || 'Unknown error');
+				setError(json.message || 'Failed to delete item');
+			}
+		} catch (error) {
+			console.error('Error deleting item:', error);
+			setError('Network error while deleting item');
+		}
 	};
 
 	const saveItem = async () => {
-		if (!form.name || !form.description || !form.categoryId || !form.price) return;
+		if (!form.name || !form.description || !form.categoryId || !form.price) {
+			setError('Please fill in all required fields');
+			return;
+		}
+		
+		// Basic validation
+		if (form.price <= 0) {
+			setError('Price must be greater than 0');
+			return;
+		}
+		
+		if (form.name.trim().length < 2) {
+			setError('Item name must be at least 2 characters');
+			return;
+		}
+		
 		try {
 			setLoading(true);
+			setError('');
+			const token = localStorage.getItem('token');
+			const headers: any = { 'Content-Type': 'application/json' };
+			if (token) headers['Authorization'] = `Bearer ${token}`;
+			
 			const payload: any = {
-				name: form.name,
-				description: form.description,
+				name: form.name.trim(),
+				description: form.description.trim(),
 				price: form.price,
-				priceDescription: form.priceDescription,
-				image: form.image,
+				priceDescription: form.priceDescription?.trim() || '',
+				image: form.image || '',
 				isAvailable: form.isAvailable,
 				isPublished: form.isPublished!==false,
 				categoryId: form.categoryId,
 				packId: form.packId || undefined,
 			};
+			
 			if (editIndex === null) {
-				const res = await fetch('/api/menu', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) });
+				const res = await fetch('/api/menu', { method: 'POST', headers, credentials: 'include', body: JSON.stringify(payload) });
 				const json = await res.json();
-				if (res.ok) setItems(prev => [json.item, ...prev]);
+				if (res.ok) {
+					setItems(prev => [{ ...json.item, _id: json.item.id || json.item._id }, ...prev]);
+					resetForm();
+				} else {
+					setError(json.message || 'Failed to create menu item');
+				}
 			} else {
 				const existing: any = (items as any)[editIndex];
 				if (existing && existing._id) {
-					const res = await fetch(`/api/menu/${existing._id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) });
+					const res = await fetch(`/api/menu/${existing._id}`, { method: 'PATCH', headers, credentials: 'include', body: JSON.stringify(payload) });
 					const json = await res.json();
-					if (res.ok) setItems(prev => prev.map((it: any, i) => (i === editIndex ? json.item : it)));
+					if (res.ok) {
+						setItems(prev => prev.map((it: any, i) => (i === editIndex ? { ...json.item, _id: json.item.id || json.item._id } : it)));
+						resetForm();
+					} else {
+						setError(json.message || 'Failed to update menu item');
+					}
 				} else {
 					// fallback create
-					const res = await fetch('/api/menu', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) });
+					const res = await fetch('/api/menu', { method: 'POST', headers, credentials: 'include', body: JSON.stringify(payload) });
 					const json = await res.json();
-					if (res.ok) setItems(prev => prev.map((it, i) => (i === editIndex ? json.item : it)));
+					if (res.ok) {
+						setItems(prev => prev.map((it, i) => (i === editIndex ? { ...json.item, _id: json.item.id || json.item._id } : it)));
+						resetForm();
+					} else {
+						setError(json.message || 'Failed to create menu item');
+					}
 				}
 			}
+		} catch (error: any) {
+			console.error('Error saving menu item:', error);
+			setError(error.message || 'Network error while saving item');
 		} finally {
 			setLoading(false);
-			resetForm();
+		}
+	};
+
+	// Toggle item availability quickly
+	const toggleItemAvailability = async (item: any) => {
+		const itemId = item._id || item.id;
+		if (!itemId) {
+			console.error('Cannot toggle availability: item has no ID');
+			return;
+		}
+		
+		// Prevent multiple simultaneous toggles
+		if (togglingItemId === itemId) {
+			return;
+		}
+		
+		const newAvailability = !item.isAvailable;
+		setTogglingItemId(itemId);
+		
+		// Optimistic update - use item ID instead of index for reliability
+		setItems(prev => prev.map((it: any) => {
+			const currentId = (it as any)._id || (it as any).id;
+			return currentId === itemId ? { ...it, isAvailable: newAvailability } : it;
+		}));
+
+		try {
+			const token = localStorage.getItem('token');
+			const headers: any = { 'Content-Type': 'application/json' };
+			if (token) headers['Authorization'] = `Bearer ${token}`;
+			
+			const res = await fetch(`/api/menu/${itemId}`, {
+				method: 'PATCH',
+				headers,
+				credentials: 'include',
+				body: JSON.stringify({ isAvailable: newAvailability })
+			});
+
+			if (res.ok) {
+				const json = await res.json();
+				// Update with server response using item ID
+				setItems(prev => prev.map((it: any) => {
+					const currentId = (it as any)._id || (it as any).id;
+					return currentId === itemId ? json.item : it;
+				}));
+			} else {
+				// Revert on error
+				setItems(prev => prev.map((it: any) => {
+					const currentId = (it as any)._id || (it as any).id;
+					return currentId === itemId ? { ...it, isAvailable: !newAvailability } : it;
+				}));
+			}
+		} catch (error) {
+			console.error('Error toggling item availability:', error);
+			// Revert on error
+			setItems(prev => prev.map((it: any) => {
+				const currentId = (it as any)._id || (it as any).id;
+				return currentId === itemId ? { ...it, isAvailable: !newAvailability } : it;
+			}));
+		} finally {
+			setTogglingItemId(null);
 		}
 	};
 
@@ -294,11 +435,21 @@ export default function MenuManagementPage() {
 								if (!file) return;
 								try {
 									setUploading(true);
+									const token = localStorage.getItem('token');
 									const fd = new FormData();
 									fd.append('file', file);
-									const res = await fetch('/api/uploads', { method: 'POST', body: fd });
+									const headers: any = {};
+									if (token) headers['Authorization'] = `Bearer ${token}`;
+									
+									const res = await fetch('/api/uploads', { method: 'POST', headers, body: fd });
 									const json = await res.json();
-									if (res.ok && json.url) setForm(prev => ({ ...prev, image: json.url }));
+									if (res.ok && json.url) {
+										setForm(prev => ({ ...prev, image: json.url }));
+									} else {
+										console.error('Failed to upload image:', json.message || 'Unknown error');
+									}
+								} catch (error) {
+									console.error('Error uploading image:', error);
 								} finally {
 									setUploading(false);
 								}
@@ -333,6 +484,118 @@ export default function MenuManagementPage() {
 						</button>
 					</div>
 				)}
+			</div>
+
+			{/* Quick Availability Control - Toggle all items on/off */}
+			<div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 mb-5">
+				<div className="flex items-center gap-2 mb-4">
+					<Power className="h-5 w-5 text-brand-primary" />
+					<h2 className="text-base sm:text-lg font-semibold text-gray-900">Quick Availability Control</h2>
+				</div>
+				<p className="text-sm text-gray-600 mb-4">Quickly toggle menu items on or off based on what's available in the kitchen</p>
+				
+				{items.length === 0 ? (
+					<div className="text-center py-8 text-gray-500 text-sm">
+						No menu items yet. Add items to manage availability.
+					</div>
+				) : (() => {
+					// Helper function to get category ID from item
+					const getItemCategoryId = (item: any): string | undefined => {
+						return (item as any).categoryId || (item as any).category;
+					};
+					
+					// Helper function to check if item belongs to a category
+					const itemBelongsToCategory = (item: any, categoryId: string | undefined): boolean => {
+						return getItemCategoryId(item) === categoryId;
+					};
+					
+					// Helper function to check if item is uncategorized
+					const isUncategorized = (item: any): boolean => {
+						const catId = getItemCategoryId(item);
+						return !categories.find(c => c._id === catId);
+					};
+					
+					// Get categorized items grouped by category
+					const categorizedItemsByCategory = categories.map(category => ({
+						category,
+						items: items.filter((item: any) => itemBelongsToCategory(item, category._id))
+					})).filter(group => group.items.length > 0);
+					
+					// Get uncategorized items
+					const uncategorizedItems = items.filter((item: any) => isUncategorized(item));
+					
+					return (
+						<div className="space-y-4">
+							{/* Group items by category */}
+							{categorizedItemsByCategory.map(({ category, items: categoryItems }) => (
+								<div key={category._id} className="border border-gray-200 rounded-lg p-4">
+									<h3 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">{category.name}</h3>
+									<div className="space-y-2">
+										{categoryItems.map((item: any, itemIndex) => (
+											<div key={(item as any)._id || itemIndex} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+												<div className="flex-1 min-w-0">
+													<div className="flex items-center gap-2">
+														<h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{item.name}</h4>
+														<span className="text-xs text-gray-500">₦{item.price.toLocaleString()}</span>
+													</div>
+													<p className="text-xs text-gray-600 truncate mt-0.5">{item.description}</p>
+												</div>
+												<button
+													onClick={() => toggleItemAvailability(item)}
+													disabled={togglingItemId === ((item as any)._id || (item as any).id)}
+													className={`ml-4 relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed ${
+														item.isAvailable ? 'bg-green-600' : 'bg-gray-300'
+													}`}
+													aria-label={`Toggle ${item.name} availability`}
+												>
+													<span
+														className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+															item.isAvailable ? 'translate-x-6' : 'translate-x-1'
+														}`}
+													/>
+												</button>
+											</div>
+										))}
+									</div>
+								</div>
+							))}
+
+							{/* Items without category */}
+							{uncategorizedItems.length > 0 && (
+								<div className="border border-gray-200 rounded-lg p-4">
+									<h3 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">Uncategorized</h3>
+									<div className="space-y-2">
+										{uncategorizedItems.map((item: any, itemIndex) => (
+											<div key={(item as any)._id || itemIndex} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+												<div className="flex-1 min-w-0">
+													<div className="flex items-center gap-2">
+														<h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{item.name}</h4>
+														<span className="text-xs text-gray-500">₦{item.price.toLocaleString()}</span>
+													</div>
+													<p className="text-xs text-gray-600 truncate mt-0.5">{item.description}</p>
+												</div>
+												<button
+													onClick={() => toggleItemAvailability(item)}
+													disabled={togglingItemId === ((item as any)._id || (item as any).id)}
+													className={`ml-4 relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed ${
+														item.isAvailable ? 'bg-green-600' : 'bg-gray-300'
+													}`}
+													aria-label={`Toggle ${item.name} availability`}
+												>
+													<span
+														className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+															item.isAvailable ? 'translate-x-6' : 'translate-x-1'
+														}`}
+													/>
+												</button>
+											</div>
+										))}
+									</div>
+								</div>
+							)}
+						</div>
+					);
+				})()}
 			</div>
 
 			{/* Items list - mobile friendly cards */}
@@ -398,7 +661,11 @@ export default function MenuManagementPage() {
 				<div className="space-y-4">
 					{/* Create / Edit Category */}
 					<CategoryEditor
-						onCreated={(cat) => setCategories(prev => [cat, ...prev])}
+						onCreated={(cat) => {
+							// Normalize category: ensure _id field exists
+							const normalized = { ...cat, _id: cat.id || cat._id };
+							setCategories(prev => [normalized, ...prev]);
+						}}
 					/>
 					{/* Categories list */}
 					<div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
@@ -415,13 +682,38 @@ export default function MenuManagementPage() {
 									</div>
 									<div className="flex items-center gap-2">
 										<button onClick={async () => {
-											const res = await fetch(`/api/categories/${cat._id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ isActive: !cat.isActive }) });
+											const token = localStorage.getItem('token');
+											const headers: any = { 'Content-Type': 'application/json' };
+											if (token) headers['Authorization'] = `Bearer ${token}`;
+											
+											const res = await fetch(`/api/categories/${cat._id}`, { method: 'PATCH', headers, credentials: 'include', body: JSON.stringify({ isActive: !cat.isActive }) });
 											if (res.ok) setCategories(prev => prev.map((c, i) => i===idx ? { ...c, isActive: !c.isActive } : c));
 										}} className={`px-3 py-1.5 rounded-lg text-sm ${cat.isActive?'bg-green-100 text-green-700':'bg-gray-100 text-gray-600'}`}>{cat.isActive?'Published':'Unpublished'}</button>
 										<button onClick={async () => {
 											if (!cat._id) return;
-											const res = await fetch(`/api/categories/${cat._id}`, { method: 'DELETE', credentials: 'include' });
-											if (res.ok) setCategories(prev => prev.filter((_, i) => i!==idx));
+											
+											// Check if category has menu items before deletion
+											const itemsInCategory = items.filter((item: any) => {
+												const catId = (item as any).categoryId || (item as any).category;
+												return catId === cat._id;
+											});
+											
+											if (itemsInCategory.length > 0) {
+												const confirmMsg = `This category has ${itemsInCategory.length} menu item(s). Deleting it will remove all items in this category. Are you sure?`;
+												if (!confirm(confirmMsg)) return;
+											}
+											
+											const token = localStorage.getItem('token');
+											const headers: any = {};
+											if (token) headers['Authorization'] = `Bearer ${token}`;
+											
+											const res = await fetch(`/api/categories/${cat._id}`, { method: 'DELETE', headers, credentials: 'include' });
+											if (res.ok) {
+												setCategories(prev => prev.filter((_, i) => i!==idx));
+											} else {
+												const json = await res.json();
+												console.error('Failed to delete category:', json.message || 'Unknown error');
+											}
 										}} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm">Delete</button>
 									</div>
 								</div>
@@ -437,7 +729,11 @@ export default function MenuManagementPage() {
 			{/* Packs Tab */}
 			{activeTab==='packs' && (
 				<div className="space-y-4">
-					<PackEditor onCreated={(pack) => setPacks(prev => [pack, ...prev])} />
+					<PackEditor onCreated={(pack) => {
+						// Normalize pack: ensure _id field exists
+						const normalized = { ...pack, _id: pack.id || pack._id };
+						setPacks(prev => [normalized, ...prev]);
+					}} />
 					<div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
 						<div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
 							<h3 className="text-sm font-semibold text-gray-900">Packs</h3>
@@ -451,13 +747,32 @@ export default function MenuManagementPage() {
 									</div>
 									<div className="flex items-center gap-2">
 										<button onClick={async () => {
-											const res = await fetch(`/api/packs/${p._id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ isActive: !p.isActive }) });
+											const token = localStorage.getItem('token');
+											const headers: any = { 'Content-Type': 'application/json' };
+											if (token) headers['Authorization'] = `Bearer ${token}`;
+											
+											const res = await fetch(`/api/packs/${p._id}`, { method: 'PATCH', headers, credentials: 'include', body: JSON.stringify({ isActive: !p.isActive }) });
 											if (res.ok) setPacks(prev => prev.map((x, i) => i===idx ? { ...x, isActive: !x.isActive } : x));
 										}} className={`px-3 py-1.5 rounded-lg text-sm ${p.isActive?'bg-green-100 text-green-700':'bg-gray-100 text-gray-600'}`}>{p.isActive?'Active':'Inactive'}</button>
 										<button onClick={async () => {
 											if (!p._id) return;
-											const res = await fetch(`/api/packs/${p._id}`, { method: 'DELETE', credentials: 'include' });
-											if (res.ok) setPacks(prev => prev.filter((_, i) => i!==idx));
+											
+											// Confirm deletion
+											if (!confirm(`Are you sure you want to delete pack "${p.name}"? This action cannot be undone.`)) {
+												return;
+											}
+											
+											const token = localStorage.getItem('token');
+											const headers: any = {};
+											if (token) headers['Authorization'] = `Bearer ${token}`;
+											
+											const res = await fetch(`/api/packs/${p._id}`, { method: 'DELETE', headers, credentials: 'include' });
+											if (res.ok) {
+												setPacks(prev => prev.filter((_, i) => i!==idx));
+											} else {
+												const json = await res.json();
+												console.error('Failed to delete pack:', json.message || 'Unknown error');
+											}
 										}} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm">Delete</button>
 									</div>
 								</div>
@@ -485,9 +800,13 @@ function CategoryEditor({ onCreated }: { onCreated: (c: any) => void }) {
     if (!name.trim()) return;
     try {
       setSaving(true);
+      const token = localStorage.getItem('token');
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
       const res = await fetch('/api/categories', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         body: JSON.stringify({ name, description, isActive })
       });
@@ -497,7 +816,11 @@ function CategoryEditor({ onCreated }: { onCreated: (c: any) => void }) {
         setName('');
         setDescription('');
         setIsActive(true);
+      } else {
+        console.error('Failed to create category:', json.message || 'Unknown error');
       }
+    } catch (error) {
+      console.error('Error creating category:', error);
     } finally {
       setSaving(false);
     }
@@ -599,12 +922,20 @@ function PackEditor({ onCreated }: { onCreated: (p: any) => void }) {
 		if (!name.trim()) return;
 		try {
 			setSaving(true);
-			const res = await fetch('/api/packs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ name, description, price, isActive }) });
+			const token = localStorage.getItem('token');
+			const headers: any = { 'Content-Type': 'application/json' };
+			if (token) headers['Authorization'] = `Bearer ${token}`;
+			
+			const res = await fetch('/api/packs', { method: 'POST', headers, credentials: 'include', body: JSON.stringify({ name, description, price, isActive }) });
 			const json = await res.json();
 			if (res.ok && json.pack) {
 				onCreated(json.pack);
 				setName(''); setDescription(''); setPrice(0); setIsActive(true);
+			} else {
+				console.error('Failed to create pack:', json.message || 'Unknown error');
 			}
+		} catch (error) {
+			console.error('Error creating pack:', error);
 		} finally {
 			setSaving(false);
 		}

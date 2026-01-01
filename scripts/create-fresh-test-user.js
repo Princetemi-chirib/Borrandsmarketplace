@@ -107,7 +107,7 @@ async function createFreshTestUser() {
       deliveryFee: 300,
       minimumOrder: 1000,
       estimatedDeliveryTime: 20,
-      image: '/images/default-restaurant.jpg',
+      image: '',
       isApproved: true,
       isActive: true,
       phoneVerified: true,

@@ -44,7 +44,13 @@ export default function MarketplacePage() {
                     <h3 className="font-semibold text-gray-900 truncate">{r.name}</h3>
                     <span className="text-xs text-gray-600">⭐ {r.rating?.toFixed?.(1) || '0.0'}</span>
                   </div>
-                  <div className="text-xs text-gray-500 truncate">{(r.cuisine||[]).join(', ')}</div>
+                  <div className="text-xs text-gray-500 truncate">
+                    {Array.isArray(r.cuisine) 
+                      ? r.cuisine.join(', ') 
+                      : typeof r.cuisine === 'string' 
+                        ? r.cuisine 
+                        : 'N/A'}
+                  </div>
                   <div className="mt-1 text-xs text-gray-600">ETA {r.estimatedDeliveryTime || 30} mins • Fee ₦{r.deliveryFee || 0}</div>
                 </div>
               </Link>

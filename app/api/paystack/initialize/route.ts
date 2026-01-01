@@ -37,8 +37,15 @@ export async function POST(request: NextRequest) {
     }
   } catch (error: any) {
     console.error('Payment initialization error:', error);
+    // Check if it's a credentials configuration error
+    if (error.message?.includes('credentials not properly configured') || error.message?.includes('Paystack credentials')) {
+      return NextResponse.json(
+        { success: false, message: 'Paystack payment gateway is not configured. Please contact support.' },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
-      { success: false, message: 'Internal server error' },
+      { success: false, message: error.message || 'Internal server error' },
       { status: 500 }
     );
   }

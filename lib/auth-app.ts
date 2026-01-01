@@ -23,8 +23,16 @@ export function verifyAppRequest(req: NextRequest): JWTPayloadApp | null {
   const token = getBearerTokenFromRequest(req);
   if (!token) return null;
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayloadApp;
-    return decoded;
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    // Handle both token formats: JWTPayload (userId) and JWTPayloadApp (sub)
+    const payload: JWTPayloadApp = {
+      sub: decoded.sub || decoded.userId, // Support both formats
+      role: decoded.role,
+      restaurantId: decoded.restaurantId,
+      iat: decoded.iat,
+      exp: decoded.exp
+    };
+    return payload;
   } catch {
     return null;
   }
