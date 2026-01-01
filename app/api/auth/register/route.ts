@@ -102,6 +102,12 @@ export async function POST(request: NextRequest) {
 
     console.log('User created successfully with ID:', user.id);
 
+    // Update lastOtpSentAt for rate limiting (before sending to track send time)
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastOtpSentAt: new Date() }
+    });
+
     // Send verification email with OTP
     try {
       const emailResult = await sendVerificationEmail(email, name, otp);

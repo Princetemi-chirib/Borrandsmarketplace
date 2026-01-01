@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     // Check if OTP expired
     if (new Date() > user.otpExpiresAt) {
       return NextResponse.json(
-        { success: false, message: 'OTP has expired. Please register again.' },
+        { success: false, message: 'OTP has expired. Please request a new verification code.' },
         { status: 400 }
       );
     }

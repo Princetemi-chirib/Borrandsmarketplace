@@ -80,10 +80,21 @@ export default function RegisterPage() {
 
     setIsLoading(true);
     try {
-      // Call resend OTP endpoint (you can create this later)
-      toast.success('OTP resent! Check your email and WhatsApp');
+      const response = await fetch('/api/auth/resend-email-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailForOtp }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        toast.success('✅ OTP resent! Check your email and WhatsApp for the verification code.');
+      } else {
+        toast.error(result.error || 'Failed to resend OTP');
+      }
     } catch (error) {
-      toast.error('Failed to resend OTP');
+      console.error('Resend OTP error:', error);
+      toast.error('Failed to resend OTP. Please try again.');
     } finally {
       setIsLoading(false);
     }
