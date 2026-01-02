@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { sendVerificationEmail } from '@/lib/services/email';
-import { sendWhatsApp } from '@/lib/services/whatsapp';
 
 // POST /api/auth/resend-email-otp - Resend Email OTP for Student Registration
 export async function POST(request: NextRequest) {
@@ -104,21 +103,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Also send WhatsApp notification if phone number provided
-    if (user.phone) {
-      try {
-        const whatsappMessage = `🎓 Welcome to Borrands, ${user.name}!\n\nYour email verification code is: ${otp}\n\nThis code expires in 10 minutes.\n\nEnter this code to activate your account and start ordering from your favorite campus restaurants!`;
-        await sendWhatsApp(user.phone, whatsappMessage);
-        console.log('✅ WhatsApp OTP sent successfully');
-      } catch (whatsappError) {
-        console.error('❌ Error sending WhatsApp OTP:', whatsappError);
-        // Don't fail if WhatsApp fails - email is the primary method
-      }
-    }
-
     return NextResponse.json({
       success: true,
-      message: 'OTP resent successfully! Check your email and WhatsApp for the verification code.'
+      message: 'OTP resent successfully! Check your email for the verification code.'
     });
 
   } catch (error: any) {
@@ -129,4 +116,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
 

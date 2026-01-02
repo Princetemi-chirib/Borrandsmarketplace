@@ -153,7 +153,7 @@ export default function RegisterPage() {
 
       if (result.success) {
         // Registration successful - OTP sent automatically
-        toast.success('📧 Check your email and WhatsApp for verification code!', {
+        toast.success('📧 Check your email for verification code!', {
           duration: 5000,
         });
         setEmailForOtp(data.email);
@@ -201,7 +201,7 @@ export default function RegisterPage() {
                 We've sent a 6-digit code to <strong>{emailForOtp}</strong>
               </p>
               <p className="mt-1 text-xs text-gray-500">
-                Also check your WhatsApp for the code
+                Please check your email inbox (and spam folder) for the verification code
               </p>
             </div>
 
@@ -250,7 +250,7 @@ export default function RegisterPage() {
                   {isLoading ? 'Sending...' : 'Resend OTP'}
                 </button>
                 <p className="mt-2 text-xs text-gray-500">
-                  Check both your email inbox and WhatsApp
+                  Check your email inbox (and spam folder) if you don't see the code
                 </p>
               </div>
             </div>

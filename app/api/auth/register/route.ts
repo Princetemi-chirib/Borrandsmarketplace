@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import bcrypt from 'bcryptjs';
 import { sendVerificationEmail } from '@/lib/services/email';
-import { sendWhatsApp } from '@/lib/services/whatsapp';
 
 export async function POST(request: NextRequest) {
   try {
@@ -102,36 +101,25 @@ export async function POST(request: NextRequest) {
 
     console.log('User created successfully with ID:', user.id);
 
-    // Update lastOtpSentAt for rate limiting (before sending to track send time)
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastOtpSentAt: new Date() }
-    });
-
     // Send verification email with OTP
     try {
       const emailResult = await sendVerificationEmail(email, name, otp);
       if (!emailResult.success) {
         console.error('Failed to send verification email:', emailResult.error);
+        // Still allow registration to succeed, but log the error
       } else {
         console.log('✅ Verification email sent successfully');
       }
     } catch (emailError) {
       console.error('Error sending verification email:', emailError);
-      // Don't fail registration if email fails
+      // Don't fail registration if email fails - OTP is still saved in database
     }
 
-    // Also send WhatsApp notification if phone number provided
-    if (phone) {
-      try {
-        const whatsappMessage = `🎓 Welcome to Borrands, ${name}!\n\nYour email verification code is: ${otp}\n\nThis code expires in 10 minutes.\n\nEnter this code to activate your account and start ordering from your favorite campus restaurants!`;
-        await sendWhatsApp(phone, whatsappMessage);
-        console.log('✅ WhatsApp OTP sent successfully');
-      } catch (whatsappError) {
-        console.error('Error sending WhatsApp OTP:', whatsappError);
-        // Don't fail registration if WhatsApp fails
-      }
-    }
+    // Update lastOtpSentAt for rate limiting (after sending email)
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastOtpSentAt: new Date() }
+    });
 
     // Return success response (without password)
     const userResponse = {
@@ -148,7 +136,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Registration successful! Please check your email and WhatsApp for the verification code.',
+      message: 'Registration successful! Please check your email for the verification code.',
       data: userResponse,
       requiresVerification: true
     });

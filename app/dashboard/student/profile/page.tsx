@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { toast } from 'react-hot-toast';
 import BackArrow from '@/components/ui/BackArrow';
 import { 
   User, 
@@ -20,9 +22,40 @@ import {
   LogOut
 } from 'lucide-react';
 
+interface ProfileData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  studentId: string;
+  department: string;
+  level: string;
+  address: string;
+  profileImage: string | null;
+}
+
+interface PreferencesData {
+  notifications: {
+    orderUpdates: boolean;
+    promotions: boolean;
+    newRestaurants: boolean;
+    deliveryReminders: boolean;
+  };
+  dietaryRestrictions: string[];
+  favoriteCuisines: string[];
+  deliveryPreferences: {
+    contactless: boolean;
+    instructions: string;
+  };
+}
+
 export default function Profile() {
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string>('');
 
   const tabs = [
     { id: 'personal', name: 'Personal Info', icon: User },
@@ -31,37 +64,190 @@ export default function Profile() {
     { id: 'payment', name: 'Payment', icon: CreditCard }
   ];
 
-  const [profile, setProfile] = useState({
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@university.edu',
-    phone: '+234 801 234 5678',
-    studentId: '2021001234',
-    department: 'Computer Science',
-    level: '300 Level',
-    address: 'Block A, Room 205, University Campus',
-    dateOfBirth: '1999-05-15',
-    profileImage: '/images/profile.jpg'
+  const [profile, setProfile] = useState<ProfileData>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    studentId: '',
+    department: '',
+    level: '',
+    address: '',
+    profileImage: null
   });
 
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useState<PreferencesData>({
     notifications: {
       orderUpdates: true,
       promotions: false,
       newRestaurants: true,
       deliveryReminders: true
     },
-    dietaryRestrictions: ['Vegetarian'],
-    favoriteCuisines: ['Nigerian', 'Italian', 'Asian'],
+    dietaryRestrictions: [],
+    favoriteCuisines: [],
     deliveryPreferences: {
       contactless: true,
-      instructions: 'Please call when arriving'
+      instructions: ''
     }
   });
 
-  const handleSave = () => {
+  const [originalProfile, setOriginalProfile] = useState<ProfileData | null>(null);
+  const [originalPreferences, setOriginalPreferences] = useState<PreferencesData | null>(null);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Not authenticated. Please log in.');
+        return;
+      }
+
+      const response = await fetch('/api/students/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch profile');
+      }
+
+      if (data.success && data.profile) {
+        const p = data.profile;
+        
+        // Split name into firstName and lastName
+        const nameParts = (p.name || '').split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+
+        // Get first address or empty string
+        const addresses = Array.isArray(p.addresses) ? p.addresses : [];
+        const address = addresses.length > 0 ? addresses[0] : '';
+
+        // Parse preferences with defaults
+        const prefs = p.preferences || {};
+        const parsedPreferences: PreferencesData = {
+          notifications: {
+            orderUpdates: prefs.notifications?.orderUpdates ?? true,
+            promotions: prefs.notifications?.promotions ?? false,
+            newRestaurants: prefs.notifications?.newRestaurants ?? true,
+            deliveryReminders: prefs.notifications?.deliveryReminders ?? true
+          },
+          dietaryRestrictions: Array.isArray(prefs.dietaryRestrictions) ? prefs.dietaryRestrictions : [],
+          favoriteCuisines: Array.isArray(prefs.favoriteCuisines) ? prefs.favoriteCuisines : [],
+          deliveryPreferences: {
+            contactless: prefs.deliveryPreferences?.contactless ?? true,
+            instructions: prefs.deliveryPreferences?.instructions || ''
+          }
+        };
+
+        const profileData: ProfileData = {
+          firstName,
+          lastName,
+          email: p.email || '',
+          phone: p.phone || '',
+          studentId: p.studentId || '',
+          department: p.department || '',
+          level: p.level || '',
+          address,
+          profileImage: p.profileImage
+        };
+
+        setProfile(profileData);
+        setOriginalProfile(profileData);
+        setPreferences(parsedPreferences);
+        setOriginalPreferences(parsedPreferences);
+      }
+    } catch (error: any) {
+      console.error('Error fetching profile:', error);
+      setError(error.message || 'Failed to load profile');
+      toast.error('Failed to load profile');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      setError('');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Not authenticated. Please log in.');
+        return;
+      }
+
+      // Combine firstName and lastName into name
+      const name = `${profile.firstName.trim()} ${profile.lastName.trim()}`.trim();
+
+      // Prepare addresses array (use first address if provided)
+      const addresses = profile.address.trim() ? [profile.address.trim()] : [];
+
+      // Prepare update payload
+      const updateData: any = {
+        name,
+        phone: profile.phone || undefined,
+        department: profile.department || undefined,
+        level: profile.level || undefined,
+        addresses: addresses,
+        preferences: preferences
+      };
+
+      const response = await fetch('/api/students/profile', {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update profile');
+      }
+
+      if (data.success) {
+        toast.success('Profile updated successfully!');
+        setIsEditing(false);
+        // Update original state
+        setOriginalProfile(profile);
+        setOriginalPreferences(preferences);
+        // Refresh profile data
+        await fetchProfile();
+      }
+    } catch (error: any) {
+      console.error('Error saving profile:', error);
+      setError(error.message || 'Failed to save profile');
+      toast.error(error.message || 'Failed to save profile');
+      // Revert to original state on error
+      if (originalProfile) setProfile(originalProfile);
+      if (originalPreferences) setPreferences(originalPreferences);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (originalProfile) setProfile(originalProfile);
+    if (originalPreferences) setPreferences(originalPreferences);
     setIsEditing(false);
-    // Here you would typically save to backend
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/auth/login');
   };
 
   const renderPersonalInfo = () => (
@@ -70,18 +256,27 @@ export default function Profile() {
       <div className="flex items-center space-x-6">
         <div className="relative">
           <div className="w-24 h-24 bg-gray-200 rounded-full overflow-hidden">
-            <div className="w-full h-full bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center">
-              <User className="h-12 w-12 text-white" />
-            </div>
+            {profile.profileImage ? (
+              <img src={profile.profileImage} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center">
+                <User className="h-12 w-12 text-white" />
+              </div>
+            )}
           </div>
-          <button className="absolute bottom-0 right-0 w-8 h-8 bg-brand-primary text-white rounded-full flex items-center justify-center hover:bg-brand-accent transition-colors">
+          <button 
+            className="absolute bottom-0 right-0 w-8 h-8 bg-brand-primary text-white rounded-full flex items-center justify-center hover:bg-brand-accent transition-colors"
+            disabled={!isEditing}
+          >
             <Camera className="h-4 w-4" />
           </button>
         </div>
         <div>
           <h3 className="text-xl font-semibold text-gray-900">{profile.firstName} {profile.lastName}</h3>
-          <p className="text-gray-600">{profile.studentId}</p>
-          <p className="text-sm text-gray-500">{profile.department} • {profile.level}</p>
+          <p className="text-gray-600">{profile.studentId || 'No student ID'}</p>
+          <p className="text-sm text-gray-500">
+            {profile.department || 'No department'} {profile.department && profile.level ? '•' : ''} {profile.level || ''}
+          </p>
         </div>
       </div>
 
@@ -112,9 +307,8 @@ export default function Profile() {
           <input
             type="email"
             value={profile.email}
-            onChange={(e) => setProfile({...profile, email: e.target.value})}
-            disabled={!isEditing}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent disabled:bg-gray-50"
+            disabled
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
           />
         </div>
         <div>
@@ -128,22 +322,32 @@ export default function Profile() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
-          <input
-            type="date"
-            value={profile.dateOfBirth}
-            onChange={(e) => setProfile({...profile, dateOfBirth: e.target.value})}
-            disabled={!isEditing}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent disabled:bg-gray-50"
-          />
-        </div>
-        <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Student ID</label>
           <input
             type="text"
             value={profile.studentId}
             disabled
             className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+          <input
+            type="text"
+            value={profile.department}
+            onChange={(e) => setProfile({...profile, department: e.target.value})}
+            disabled={!isEditing}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent disabled:bg-gray-50"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Level</label>
+          <input
+            type="text"
+            value={profile.level}
+            onChange={(e) => setProfile({...profile, level: e.target.value})}
+            disabled={!isEditing}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent disabled:bg-gray-50"
           />
         </div>
         <div className="md:col-span-2">
@@ -154,6 +358,7 @@ export default function Profile() {
             onChange={(e) => setProfile({...profile, address: e.target.value})}
             disabled={!isEditing}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent disabled:bg-gray-50"
+            placeholder="Enter your address"
           />
         </div>
       </div>
@@ -185,9 +390,10 @@ export default function Profile() {
                       [key]: e.target.checked
                     }
                   })}
+                  disabled={!isEditing}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary disabled:opacity-50"></div>
               </label>
             </div>
           ))}
@@ -216,7 +422,8 @@ export default function Profile() {
                     });
                   }
                 }}
-                className="rounded border-gray-300 text-brand-primary focus:ring-brand-primary"
+                disabled={!isEditing}
+                className="rounded border-gray-300 text-brand-primary focus:ring-brand-primary disabled:opacity-50"
               />
               <span className="text-sm text-gray-700">{restriction}</span>
             </label>
@@ -246,7 +453,8 @@ export default function Profile() {
                     });
                   }
                 }}
-                className="rounded border-gray-300 text-brand-primary focus:ring-brand-primary"
+                disabled={!isEditing}
+                className="rounded border-gray-300 text-brand-primary focus:ring-brand-primary disabled:opacity-50"
               />
               <span className="text-sm text-gray-700">{cuisine}</span>
             </label>
@@ -273,8 +481,8 @@ export default function Profile() {
             <p className="text-xs text-gray-500">Receive codes via SMS</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" className="sr-only peer" />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary"></div>
+            <input type="checkbox" className="sr-only peer" disabled />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary opacity-50"></div>
           </label>
         </div>
       </div>
@@ -286,23 +494,26 @@ export default function Profile() {
       <div>
         <h4 className="text-lg font-medium text-gray-900 mb-4">Payment Methods</h4>
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-6 bg-blue-600 rounded"></div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Visa ending in 1234</p>
-                <p className="text-xs text-gray-500">Expires 12/25</p>
-              </div>
-            </div>
-            <button className="text-red-600 hover:text-red-700 text-sm">Remove</button>
+          <div className="p-4 border border-gray-200 rounded-lg text-center text-gray-500">
+            <CreditCard className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+            <p className="text-sm">No payment methods saved</p>
+            <p className="text-xs text-gray-400 mt-1">Payment methods are managed during checkout</p>
           </div>
-          <button className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-brand-primary hover:text-brand-primary transition-colors">
-            + Add Payment Method
-          </button>
         </div>
       </div>
     </div>
   );
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="spinner mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -328,14 +539,25 @@ export default function Profile() {
                 <>
                   <button
                     onClick={handleSave}
-                    className="flex items-center space-x-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-accent transition-colors"
+                    disabled={isSaving}
+                    className="flex items-center space-x-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Save className="h-4 w-4" />
-                    <span>Save Changes</span>
+                    {isSaving ? (
+                      <>
+                        <div className="spinner h-4 w-4"></div>
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        <span>Save Changes</span>
+                      </>
+                    )}
                   </button>
                   <button
-                    onClick={() => setIsEditing(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    onClick={handleCancel}
+                    disabled={isSaving}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -353,6 +575,14 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {error && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -377,7 +607,10 @@ export default function Profile() {
               </nav>
               
               <div className="mt-8 pt-6 border-t border-gray-200">
-                <button className="w-full flex items-center space-x-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors">
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center space-x-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors"
+                >
                   <LogOut className="h-4 w-4" />
                   <span>Sign Out</span>
                 </button>
@@ -399,4 +632,3 @@ export default function Profile() {
     </div>
   );
 }
-
