@@ -1,15 +1,37 @@
 import nodemailer from 'nodemailer';
 
+// Check if email credentials are configured
+const isEmailConfigured = () => {
+  const host = process.env.MAIL_HOST || process.env.SMTP_HOST;
+  const user = process.env.MAIL_USERNAME || process.env.SMTP_USER;
+  const pass = process.env.MAIL_PASSWORD || process.env.SMTP_PASS;
+  
+  return !!(host && user && pass);
+};
+
 // Email transporter configuration
-const transporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST || 'mail.borrands.com.ng',
-  port: parseInt(process.env.MAIL_PORT || '465'),
-  secure: true, // use SSL
-  auth: {
-    user: process.env.MAIL_USERNAME || 'support@borrands.com.ng',
-    pass: process.env.MAIL_PASSWORD || '',
-  },
-});
+const getTransporter = () => {
+  // Support both MAIL_* and SMTP_* environment variable names
+  const host = process.env.MAIL_HOST || process.env.SMTP_HOST || 'mail.borrands.com.ng';
+  const port = parseInt(process.env.MAIL_PORT || process.env.SMTP_PORT || '465');
+  const user = process.env.MAIL_USERNAME || process.env.SMTP_USER || 'support@borrands.com.ng';
+  const pass = process.env.MAIL_PASSWORD || process.env.SMTP_PASS || '';
+
+  // If password is empty, return null to indicate email is not configured
+  if (!pass) {
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465, // use SSL for port 465, TLS for others
+    auth: {
+      user,
+      pass,
+    },
+  });
+};
 
 /**
  * Send email verification OTP
@@ -20,6 +42,20 @@ export async function sendVerificationEmail(
   otp: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // Check if email is configured
+    if (!isEmailConfigured()) {
+      const errorMsg = 'Email service is not configured. Please set MAIL_HOST, MAIL_USERNAME, and MAIL_PASSWORD environment variables.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const transporter = getTransporter();
+    if (!transporter) {
+      const errorMsg = 'Email credentials are missing. Please configure MAIL_PASSWORD or SMTP_PASS environment variable.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
     const mailOptions = {
       from: `"${process.env.MAIL_FROM_NAME || 'Borrands'}" <${process.env.MAIL_FROM_ADDRESS || 'noreply@borrands.com.ng'}>`,
       to: email,
@@ -105,7 +141,16 @@ export async function sendVerificationEmail(
     return { success: true };
   } catch (error: any) {
     console.error('❌ Email sending error:', error);
-    return { success: false, error: error.message };
+    
+    // Provide more helpful error messages
+    let errorMessage = error.message;
+    if (error.code === 'EAUTH') {
+      errorMessage = 'Email authentication failed. Please check your MAIL_USERNAME and MAIL_PASSWORD environment variables.';
+    } else if (error.code === 'ECONNECTION') {
+      errorMessage = 'Could not connect to email server. Please check your MAIL_HOST and MAIL_PORT environment variables.';
+    }
+    
+    return { success: false, error: errorMessage };
   }
 }
 
@@ -120,6 +165,19 @@ export async function sendOrderNotificationEmail(
   orderDetails: any
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // Check if email is configured
+    if (!isEmailConfigured()) {
+      const errorMsg = 'Email service is not configured. Please set MAIL_HOST, MAIL_USERNAME, and MAIL_PASSWORD environment variables.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const transporter = getTransporter();
+    if (!transporter) {
+      const errorMsg = 'Email credentials are missing. Please configure MAIL_PASSWORD or SMTP_PASS environment variable.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
     const statusEmoji: { [key: string]: string } = {
       'PENDING': '⏳',
       'ACCEPTED': '✅',

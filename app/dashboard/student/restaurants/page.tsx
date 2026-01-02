@@ -362,7 +362,19 @@ export default function RestaurantsPage() {
                 className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
               >
                 {/* Restaurant Image */}
-                <div className="relative h-48 bg-gray-200">
+                <div className="relative h-48 bg-gray-200 overflow-hidden">
+                  {restaurant.image && restaurant.image.trim() !== '' ? (
+                    <img 
+                      src={restaurant.image.startsWith('http') ? restaurant.image : restaurant.image}
+                      alt={restaurant.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400" />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <div className="absolute top-3 right-3">
                     <button

@@ -211,8 +211,8 @@ export default function RegisterPage() {
                   OTP Code
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <MessageCircle className="h-5 w-5 text-gray-400" />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                    <MessageCircle className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                   </div>
                   <input
                     id="otpCode"
@@ -220,7 +220,7 @@ export default function RegisterPage() {
                     maxLength={6}
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                    className="form-input pl-10"
+                    className="form-input pl-10 text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400"
                     placeholder="Enter 6-digit code"
                   />
                 </div>
@@ -309,7 +309,7 @@ export default function RegisterPage() {
                   required: 'Name is required',
                   minLength: { value: 2, message: 'Name must be at least 2 characters' }
                 })}
-                className={`form-input ${errors.name ? 'border-error-500' : ''}`}
+                className={`form-input text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 ${errors.name ? 'border-error-500' : ''}`}
                 placeholder="Enter your full name"
               />
               {errors.name && (
@@ -335,7 +335,7 @@ export default function RegisterPage() {
                     message: 'Please enter a valid email address'
                   }
                 })}
-                className={`form-input ${errors.email ? 'border-error-500' : ''}`}
+                className={`form-input text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 ${errors.email ? 'border-error-500' : ''}`}
                 placeholder="Enter your email address"
               />
               {errors.email && (
@@ -352,8 +352,8 @@ export default function RegisterPage() {
                 WhatsApp Phone Number *
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Phone className="h-5 w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                  <Phone className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                 </div>
                 <input
                   id="phone"
@@ -365,7 +365,7 @@ export default function RegisterPage() {
                       message: 'Invalid phone number'
                     }
                   })}
-                  className={`form-input pl-10 ${errors.phone ? 'border-error-500' : ''}`}
+                  className={`form-input pl-11 pr-3 text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 ${errors.phone ? 'border-error-500' : ''}`}
                   placeholder="+234 801 234 5678"
                 />
               </div>
@@ -385,7 +385,7 @@ export default function RegisterPage() {
               <select
                 id="university"
                 {...register('university', { required: 'University is required' })}
-                className={`form-input ${errors.university ? 'border-error-500' : ''}`}
+                className={`form-input text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600 ${errors.university ? 'border-error-500' : ''}`}
               >
                 <option value="">Select your university</option>
                 {universities.map((university) => (
@@ -413,7 +413,7 @@ export default function RegisterPage() {
                     id="studentId"
                     type="text"
                     {...register('studentId')}
-                    className="form-input"
+                    className="form-input text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400"
                     placeholder="Enter your student ID"
                   />
                 </div>
@@ -426,7 +426,7 @@ export default function RegisterPage() {
                     id="department"
                     type="text"
                     {...register('department')}
-                    className="form-input"
+                    className="form-input text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400"
                     placeholder="Enter your department"
                   />
                 </div>
@@ -438,7 +438,7 @@ export default function RegisterPage() {
                   <select
                     id="level"
                     {...register('level')}
-                    className="form-input"
+                    className="form-input text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600"
                   >
                     <option value="">Select your level</option>
                     <option value="100">100 Level</option>
@@ -467,7 +467,7 @@ export default function RegisterPage() {
                     required: 'Password is required',
                     minLength: { value: 6, message: 'Password must be at least 6 characters' }
                   })}
-                  className={`form-input pr-10 ${errors.password ? 'border-error-500' : ''}`}
+                  className={`form-input pr-10 text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 ${errors.password ? 'border-error-500' : ''}`}
                   placeholder="Create a password"
                 />
                 <button
@@ -503,7 +503,7 @@ export default function RegisterPage() {
                     required: 'Please confirm your password',
                     validate: value => value === password || 'Passwords do not match'
                   })}
-                  className={`form-input pr-10 ${errors.confirmPassword ? 'border-error-500' : ''}`}
+                  className={`form-input pr-10 text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 ${errors.confirmPassword ? 'border-error-500' : ''}`}
                   placeholder="Confirm your password"
                 />
                 <button

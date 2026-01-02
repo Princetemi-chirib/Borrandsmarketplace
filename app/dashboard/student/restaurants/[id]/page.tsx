@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import BackArrow from '@/components/ui/BackArrow';
+import { getImageUrl, isValidImageUrl } from '@/lib/image-utils';
 import { 
   ArrowLeft, 
   Star, 
@@ -437,7 +438,22 @@ export default function RestaurantPage() {
                   className="bg-gray-50 rounded-lg p-4 hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start space-x-3">
-                    <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0"></div>
+                    <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden relative">
+                      {isValidImageUrl(item.image) ? (
+                        <img 
+                          src={getImageUrl(item.image)} 
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                          <span className="text-xs text-gray-400">No image</span>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
