@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PaystackService from '@/lib/paystack';
 import { dbConnect, prisma } from '@/lib/db-prisma';
-import { sendNewOrderEmailToRestaurant } from '@/lib/services/email';
+import { sendNewOrderEmailToRestaurant, sendOrderPlacedEmailToStudent } from '@/lib/services/email';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
