@@ -174,6 +174,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Send new order notification to admin
+    try {
+      await sendNewOrderNotificationToAdmin(
+        orderNumber,
+        restaurant.name,
+        student?.name || 'Student',
+        {
+          items: normalizedItems,
+          deliveryAddress,
+          deliveryInstructions,
+          total,
+          subtotal,
+          deliveryFee: DELIVERY_FEE
+        }
+      );
+    } catch (error) {
+      console.error('Failed to send new order notification to admin:', error);
+      // Don't fail the request if email fails
+    }
+
     return NextResponse.json({ order, fees: { serviceCharge: SERVICE_CHARGE, deliveryFee: DELIVERY_FEE } }, { status: 201 });
   } catch (e: any) {
     return NextResponse.json({ message: e.message || 'Failed to create order' }, { status: 400 });
