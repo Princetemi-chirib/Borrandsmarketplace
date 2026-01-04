@@ -218,6 +218,32 @@ export async function GET(request: NextRequest) {
             }
           }
 
+          return NextResponse.json({
+            success: true,
+            data: result.data,
+            orders: createdOrders.map(o => ({ id: o.id, restaurantId: o.restaurantId })),
+            message: 'Transaction verified and orders created successfully',
+          });
+        } else {
+          console.warn('⚠️ Payment verified but missing metadata for order creation:', reference);
+          console.log('Metadata received:', JSON.stringify(metadata, null, 2));
+          console.log('Parsed cart:', cart);
+          console.log('Parsed deliveryAddress:', deliveryAddress);
+          console.log('UserId:', metadata?.userId);
+          return NextResponse.json({
+            success: true,
+            data: result.data,
+            message: 'Transaction verified successfully (no order metadata)',
+          });
+        }
+      } else {
+        // Payment not successful
+        return NextResponse.json({
+          success: false,
+          message: `Payment ${transaction.status}`,
+        }, { status: 400 });
+      }
+    } else {
       return NextResponse.json(
         { success: false, message: result.error },
         { status: 400 }
