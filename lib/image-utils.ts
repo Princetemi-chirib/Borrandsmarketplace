@@ -66,3 +66,6 @@ export function getPlaceholderImage(): string {
   return '/images/placeholder.jpg'; // You can add a placeholder image to public/images/
 }
 
+
+
+

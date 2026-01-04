@@ -101,7 +101,7 @@ export default function StudentDashboard() {
           // Compute stats from real data
           const totalOrders = normalizedOrders.length;
           const activeOrders = normalizedOrders.filter((order: Order) => 
-            ['pending', 'accepted', 'preparing', 'ready', 'picked_up', 'in_transit'].includes(order.status)
+            ['pending', 'accepted', 'preparing', 'ready', 'picked_up'].includes(order.status)
           ).length;
           const completedOrders = normalizedOrders.filter((order: Order) => 
             order.status === 'delivered'
@@ -150,8 +150,6 @@ export default function StudentDashboard() {
     switch (status) {
       case 'delivered':
         return 'text-green-600 bg-green-100';
-      case 'in_transit':
-        return 'text-blue-600 bg-blue-100';
       case 'picked_up':
         return 'text-purple-600 bg-purple-100';
       case 'ready':
@@ -169,8 +167,6 @@ export default function StudentDashboard() {
     switch (status) {
       case 'delivered':
         return <CheckCircle className="w-4 h-4" />;
-      case 'in_transit':
-        return <Package className="w-4 h-4" />;
       case 'picked_up':
         return <Package className="w-4 h-4" />;
       case 'ready':

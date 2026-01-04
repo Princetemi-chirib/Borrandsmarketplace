@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
-import { sendWhatsApp, renderOrderTemplate } from '@/lib/services/whatsapp';
 import emitter from '@/lib/services/events';
+import { sendOrderNotificationEmail } from '@/lib/services/email';
 
 const ALLOWED_STATUSES = ['PENDING','ACCEPTED','PREPARING','READY','PICKED_UP','DELIVERED','CANCELLED'] as const;
 type OrderStatus = typeof ALLOWED_STATUSES[number];
@@ -51,8 +51,24 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ message: 'Invalid status' }, { status: 400 });
     }
 
+    // Get order with student info for email notification (single query)
     const order = await prisma.order.findFirst({
-      where: { id: params.id, restaurantId: auth.restaurantId }
+      where: { id: params.id, restaurantId: auth.restaurantId },
+      include: {
+        student: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        restaurant: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
     });
     if (!order) return NextResponse.json({ message: 'Not found' }, { status: 404 });
 
@@ -69,25 +85,33 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       data: updateData
     });
 
-    // Send WhatsApp notification to customer if phone is available
-    try {
-      const customerPhone = (updatedOrder as any).customerPhone || (updatedOrder as any).deliveryPhone;
-      if (customerPhone && updatedOrder.orderNumber) {
-        const tplMap: Record<string, any> = {
-          ACCEPTED: 'order_confirmed',
-          PREPARING: 'order_preparing',
-          READY: 'order_ready',
-          PICKED_UP: 'order_picked_up',
-          DELIVERED: 'order_delivered',
-          CANCELLED: 'order_cancelled',
-        };
-        const tpl = tplMap[nextStatus];
-        if (tpl) {
-          const msg = renderOrderTemplate(tpl, { orderNumber: updatedOrder.orderNumber, restaurantName: undefined });
-          await sendWhatsApp(customerPhone, msg);
+    // Send email notification to student for status updates (PREPARING, READY, PICKED_UP)
+    if (order.student.email && ['PREPARING', 'READY', 'PICKED_UP'].includes(nextStatus)) {
+      try {
+        let items;
+        try {
+          items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+        } catch (parseError) {
+          console.error('Failed to parse order items:', parseError);
+          items = [];
         }
+        await sendOrderNotificationEmail(
+          order.student.email,
+          order.student.name,
+          order.orderNumber,
+          nextStatus,
+          {
+            restaurantName: order.restaurant.name,
+            total: order.total,
+            deliveryAddress: order.deliveryAddress,
+            items
+          }
+        );
+      } catch (error) {
+        console.error('Failed to send status update email to student:', error);
+        // Don't fail the request if email fails
       }
-    } catch {}
+    }
 
     // Emit SSE event to restaurant listeners
     try {

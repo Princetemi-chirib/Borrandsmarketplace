@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyToken } from '@/lib/auth';
-import { sendWhatsApp } from '@/lib/services/whatsapp';
 import emitter from '@/lib/services/events';
 
 export async function PATCH(request: NextRequest) {
@@ -98,44 +97,6 @@ export async function PATCH(request: NextRequest) {
       where: { id: orderId },
       data: updateData
     });
-
-    // Send WhatsApp notification to customer
-    try {
-      if (order.student.phone) {
-        let message = '';
-        if (status === 'PICKED_UP') {
-          message = `🛵 *Order Picked Up!*\n\n` +
-            `Your order #${order.orderNumber} has been picked up by ${rider.name}.\n\n` +
-            `📍 Your delivery is on the way!\n` +
-            `🕐 Estimated delivery: ${order.estimatedDeliveryTime} minutes\n\n` +
-            `Track your order in real-time on the app. 📱`;
-        } else if (status === 'DELIVERED') {
-          message = `✅ *Order Delivered!*\n\n` +
-            `Your order #${order.orderNumber} has been delivered successfully!\n\n` +
-            `Thank you for ordering with Borrands! 🎉\n\n` +
-            `Enjoy your meal! 🍔🍕`;
-        }
-        
-        if (message) {
-          await sendWhatsApp(order.student.phone, message);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to send WhatsApp notification:', error);
-    }
-
-    // Send notification to restaurant
-    try {
-      if (order.restaurant.phone && status === 'DELIVERED') {
-        const message = `✅ *Order #${order.orderNumber} Delivered*\n\n` +
-          `The order has been successfully delivered to the customer.\n\n` +
-          `Rider: ${rider.name}`;
-        
-        await sendWhatsApp(order.restaurant.phone, message);
-      }
-    } catch (error) {
-      console.error('Failed to send restaurant notification:', error);
-    }
 
     // Emit SSE event for real-time updates
     emitter.emit('orderUpdate', {

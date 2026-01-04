@@ -5,6 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { toast } from 'react-hot-toast';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import BackArrow from '@/components/ui/BackArrow';
 import { 
@@ -75,8 +76,9 @@ export default function OrderTracking() {
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
 
-  const statusFlow = ['pending','accepted','preparing','ready','picked_up','in_transit','delivered'] as const;
+  const statusFlow = ['pending','accepted','preparing','ready','picked_up','delivered'] as const;
 
   const deriveTracking = (status: string): TrackingStep[] => {
     const currentIndex = statusFlow.indexOf(status as any);
@@ -156,6 +158,37 @@ export default function OrderTracking() {
     }, 1000);
   };
 
+  const handleMarkAsReceived = async () => {
+    if (!order) return;
+    
+    setIsCompleting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/students/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action: 'complete' })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        toast.success('Order marked as received!');
+        // Refresh order data by reloading
+        window.location.reload();
+      } else {
+        toast.error(data.error || 'Failed to mark order as received');
+      }
+    } catch (error) {
+      console.error('Error marking order as received:', error);
+      toast.error('Error marking order as received');
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
@@ -168,8 +201,6 @@ export default function OrderTracking() {
         return 'bg-purple-100 text-purple-800';
       case 'picked_up':
         return 'bg-indigo-100 text-indigo-800';
-      case 'in_transit':
-        return 'bg-cyan-100 text-cyan-800';
       case 'delivered':
         return 'bg-green-100 text-green-800';
       case 'cancelled':
@@ -185,8 +216,6 @@ export default function OrderTracking() {
         return <Clock className="h-4 w-4" />;
       case 'preparing':
         return <Package className="h-4 w-4" />;
-      case 'in_transit':
-        return <Truck className="h-4 w-4" />;
       case 'delivered':
         return <CheckCircle className="h-4 w-4" />;
       default:
@@ -465,6 +494,16 @@ export default function OrderTracking() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
               
               <div className="space-y-2">
+                {(order.status.toLowerCase() === 'delivered' || order.status.toLowerCase() === 'picked_up') && (
+                  <button
+                    onClick={handleMarkAsReceived}
+                    disabled={isCompleting}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    <span>{isCompleting ? 'Marking...' : 'Mark as Received'}</span>
+                  </button>
+                )}
                 <Link
                   href="/dashboard/student/support"
                   className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -472,10 +511,12 @@ export default function OrderTracking() {
                   <AlertCircle className="h-4 w-4" />
                   <span>Get Help</span>
                 </Link>
-                <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Star className="h-4 w-4" />
-                  <span>Rate Order</span>
-                </button>
+                {order.status.toLowerCase() === 'delivered' && (
+                  <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                    <Star className="h-4 w-4" />
+                    <span>Rate Order</span>
+                  </button>
+                )}
                 <Link
                   href="/dashboard/student/restaurants"
                   className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"

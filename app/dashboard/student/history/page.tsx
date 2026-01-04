@@ -166,8 +166,6 @@ export default function OrderHistory() {
         return 'text-green-600 bg-green-100';
       case 'cancelled':
         return 'text-red-600 bg-red-100';
-      case 'in_transit':
-        return 'text-blue-600 bg-blue-100';
       case 'picked_up':
         return 'text-purple-600 bg-purple-100';
       case 'ready':
@@ -186,8 +184,6 @@ export default function OrderHistory() {
       case 'delivered':
         return <CheckCircle className="w-4 h-4" />;
       case 'cancelled':
-        return <Package className="w-4 h-4" />;
-      case 'in_transit':
         return <Package className="w-4 h-4" />;
       case 'picked_up':
         return <Package className="w-4 h-4" />;
@@ -383,7 +379,6 @@ export default function OrderHistory() {
                 <option value="preparing">Preparing</option>
                 <option value="ready">Ready</option>
                 <option value="picked_up">Picked Up</option>
-                <option value="in_transit">In Transit</option>
                 <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
               </select>

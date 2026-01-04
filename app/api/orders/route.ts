@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
+import { sendNewOrderEmailToRestaurant } from '@/lib/services/email';
 
 const ALLOWED_STATUSES = new Set(['PENDING','ACCEPTED','PREPARING','READY','PICKED_UP','DELIVERED','CANCELLED']);
 
@@ -52,7 +53,16 @@ export async function POST(request: NextRequest) {
 
     const restaurant = await prisma.restaurant.findFirst({
       where: { id: restaurantId, isApproved: true, isActive: true },
-      select: { id: true, estimatedDeliveryTime: true }
+      select: { 
+        id: true, 
+        estimatedDeliveryTime: true,
+        name: true,
+        user: {
+          select: {
+            email: true
+          }
+        }
+      }
     });
     if (!restaurant) return NextResponse.json({ message: 'Restaurant not found or inactive' }, { status: 404 });
 
@@ -88,6 +98,8 @@ export async function POST(request: NextRequest) {
     const DELIVERY_FEE = 500;
     const total = subtotal + SERVICE_CHARGE + DELIVERY_FEE;
 
+    const orderNumber = `OD-${Date.now()}-${Math.floor(Math.random()*1000)}`;
+    
     const order = await prisma.order.create({
       data: {
         studentId: auth.sub,
@@ -102,10 +114,32 @@ export async function POST(request: NextRequest) {
         deliveryAddress,
         deliveryInstructions: deliveryInstructions || undefined,
         estimatedDeliveryTime: restaurant.estimatedDeliveryTime || 30,
-        orderNumber: `OD-${Date.now()}-${Math.floor(Math.random()*1000)}`,
+        orderNumber,
         notes: `serviceCharge=${SERVICE_CHARGE}`,
       }
     });
+
+    // Send email notification to restaurant
+    if (restaurant.user?.email) {
+      try {
+        await sendNewOrderEmailToRestaurant(
+          restaurant.user.email,
+          restaurant.name,
+          orderNumber,
+          {
+            items: normalizedItems,
+            deliveryAddress,
+            deliveryInstructions,
+            total,
+            subtotal,
+            deliveryFee: DELIVERY_FEE
+          }
+        );
+      } catch (error) {
+        console.error('Failed to send email to restaurant:', error);
+        // Don't fail the order creation if email fails
+      }
+    }
 
     return NextResponse.json({ order, fees: { serviceCharge: SERVICE_CHARGE, deliveryFee: DELIVERY_FEE } }, { status: 201 });
   } catch (e: any) {

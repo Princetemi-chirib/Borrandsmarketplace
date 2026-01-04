@@ -1,0 +1,166 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { dbConnect, prisma } from '@/lib/db-prisma';
+import { getUserFromRequest } from '@/lib/auth';
+import { sendRiderAssignmentEmail } from '@/lib/services/rider-notification';
+import { sendOrderNotificationEmail } from '@/lib/services/email';
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const payload = getUserFromRequest(request);
+    if (!payload || payload.role !== 'ADMIN') {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+
+    await dbConnect();
+    const body = await request.json();
+    const { riderId } = body;
+
+    if (!riderId) {
+      return NextResponse.json({ success: false, message: 'Rider ID is required' }, { status: 400 });
+    }
+
+    // Get order with related data
+    const order = await prisma.order.findUnique({
+      where: { id: params.id },
+      include: {
+        restaurant: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        student: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        rider: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    if (!order) {
+      return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
+    }
+
+    // Check if order is ACCEPTED (only ACCEPTED orders can have riders assigned)
+    if (order.status !== 'ACCEPTED') {
+      return NextResponse.json({ 
+        success: false, 
+        message: `Order must be ACCEPTED before assigning a rider. Current status: ${order.status}` 
+      }, { status: 400 });
+    }
+
+    // Check if order already has a rider assigned
+    if (order.riderId) {
+      return NextResponse.json({ 
+        success: false, 
+        message: `Order already has a rider assigned: ${order.rider?.name || 'Unknown'}` 
+      }, { status: 400 });
+    }
+
+    // Get rider with user data
+    const rider = await prisma.rider.findUnique({
+      where: { id: riderId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    if (!rider || !rider.isActive) {
+      return NextResponse.json({ success: false, message: 'Rider not found or inactive' }, { status: 404 });
+    }
+
+    // Assign rider to order
+    const updatedOrder = await prisma.order.update({
+      where: { id: params.id },
+      data: {
+        riderId: riderId,
+        status: 'PREPARING' // Move order to PREPARING status when rider is assigned
+      },
+      include: {
+        rider: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    // Send email notification to rider
+    if (rider.user.email) {
+      try {
+        await sendRiderAssignmentEmail(
+          rider.user.email,
+          rider.name,
+          order.orderNumber,
+          order.deliveryAddress,
+          order.student.name,
+          order.restaurant.name
+        );
+      } catch (error) {
+        console.error('Failed to send email to rider:', error);
+        // Don't fail the request if email fails
+      }
+    }
+
+    // Send email notification to student that rider has been assigned
+    if (order.student.email) {
+      try {
+        let items;
+        try {
+          items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+        } catch (parseError) {
+          console.error('Failed to parse order items:', parseError);
+          items = [];
+        }
+        await sendOrderNotificationEmail(
+          order.student.email,
+          order.student.name,
+          order.orderNumber,
+          'PREPARING',
+          {
+            restaurantName: order.restaurant.name,
+            total: order.total,
+            deliveryAddress: order.deliveryAddress,
+            items,
+            riderName: rider.name
+          }
+        );
+      } catch (error) {
+        console.error('Failed to send rider assignment notification to student:', error);
+        // Don't fail the request if email fails
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Rider assigned successfully',
+      order: updatedOrder 
+    });
+  } catch (error: any) {
+    console.error('Error assigning rider:', error);
+    return NextResponse.json({ 
+      success: false, 
+      message: error.message || 'Failed to assign rider' 
+    }, { status: 500 });
+  }
+}
+

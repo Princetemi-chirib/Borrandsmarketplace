@@ -221,9 +221,7 @@ a {
   @apply bg-accent-100 text-accent-800;
 }
 
-.status-in_transit {
-  @apply bg-primary-100 text-primary-800;
-}
+/* IN_TRANSIT status removed - not in enum */
 
 .status-delivered {
   @apply bg-success-100 text-success-800;

@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 
 // Check if email credentials are configured
-const isEmailConfigured = () => {
+export const isEmailConfigured = () => {
   const host = process.env.MAIL_HOST || process.env.SMTP_HOST;
   const user = process.env.MAIL_USERNAME || process.env.SMTP_USER;
   const pass = process.env.MAIL_PASSWORD || process.env.SMTP_PASS;
@@ -10,7 +10,7 @@ const isEmailConfigured = () => {
 };
 
 // Email transporter configuration
-const getTransporter = () => {
+export const getTransporter = () => {
   // Support both MAIL_* and SMTP_* environment variable names
   const host = process.env.MAIL_HOST || process.env.SMTP_HOST || 'mail.borrands.com.ng';
   const port = parseInt(process.env.MAIL_PORT || process.env.SMTP_PORT || '465');
@@ -245,8 +245,363 @@ export async function sendOrderNotificationEmail(
   }
 }
 
+/**
+ * Send new order notification to restaurant with accept/reject options
+ */
+export async function sendNewOrderEmailToRestaurant(
+  email: string,
+  restaurantName: string,
+  orderNumber: string,
+  orderDetails: any
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!isEmailConfigured()) {
+      const errorMsg = 'Email service is not configured. Please set MAIL_HOST, MAIL_USERNAME, and MAIL_PASSWORD environment variables.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const transporter = getTransporter();
+    if (!transporter) {
+      const errorMsg = 'Email credentials are missing. Please configure MAIL_PASSWORD or SMTP_PASS environment variable.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const items = typeof orderDetails.items === 'string' ? JSON.parse(orderDetails.items) : orderDetails.items;
+    const itemsList = Array.isArray(items) ? items.map((item: any) => 
+      `${item.name} x${item.quantity} - ₦${item.total?.toLocaleString() || item.price?.toLocaleString()}`
+    ).join('<br>') : 'N/A';
+
+    const mailOptions = {
+      from: `"${process.env.MAIL_FROM_NAME || 'Borrands'}" <${process.env.MAIL_FROM_ADDRESS || 'noreply@borrands.com.ng'}>`,
+      to: email,
+      subject: `New Order #${orderNumber} - Action Required`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white; }
+            .content { padding: 30px; }
+            .order-box { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .items-list { margin: 10px 0; }
+            .action-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin: 20px 0; border-radius: 4px; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📦 New Order Received</h1>
+            </div>
+            <div class="content">
+              <h2>Hi ${restaurantName}!</h2>
+              <p>You have received a new order. Please review and accept or reject it.</p>
+              <div class="order-box">
+                <p><strong>Order Number:</strong> #${orderNumber}</p>
+                <p><strong>Delivery Address:</strong> ${orderDetails.deliveryAddress || 'N/A'}</p>
+                <p><strong>Total:</strong> ₦${orderDetails.total?.toLocaleString() || '0'}</p>
+                <p><strong>Items:</strong></p>
+                <div class="items-list">${itemsList}</div>
+                ${orderDetails.deliveryInstructions ? `<p><strong>Delivery Instructions:</strong> ${orderDetails.deliveryInstructions}</p>` : ''}
+              </div>
+              <div class="action-box">
+                <p><strong>⚠️ Action Required:</strong></p>
+                <p>Please log in to your restaurant dashboard to accept or reject this order. You can provide a reason if rejecting.</p>
+              </div>
+              <p>Best regards,<br><strong>The Borrands Team</strong></p>
+            </div>
+            <div class="footer">
+              <p>© ${new Date().getFullYear()} Borrands Marketplace</p>
+              <p>📧 support@borrands.com.ng | 🌐 www.borrands.com.ng</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ New order email sent to restaurant ${email}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Email sending error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send order rejection notification to student
+ */
+export async function sendOrderRejectionEmailToStudent(
+  email: string,
+  studentName: string,
+  orderNumber: string,
+  restaurantName: string,
+  rejectionReason: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!isEmailConfigured()) {
+      const errorMsg = 'Email service is not configured.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const transporter = getTransporter();
+    if (!transporter) {
+      const errorMsg = 'Email credentials are missing.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const mailOptions = {
+      from: `"${process.env.MAIL_FROM_NAME || 'Borrands'}" <${process.env.MAIL_FROM_ADDRESS || 'noreply@borrands.com.ng'}>`,
+      to: email,
+      subject: `Order #${orderNumber} Rejected`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); padding: 30px; text-align: center; color: white; }
+            .content { padding: 30px; }
+            .rejection-box { background: #f8d7da; border-left: 4px solid #dc3545; padding: 20px; margin: 20px 0; border-radius: 4px; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>❌ Order Rejected</h1>
+            </div>
+            <div class="content">
+              <h2>Hi ${studentName}!</h2>
+              <p>We regret to inform you that your order has been rejected by the restaurant.</p>
+              <div class="rejection-box">
+                <p><strong>Order Number:</strong> #${orderNumber}</p>
+                <p><strong>Restaurant:</strong> ${restaurantName}</p>
+                <p><strong>Reason:</strong> ${rejectionReason}</p>
+              </div>
+              <p>If you have any questions or concerns, please contact our support team.</p>
+              <p>Best regards,<br><strong>The Borrands Team</strong></p>
+            </div>
+            <div class="footer">
+              <p>© ${new Date().getFullYear()} Borrands Marketplace</p>
+              <p>📧 support@borrands.com.ng | 🌐 www.borrands.com.ng</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Order rejection email sent to student ${email}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Email sending error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send order acceptance notification to admin and Miebaijoan15@gmail.com
+ */
+export async function sendOrderAcceptanceNotificationToAdmin(
+  orderNumber: string,
+  restaurantName: string,
+  studentName: string,
+  orderDetails: any
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!isEmailConfigured()) {
+      const errorMsg = 'Email service is not configured.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const transporter = getTransporter();
+    if (!transporter) {
+      const errorMsg = 'Email credentials are missing.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const adminEmails = ['Miebaijoan15@gmail.com']; // Add admin email from env if needed
+    const items = typeof orderDetails.items === 'string' ? JSON.parse(orderDetails.items) : orderDetails.items;
+    const itemsList = Array.isArray(items) ? items.map((item: any) => 
+      `${item.name} x${item.quantity} - ₦${item.total?.toLocaleString() || item.price?.toLocaleString()}`
+    ).join('<br>') : 'N/A';
+
+    const mailOptions = {
+      from: `"${process.env.MAIL_FROM_NAME || 'Borrands'}" <${process.env.MAIL_FROM_ADDRESS || 'noreply@borrands.com.ng'}>`,
+      to: adminEmails.join(', '),
+      subject: `Order #${orderNumber} Accepted - Rider Assignment Required`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 30px; text-align: center; color: white; }
+            .content { padding: 30px; }
+            .order-box { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .action-box { background: #d1ecf1; border-left: 4px solid #17a2b8; padding: 20px; margin: 20px 0; border-radius: 4px; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>✅ Order Accepted</h1>
+            </div>
+            <div class="content">
+              <h2>Order Accepted - Rider Assignment Required</h2>
+              <p>An order has been accepted by the restaurant and requires rider assignment.</p>
+              <div class="order-box">
+                <p><strong>Order Number:</strong> #${orderNumber}</p>
+                <p><strong>Restaurant:</strong> ${restaurantName}</p>
+                <p><strong>Student:</strong> ${studentName}</p>
+                <p><strong>Delivery Address:</strong> ${orderDetails.deliveryAddress || 'N/A'}</p>
+                <p><strong>Total:</strong> ₦${orderDetails.total?.toLocaleString() || '0'}</p>
+                <p><strong>Items:</strong></p>
+                <div>${itemsList}</div>
+              </div>
+              <div class="action-box">
+                <p><strong>⚠️ Action Required:</strong></p>
+                <p>Please log in to the admin dashboard to assign a rider to this order.</p>
+              </div>
+              <p>Best regards,<br><strong>The Borrands Team</strong></p>
+            </div>
+            <div class="footer">
+              <p>© ${new Date().getFullYear()} Borrands Marketplace</p>
+              <p>📧 support@borrands.com.ng | 🌐 www.borrands.com.ng</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Order acceptance notification sent to admin`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Email sending error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send order acceptance notification to student
+ */
+export async function sendOrderAcceptanceEmailToStudent(
+  email: string,
+  studentName: string,
+  orderNumber: string,
+  restaurantName: string,
+  orderDetails: any
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!isEmailConfigured()) {
+      const errorMsg = 'Email service is not configured.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const transporter = getTransporter();
+    if (!transporter) {
+      const errorMsg = 'Email credentials are missing.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const items = typeof orderDetails.items === 'string' ? JSON.parse(orderDetails.items) : orderDetails.items;
+    const itemsList = Array.isArray(items) ? items.map((item: any) => 
+      `${item.name} x${item.quantity} - ₦${item.total?.toLocaleString() || item.price?.toLocaleString()}`
+    ).join('<br>') : 'N/A';
+
+    const mailOptions = {
+      from: `"${process.env.MAIL_FROM_NAME || 'Borrands'}" <${process.env.MAIL_FROM_ADDRESS || 'noreply@borrands.com.ng'}>`,
+      to: email,
+      subject: `Order #${orderNumber} Accepted! 🎉`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 30px; text-align: center; color: white; }
+            .content { padding: 30px; }
+            .order-box { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .success-box { background: #d4edda; border-left: 4px solid #28a745; padding: 20px; margin: 20px 0; border-radius: 4px; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>✅ Order Accepted!</h1>
+            </div>
+            <div class="content">
+              <h2>Hi ${studentName}!</h2>
+              <p>Great news! Your order has been accepted by the restaurant and is being prepared.</p>
+              <div class="order-box">
+                <p><strong>Order Number:</strong> #${orderNumber}</p>
+                <p><strong>Restaurant:</strong> ${restaurantName}</p>
+                <p><strong>Delivery Address:</strong> ${orderDetails.deliveryAddress || 'N/A'}</p>
+                <p><strong>Total:</strong> ₦${orderDetails.total?.toLocaleString() || '0'}</p>
+                <p><strong>Items:</strong></p>
+                <div>${itemsList}</div>
+                ${orderDetails.deliveryInstructions ? `<p><strong>Delivery Instructions:</strong> ${orderDetails.deliveryInstructions}</p>` : ''}
+              </div>
+              <div class="success-box">
+                <p><strong>📦 What's Next?</strong></p>
+                <p>Your order is now being prepared. A rider will be assigned shortly, and you'll receive updates as your order progresses.</p>
+                <p>You can track your order in real-time on the Borrands app.</p>
+              </div>
+              <p>Best regards,<br><strong>The Borrands Team</strong></p>
+            </div>
+            <div class="footer">
+              <p>© ${new Date().getFullYear()} Borrands Marketplace</p>
+              <p>📧 support@borrands.com.ng | 🌐 www.borrands.com.ng</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Order acceptance email sent to student ${email}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Email sending error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export default {
   sendVerificationEmail,
   sendOrderNotificationEmail,
+  sendNewOrderEmailToRestaurant,
+  sendOrderRejectionEmailToStudent,
+  sendOrderAcceptanceNotificationToAdmin,
+  sendOrderAcceptanceEmailToStudent,
 };
 

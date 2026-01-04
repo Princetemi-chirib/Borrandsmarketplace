@@ -365,8 +365,6 @@ export default function RiderDashboard() {
         return 'text-blue-600 bg-blue-100 border-blue-200';
       case 'picked_up':
         return 'text-orange-600 bg-orange-100 border-orange-200';
-      case 'in_transit':
-        return 'text-cyan-600 bg-cyan-100 border-cyan-200';
       case 'delivered':
         return 'text-green-600 bg-green-100 border-green-200';
       case 'cancelled':
@@ -382,8 +380,6 @@ export default function RiderDashboard() {
         return <Package className="h-4 w-4" />;
       case 'picked_up':
         return <Truck className="h-4 w-4" />;
-      case 'in_transit':
-        return <Navigation className="h-4 w-4" />;
       case 'delivered':
         return <CheckCircle className="h-4 w-4" />;
       default:

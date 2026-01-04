@@ -151,6 +151,8 @@ model Order {
   review                String?
   ratedAt               DateTime?
   cancelledAt           DateTime?
+  rejectedAt            DateTime?
+  rejectionReason       String?
   items                 String        @db.LongText
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt

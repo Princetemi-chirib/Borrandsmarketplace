@@ -267,8 +267,6 @@ export default function RestaurantDashboard() {
         return 'text-purple-600 bg-purple-100 border-purple-200';
       case 'picked_up':
         return 'text-indigo-600 bg-indigo-100 border-indigo-200';
-      case 'in_transit':
-        return 'text-cyan-600 bg-cyan-100 border-cyan-200';
       case 'delivered':
         return 'text-green-600 bg-green-100 border-green-200';
       case 'cancelled':
@@ -286,8 +284,6 @@ export default function RestaurantDashboard() {
         return <Package className="h-4 w-4" />;
       case 'ready':
         return <CheckCircle className="h-4 w-4" />;
-      case 'in_transit':
-        return <Truck className="h-4 w-4" />;
       case 'delivered':
         return <CheckCircle className="h-4 w-4" />;
       default:

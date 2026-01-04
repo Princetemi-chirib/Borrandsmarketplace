@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyToken } from '@/lib/auth';
-import { sendWhatsApp, renderOrderTemplate } from '@/lib/services/whatsapp';
 
 export async function POST(request: NextRequest) {
   try {
@@ -93,36 +92,6 @@ export async function POST(request: NextRequest) {
         // Status remains READY until rider picks it up
       }
     });
-
-    // Send WhatsApp notification to customer
-    try {
-      if (order.student.phone) {
-        const message = `🛵 *Rider Assigned!*\n\n` +
-          `Good news! ${rider.name} has been assigned to deliver your order #${order.orderNumber}.\n\n` +
-          `📱 Rider Phone: ${rider.phone}\n` +
-          `📍 You can track your delivery in real-time.\n\n` +
-          `Thank you for using Borrands! 🎉`;
-        
-        await sendWhatsApp(order.student.phone, message);
-      }
-    } catch (error) {
-      console.error('Failed to send WhatsApp notification:', error);
-      // Don't fail the request if notification fails
-    }
-
-    // Send notification to restaurant
-    try {
-      if (order.restaurant.phone) {
-        const message = `🛵 *Rider Assigned to Order #${order.orderNumber}*\n\n` +
-          `Rider: ${rider.name}\n` +
-          `Phone: ${rider.phone}\n\n` +
-          `The rider is on the way to pick up the order.`;
-        
-        await sendWhatsApp(order.restaurant.phone, message);
-      }
-    } catch (error) {
-      console.error('Failed to send restaurant notification:', error);
-    }
 
     return NextResponse.json({
       success: true,

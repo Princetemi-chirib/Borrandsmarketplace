@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -67,6 +68,7 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
@@ -82,93 +84,87 @@ export default function AdminDashboard() {
   const [pendingApprovals, setPendingApprovals] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Mock data for demonstration
-  const mockStats = {
-    totalUsers: 1250,
-    totalRestaurants: 45,
-    totalRiders: 89,
-    totalOrders: 3456,
-    totalRevenue: 25000000,
-    pendingApprovals: 12,
-    activeUsers: 890,
-    platformRating: 4.7
-  };
-
-  const mockRecentUsers: User[] = [
-    {
-      _id: '1',
-      name: 'John Doe',
-      email: 'john.doe@university.edu',
-      role: 'student',
-      status: 'active',
-      university: 'University of Lagos',
-      createdAt: '2024-01-15T10:30:00Z',
-      lastActive: '2024-01-15T14:20:00Z'
-    },
-    {
-      _id: '2',
-      name: 'Pizza Palace',
-      email: 'info@pizzapalace.com',
-      role: 'restaurant',
-      status: 'active',
-      university: 'University of Lagos',
-      createdAt: '2024-01-15T09:15:00Z',
-      lastActive: '2024-01-15T13:45:00Z'
-    },
-    {
-      _id: '3',
-      name: 'Mike Wilson',
-      email: 'mike.wilson@email.com',
-      role: 'rider',
-      status: 'active',
-      university: 'University of Lagos',
-      createdAt: '2024-01-15T08:45:00Z',
-      lastActive: '2024-01-15T12:30:00Z'
-    }
-  ];
-
-  const mockPendingApprovals: User[] = [
-    {
-      _id: '4',
-      name: 'New Restaurant',
-      email: 'new@restaurant.com',
-      role: 'restaurant',
-      status: 'pending',
-      university: 'University of Lagos',
-      createdAt: '2024-01-15T07:30:00Z',
-      lastActive: '2024-01-15T07:30:00Z'
-    },
-    {
-      _id: '5',
-      name: 'New Rider',
-      email: 'new@rider.com',
-      role: 'rider',
-      status: 'pending',
-      university: 'University of Lagos',
-      createdAt: '2024-01-15T06:15:00Z',
-      lastActive: '2024-01-15T06:15:00Z'
-    }
-  ];
-
   useEffect(() => {
-    // Get user from localStorage
-    try {
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        setUser(JSON.parse(userData));
-      }
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-    }
+    const fetchData = async () => {
+      try {
+        // Check authentication
+        const token = localStorage.getItem('token');
+        const userData = localStorage.getItem('user');
+        
+        if (!token || !userData) {
+          router.push('/auth/login');
+          return;
+        }
 
-    // Simulate API call
-    setTimeout(() => {
-      setStats(mockStats);
-      setRecentUsers(mockRecentUsers);
-      setPendingApprovals(mockPendingApprovals);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+        const parsedUser = JSON.parse(userData);
+        if (parsedUser.role !== 'ADMIN') {
+          router.push('/auth/login');
+          return;
+        }
+
+        setUser(parsedUser);
+
+        // Fetch stats
+        const statsResponse = await fetch('/api/admin/stats', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          if (statsData.success) {
+            setStats(statsData.stats);
+          }
+        }
+
+        // Fetch recent users
+        const usersResponse = await fetch('/api/admin/users?limit=5', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (usersResponse.ok) {
+          const usersData = await usersResponse.json();
+          if (usersData.success) {
+            setRecentUsers(usersData.users);
+          }
+        }
+
+        // Fetch pending approvals (restaurants with pending status)
+        const restaurantsResponse = await fetch('/api/restaurants', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (restaurantsResponse.ok) {
+          const restaurantsData = await restaurantsResponse.json();
+          const pending = (restaurantsData.restaurants || []).filter((r: any) => r.status === 'pending').slice(0, 5);
+          setPendingApprovals(pending.map((r: any) => ({
+            _id: r._id,
+            name: r.name,
+            email: r.owner?.email || r.email || '',
+            role: 'restaurant',
+            status: 'pending',
+            university: r.university || '',
+            createdAt: r.createdAt,
+            lastActive: r.createdAt
+          })));
+        }
+      } catch (error) {
+        console.error('Error fetching admin data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [router]);
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -233,7 +229,7 @@ export default function AdminDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-brand-primary to-brand-accent rounded-xl p-4 sm:p-5 text-white"
+          className="bg-gradient-to-r from-primary-500 to-accent-500 rounded-xl p-4 sm:p-5 text-white"
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
             <div className="flex-1">

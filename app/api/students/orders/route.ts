@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyToken } from '@/lib/auth';
-import WhatsApp from '@/lib/whatsapp';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -171,15 +170,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Send notification to restaurant
-    try {
-      await WhatsApp.sendMessage(
-        restaurant.phone,
-        `New order received! Order #${order.orderNumber} for ₦${total.toLocaleString()}. Please check your dashboard.`
-      );
-    } catch (error) {
-      console.error('Error sending WhatsApp notification:', error);
-    }
+    // WhatsApp notifications removed - order creation now sends email to restaurant via /api/orders route
 
     return NextResponse.json({ 
       message: 'Order created successfully',
