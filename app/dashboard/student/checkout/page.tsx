@@ -11,7 +11,6 @@ import {
   Clock, 
   Truck, 
   CreditCard, 
-  Banknote,
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
@@ -52,7 +51,7 @@ export default function CheckoutPage() {
   const [popularLocations, setPopularLocations] = useState<PopularLocation[]>([]);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const [locationName, setLocationName] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash'>('card');
+  const [paymentMethod, setPaymentMethod] = useState<'card'>('card');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -401,36 +400,9 @@ export default function CheckoutPage() {
             >
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Payment Method</h2>
               
-              <div className="space-y-3">
-                <label className="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="card"
-                    checked={paymentMethod === 'card'}
-                    onChange={(e) => setPaymentMethod(e.target.value as 'card' | 'cash')}
-                    className="h-4 w-4 text-brand-primary focus:ring-brand-primary border-gray-300"
-                  />
-                  <div className="ml-3 flex items-center">
-                    <CreditCard className="h-5 w-5 text-gray-400 mr-2" />
-                    <span className="text-sm font-medium text-gray-900">Paystack Checkout</span>
-                  </div>
-                </label>
-
-                <label className="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="cash"
-                    checked={paymentMethod === 'cash'}
-                    onChange={(e) => setPaymentMethod(e.target.value as 'card' | 'cash')}
-                    className="h-4 w-4 text-brand-primary focus:ring-brand-primary border-gray-300"
-                  />
-                  <div className="ml-3 flex items-center">
-                    <Banknote className="h-5 w-5 text-gray-400 mr-2" />
-                    <span className="text-sm font-medium text-gray-900">Cash on Delivery</span>
-                  </div>
-                </label>
+              <div className="flex items-center p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <CreditCard className="h-5 w-5 text-gray-400 mr-3" />
+                <span className="text-sm font-medium text-gray-900">Paystack Checkout</span>
               </div>
             </motion.div>
 
