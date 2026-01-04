@@ -205,61 +205,9 @@ export default function CheckoutPage() {
       // Track delivery location usage (async, don't wait for it)
       trackDeliveryLocation();
 
-      if (paymentMethod === 'card') {
-        await initializeCardPayment();
-        return; // Redirecting; do not proceed to create orders now
-      }
-
-      // Cash on delivery: create orders immediately
-      const ordersByRestaurant = cart.reduce((acc, item) => {
-        if (!acc[item.restaurantId]) {
-          acc[item.restaurantId] = {
-            restaurantId: item.restaurantId,
-            restaurantName: item.restaurantName,
-            items: []
-          };
-        }
-        acc[item.restaurantId].items.push({
-          itemId: item.itemId,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity
-        });
-        return acc;
-      }, {} as Record<string, any>);
-
-      const orderPromises = Object.values(ordersByRestaurant).map(async (orderData: any) => {
-        const response = await fetch('/api/orders', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({
-            restaurantId: orderData.restaurantId,
-            items: orderData.items,
-            deliveryAddress: deliveryAddress.address,
-            deliveryInstructions: deliveryAddress.instructions,
-            paymentMethod
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to create order');
-        }
-
-        return response.json();
-      });
-
-      await Promise.all(orderPromises);
-      
-      // Clear cart
-      localStorage.removeItem('cart');
-      setCart([]);
-
-      // Redirect to orders page
-      router.push('/dashboard/student/orders');
+      // Only card payment (Paystack) is supported
+      await initializeCardPayment();
+      return; // Redirecting to Paystack payment page
     } catch (error: any) {
       setError(error.message || 'Failed to place order. Please try again.');
     } finally {
@@ -498,7 +446,7 @@ export default function CheckoutPage() {
                 ) : (
                   <>
                     <CheckCircle className="h-5 w-5" />
-                    <span>{paymentMethod === 'card' ? 'Paystack Checkout' : 'Place Order'}</span>
+                    <span>Paystack Checkout</span>
                   </>
                 )}
               </button>
