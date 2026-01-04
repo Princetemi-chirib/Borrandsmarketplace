@@ -20,7 +20,8 @@ import {
 } from 'lucide-react';
 
 interface Order {
-  _id: string;
+  _id?: string;
+  id?: string;
   restaurantName: string;
   status: string;
   total: number;
@@ -389,7 +390,7 @@ export default function StudentDashboard() {
           ) : (
             <div className="space-y-4">
               {recentOrders.map((order) => (
-                <div key={order._id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                <div key={order._id || order.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="p-2 bg-gray-100 rounded-full">
                       <Package className="w-5 h-5 text-gray-600" />
