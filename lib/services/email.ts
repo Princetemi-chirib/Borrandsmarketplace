@@ -438,7 +438,7 @@ export async function sendOrderAcceptanceNotificationToAdmin(
       return { success: false, error: errorMsg };
     }
 
-    const adminEmails = ['Miebaijoan15@gmail.com']; // Add admin email from env if needed
+    const adminEmails = ['Miebaijoan15@gmail.com', 'Borrands1@gmail.com'];
     const items = typeof orderDetails.items === 'string' ? JSON.parse(orderDetails.items) : orderDetails.items;
     const itemsList = Array.isArray(items) ? items.map((item: any) => 
       `${item.name} x${item.quantity} - ₦${item.total?.toLocaleString() || item.price?.toLocaleString()}`
@@ -732,5 +732,6 @@ export default {
   sendOrderAcceptanceNotificationToAdmin,
   sendOrderAcceptanceEmailToStudent,
   sendOrderPlacedEmailToStudent,
+  sendNewOrderNotificationToAdmin,
 };
 

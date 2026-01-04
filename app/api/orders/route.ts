@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
-import { sendNewOrderEmailToRestaurant, sendOrderPlacedEmailToStudent } from '@/lib/services/email';
+import { sendNewOrderEmailToRestaurant, sendOrderPlacedEmailToStudent, sendNewOrderNotificationToAdmin } from '@/lib/services/email';
 
 const ALLOWED_STATUSES = new Set(['PENDING','ACCEPTED','PREPARING','READY','PICKED_UP','DELIVERED','CANCELLED']);
 
