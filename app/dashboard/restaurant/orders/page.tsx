@@ -209,7 +209,7 @@ export default function RestaurantOrders() {
       case 'accepted': return { label: 'Start Preparing', color: 'bg-orange-600 hover:bg-orange-700', next: 'preparing' };
       case 'preparing': return { label: 'Mark Ready', color: 'bg-green-600 hover:bg-green-700', next: 'ready' };
       case 'ready': return { label: 'Mark Picked Up', color: 'bg-purple-600 hover:bg-purple-700', next: 'picked_up' };
-      case 'picked_up': return { label: 'Mark Delivered', color: 'bg-emerald-600 hover:bg-emerald-700', next: 'delivered' };
+      // Removed 'Mark Delivered' - only students can mark orders as delivered
       default: return null;
     }
   };

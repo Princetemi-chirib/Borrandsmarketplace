@@ -463,14 +463,26 @@ export default function OrderTracking() {
                   <p className="text-sm text-gray-600 mb-4">#{order.trackingCode}</p>
                   
                   <div className="space-y-2">
-                    <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-accent transition-colors">
-                      <Phone className="h-4 w-4" />
-                      <span>Call Rider</span>
-                    </button>
-                    <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                      <MessageCircle className="h-4 w-4" />
-                      <span>Message</span>
-                    </button>
+                    {order.riderPhone && (
+                      <a 
+                        href={`tel:${order.riderPhone}`}
+                        className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-accent transition-colors"
+                      >
+                        <Phone className="h-4 w-4" />
+                        <span>Call Rider</span>
+                      </a>
+                    )}
+                    {order.riderPhone && (
+                      <a 
+                        href={`https://wa.me/${order.riderPhone.replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        <span>Message Rider</span>
+                      </a>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -489,14 +501,26 @@ export default function OrderTracking() {
                 <h4 className="font-medium text-gray-900">{order.restaurantName}</h4>
                 
                 <div className="space-y-2">
-                  <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-accent transition-colors">
-                    <Phone className="h-4 w-4" />
-                    <span>Call Restaurant</span>
-                  </button>
-                  <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                    <MessageCircle className="h-4 w-4" />
-                    <span>Message</span>
-                  </button>
+                  {order.restaurantPhone && (
+                    <a 
+                      href={`tel:${order.restaurantPhone}`}
+                      className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-accent transition-colors"
+                    >
+                      <Phone className="h-4 w-4" />
+                      <span>Call Restaurant</span>
+                    </a>
+                  )}
+                  {order.restaurantPhone && (
+                    <a 
+                      href={`https://wa.me/${order.restaurantPhone.replace(/[^0-9]/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      <span>Message Restaurant</span>
+                    </a>
+                  )}
                 </div>
               </div>
             </motion.div>
