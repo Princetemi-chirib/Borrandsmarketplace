@@ -162,9 +162,9 @@ export default function CheckoutPage() {
       reference,
       callback_url: `${window.location.origin}/payment/success?reference=${reference}`,
       metadata: {
-        cart,
-        deliveryAddress,
-        userId: user?._id,
+        cart: JSON.stringify(cart),
+        deliveryAddress: JSON.stringify(deliveryAddress),
+        userId: user?._id || user?.id || '',
         role: 'student',
         paymentMethod: 'paystack',
         phone,

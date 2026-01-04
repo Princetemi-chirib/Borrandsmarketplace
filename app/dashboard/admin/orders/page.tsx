@@ -88,9 +88,12 @@ export default function AdminOrders() {
   const [assignLoading, setAssignLoading] = useState(false);
 
   useEffect(() => {
-    fetchOrders();
     fetchRiders();
   }, []);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [statusFilter]);
 
   useEffect(() => {
     filterOrders();
@@ -109,7 +112,10 @@ export default function AdminOrders() {
       
       if (response.ok) {
         const data = await response.json();
-        setOrders(data.orders || []);
+        const ordersData = data.orders || [];
+        console.log('Fetched orders:', ordersData.length);
+        console.log('Sample order:', ordersData[0]);
+        setOrders(ordersData);
       } else {
         toast.error('Failed to fetch orders');
       }
@@ -366,7 +372,7 @@ export default function AdminOrders() {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      {order.status.toUpperCase() === 'ACCEPTED' && !order.rider && (
+                      {(order.status.toUpperCase() === 'PENDING' || order.status.toUpperCase() === 'ACCEPTED') && (!order.rider || !order.rider.id) && (
                         <button
                           onClick={() => {
                             setSelectedOrder(order);
@@ -378,7 +384,7 @@ export default function AdminOrders() {
                           Assign Rider
                         </button>
                       )}
-                      {order.rider && (
+                      {order.rider && order.rider.id && (
                         <div className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
                           Rider: {order.rider.name}
                         </div>

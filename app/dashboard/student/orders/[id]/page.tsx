@@ -81,15 +81,15 @@ export default function OrderTracking() {
   const statusFlow = ['pending','accepted','preparing','ready','picked_up','delivered'] as const;
 
   const deriveTracking = (status: string): TrackingStep[] => {
-    const currentIndex = statusFlow.indexOf(status as any);
+    const normalizedStatus = (status || 'pending').toLowerCase();
+    const currentIndex = statusFlow.indexOf(normalizedStatus as any);
     const defs: Array<{ id: string; title: string; description: string; icon: any }> = [
       { id: '1', title: 'Order Placed', description: 'Your order has been received', icon: Package },
       { id: '2', title: 'Restaurant Confirmed', description: 'Restaurant has confirmed your order', icon: CheckCircle },
       { id: '3', title: 'Preparing', description: 'Your food is being prepared', icon: Clock },
       { id: '4', title: 'Ready for Pickup', description: 'Order is ready for pickup', icon: Package },
       { id: '5', title: 'Rider Picked Up', description: 'Rider has collected your order', icon: Truck },
-      { id: '6', title: 'In Transit', description: 'Your order is on its way', icon: Navigation },
-      { id: '7', title: 'Delivered', description: 'Order has been delivered', icon: CheckCircle },
+      { id: '6', title: 'Delivered', description: 'Order has been delivered', icon: CheckCircle },
     ];
     return defs.map((d, idx) => ({
       id: d.id,
@@ -113,36 +113,50 @@ export default function OrderTracking() {
         if (!res.ok) throw new Error(data.error || 'Failed to load order');
 
         const o = data.order;
+        if (!o) {
+          throw new Error('Order data is missing from response');
+        }
+
+        // Parse items if it's a JSON string
+        let parsedItems = [];
+        try {
+          parsedItems = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []);
+        } catch (parseError) {
+          console.error('Error parsing order items:', parseError);
+          parsedItems = [];
+        }
+
         const mapped: Order = {
-          id: o._id,
+          id: o._id || o.id,
           orderNumber: o.orderNumber,
           restaurantName: o.restaurant?.name || 'Restaurant',
           restaurantPhone: o.restaurant?.phone || '',
-          status: o.status,
-          total: o.total,
-          deliveryFee: o.deliveryFee,
-          subtotal: o.subtotal,
+          status: o.status?.toLowerCase() || 'pending',
+          total: typeof o.total === 'number' ? o.total : parseFloat(o.total) || 0,
+          deliveryFee: typeof o.deliveryFee === 'number' ? o.deliveryFee : parseFloat(o.deliveryFee) || 0,
+          subtotal: typeof o.subtotal === 'number' ? o.subtotal : parseFloat(o.subtotal) || 0,
           createdAt: o.createdAt,
           estimatedDeliveryTime: o.estimatedDeliveryTime,
-          items: (o.items || []).map((it: any, idx: number) => ({
-            id: it.itemId || String(idx),
-            name: it.name,
-            quantity: it.quantity,
-            price: it.price,
-            image: '',
+          items: parsedItems.map((it: any, idx: number) => ({
+            id: it.itemId || it.id || String(idx),
+            name: it.name || 'Item',
+            quantity: it.quantity || 1,
+            price: typeof it.price === 'number' ? it.price : parseFloat(it.price) || 0,
+            image: it.image || '',
           })),
-          deliveryAddress: o.deliveryAddress,
-          paymentMethod: o.paymentMethod,
+          deliveryAddress: o.deliveryAddress || '',
+          paymentMethod: o.paymentMethod || 'CARD',
           riderName: o.rider?.name,
           riderPhone: o.rider?.phone,
           riderPhoto: '',
           trackingCode: o.trackingCode || o.orderNumber,
-          specialInstructions: o.deliveryInstructions,
+          specialInstructions: o.deliveryInstructions || '',
         };
 
         setOrder(mapped);
       } catch (e) {
-        console.error(e);
+        console.error('Error loading order:', e);
+        console.error('Order ID:', orderId);
         setOrder(null);
       } finally {
         setIsLoading(false);
@@ -227,6 +241,11 @@ export default function OrderTracking() {
     return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
+  const trackingSteps = useMemo(() => {
+    if (!order) return [];
+    return deriveTracking(order.status || 'pending');
+  }, [order]);
+
   if (isLoading) {
     return (
       <DashboardLayout userRole="student" userName="Student">
@@ -248,8 +267,6 @@ export default function OrderTracking() {
       </DashboardLayout>
     );
   }
-
-  const trackingSteps = useMemo(() => deriveTracking(order?.status || 'pending'), [order?.status]);
 
   return (
     <DashboardLayout userRole="student" userName="Student">

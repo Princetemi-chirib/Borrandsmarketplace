@@ -1,7 +1,8 @@
 'use client';
 // Updated: Removed mock data, now fetches real data from /api/students/orders and /api/students/favorites
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -46,6 +47,7 @@ interface Stats {
 }
 
 export default function StudentDashboard() {
+  const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState<Stats>({
     totalOrders: 0,
@@ -59,19 +61,8 @@ export default function StudentDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
-  useEffect(() => {
-    // Get user from localStorage
-    try {
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        setUser(JSON.parse(userData));
-      }
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-    }
-
-    // Fetch orders and favorites to compute stats
-    const fetchDashboardData = async () => {
+  // Fetch orders and favorites to compute stats
+  const fetchDashboardData = useCallback(async () => {
       try {
         const token = localStorage.getItem('token');
         const headers: any = {};
@@ -141,10 +132,45 @@ export default function StudentDashboard() {
       } finally {
         setIsLoading(false);
       }
+  }, []);
+
+  useEffect(() => {
+    // Get user from localStorage
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        setUser(JSON.parse(userData));
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+    }
+
+    // Fetch data on mount
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  // Refresh data when page becomes visible or user returns to tab
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && pathname === '/dashboard/student') {
+        fetchDashboardData();
+      }
     };
 
-    fetchDashboardData();
-  }, []);
+    const handleFocus = () => {
+      if (pathname === '/dashboard/student') {
+        fetchDashboardData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [pathname, fetchDashboardData]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -388,7 +414,7 @@ export default function StudentDashboard() {
                       </span>
                     </span>
                     <Link 
-                      href={`/dashboard/student/orders/${order._id}`}
+                      href={`/dashboard/student/orders/${order._id || order.id}`}
                       className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                     >
                       View Details
@@ -408,7 +434,7 @@ export default function StudentDashboard() {
           className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6"
         >
           <Link 
-            href="/marketplace"
+            href="/dashboard/student/restaurants"
             className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
           >
             <div className="flex items-center gap-4">

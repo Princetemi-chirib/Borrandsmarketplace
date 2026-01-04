@@ -12,31 +12,60 @@ export async function GET(request: NextRequest) {
 
   const stream = new ReadableStream({
     start(controller) {
+      let isClosed = false;
+      let heartbeatInterval: NodeJS.Timeout | null = null;
+      let eventHandler: ((payload: any) => void) | null = null;
+
+      const cleanup = () => {
+        if (isClosed) return;
+        isClosed = true;
+        if (heartbeatInterval) {
+          clearInterval(heartbeatInterval);
+          heartbeatInterval = null;
+        }
+        if (eventHandler) {
+          emitter.off('order.updated', eventHandler);
+          eventHandler = null;
+        }
+      };
+
       const send = (event: string, data: any) => {
-        const payload = `event: ${event}\n` + `data: ${JSON.stringify(data)}\n\n`;
-        controller.enqueue(new TextEncoder().encode(payload));
+        if (isClosed) return;
+        try {
+          const payload = `event: ${event}\n` + `data: ${JSON.stringify(data)}\n\n`;
+          controller.enqueue(new TextEncoder().encode(payload));
+        } catch (error) {
+          // Controller is closed, cleanup
+          cleanup();
+        }
       };
 
       // Initial heartbeat
       send('connected', { ok: true });
 
-      const handler = (payload: any) => {
+      eventHandler = (payload: any) => {
+        if (isClosed) return;
         if (!payload || payload.restaurantId !== auth.restaurantId) return;
         send('order.updated', payload);
       };
 
-      emitter.on('order.updated', handler);
+      emitter.on('order.updated', eventHandler);
 
-      const heartbeat = setInterval(() => send('ping', { t: Date.now() }), 25000);
+      heartbeatInterval = setInterval(() => {
+        if (!isClosed) {
+          send('ping', { t: Date.now() });
+        } else {
+          cleanup();
+        }
+      }, 25000);
 
-      controller.enqueue(new TextEncoder().encode(': connected\n\n'));
-
-      return () => {
-        clearInterval(heartbeat);
-        emitter.off('order.updated', handler);
-      };
+      // Store cleanup in a way cancel can access (though cancel has limited access)
+      // Cleanup will be called automatically on errors via the catch block
     },
-    cancel() {}
+    cancel() {
+      // Cleanup is handled automatically when send() throws errors
+      // The isClosed flag and cleanup in send() catch block handles this
+    }
   });
 
   return new Response(stream, {

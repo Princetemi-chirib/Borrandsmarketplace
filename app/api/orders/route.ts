@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
-import { sendNewOrderEmailToRestaurant } from '@/lib/services/email';
+import { sendNewOrderEmailToRestaurant, sendOrderPlacedEmailToStudent } from '@/lib/services/email';
 
 const ALLOWED_STATUSES = new Set(['PENDING','ACCEPTED','PREPARING','READY','PICKED_UP','DELIVERED','CANCELLED']);
 
@@ -65,6 +65,16 @@ export async function POST(request: NextRequest) {
       }
     });
     if (!restaurant) return NextResponse.json({ message: 'Restaurant not found or inactive' }, { status: 404 });
+
+    // Get student information for email notification
+    const student = await prisma.user.findUnique({
+      where: { id: auth.sub },
+      select: {
+        id: true,
+        name: true,
+        email: true
+      }
+    });
 
     // Load item prices from DB to prevent tampering
     const itemIds = items.map((it: any) => it.itemId);
@@ -138,6 +148,29 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.error('Failed to send email to restaurant:', error);
         // Don't fail the order creation if email fails
+      }
+    }
+
+    // Send order placed confirmation email to student
+    if (student?.email) {
+      try {
+        await sendOrderPlacedEmailToStudent(
+          student.email,
+          student.name || 'Student',
+          orderNumber,
+          restaurant.name,
+          {
+            items: normalizedItems,
+            deliveryAddress,
+            deliveryInstructions,
+            total,
+            subtotal,
+            deliveryFee: DELIVERY_FEE
+          }
+        );
+      } catch (error) {
+        console.error('Failed to send order placed email to student:', error);
+        // Don't fail the request if email fails
       }
     }
 

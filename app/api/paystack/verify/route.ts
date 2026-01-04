@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PaystackService from '@/lib/paystack';
 import { dbConnect, prisma } from '@/lib/db-prisma';
+import { sendNewOrderEmailToRestaurant } from '@/lib/services/email';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -29,9 +30,37 @@ export async function GET(request: NextRequest) {
         
         const metadata = transaction.metadata as any;
         
-        if (metadata && metadata.cart && metadata.userId) {
+        // Parse metadata - Paystack stores complex objects as strings
+        let cart: any[] = [];
+        let deliveryAddress: any = {};
+        
+        try {
+          cart = typeof metadata.cart === 'string' ? JSON.parse(metadata.cart) : metadata.cart || [];
+          deliveryAddress = typeof metadata.deliveryAddress === 'string' ? JSON.parse(metadata.deliveryAddress) : metadata.deliveryAddress || {};
+        } catch (parseError) {
+          console.error('Error parsing metadata:', parseError);
+          console.log('Raw metadata:', metadata);
+        }
+        
+        if (metadata && cart && Array.isArray(cart) && cart.length > 0 && metadata.userId) {
+          // Check if orders already exist for this payment reference
+          const existingOrders = await prisma.order.findMany({
+            where: { paymentReference: reference },
+            select: { id: true, orderNumber: true }
+          });
+
+          if (existingOrders.length > 0) {
+            console.log(`⚠️ Orders already exist for payment reference ${reference}. Returning existing orders.`);
+            return NextResponse.json({
+              success: true,
+              data: result.data,
+              orders: existingOrders.map(o => ({ id: o.id })),
+              message: 'Transaction verified (orders already created)',
+            });
+          }
+
           // Group cart items by restaurant
-          const ordersByRestaurant = metadata.cart.reduce((acc: any, item: any) => {
+          const ordersByRestaurant = cart.reduce((acc: any, item: any) => {
             if (!acc[item.restaurantId]) {
               acc[item.restaurantId] = {
                 restaurantId: item.restaurantId,
@@ -48,6 +77,16 @@ export async function GET(request: NextRequest) {
             return acc;
           }, {});
 
+          // Get student information for email notification
+          const student = await prisma.user.findUnique({
+            where: { id: metadata.userId },
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          });
+
           // Create orders for each restaurant
           const orderPromises = Object.values(ordersByRestaurant).map(async (orderData: any) => {
             const subtotal = orderData.items.reduce((sum: number, item: any) => 
@@ -57,40 +96,101 @@ export async function GET(request: NextRequest) {
             // Get restaurant to calculate delivery fee
             const restaurant = await prisma.restaurant.findUnique({
               where: { id: orderData.restaurantId },
-              select: { deliveryFee: true, estimatedDeliveryTime: true }
+              select: { 
+                id: true,
+                name: true,
+                deliveryFee: true, 
+                estimatedDeliveryTime: true,
+                user: {
+                  select: {
+                    email: true
+                  }
+                }
+              }
             });
             
-            const deliveryFee = restaurant?.deliveryFee || 0;
-            const total = subtotal + deliveryFee;
+            const SERVICE_CHARGE = 150;
+            const DELIVERY_FEE = 500; // Use fixed delivery fee to match /api/orders
+            const total = subtotal + SERVICE_CHARGE + DELIVERY_FEE;
             const estimatedDeliveryTime = restaurant?.estimatedDeliveryTime || 30;
             
             // Generate unique order number
             const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
-            return await prisma.order.create({
+            const createdOrder = await prisma.order.create({
               data: {
                 studentId: metadata.userId,
                 restaurantId: orderData.restaurantId,
                 items: JSON.stringify(orderData.items),
                 subtotal: subtotal,
-                deliveryFee: deliveryFee,
+                deliveryFee: DELIVERY_FEE,
                 total: total,
+                notes: `serviceCharge=${SERVICE_CHARGE}`,
                 estimatedDeliveryTime: estimatedDeliveryTime,
                 orderNumber: orderNumber,
-                deliveryAddress: metadata.deliveryAddress?.address || '',
-                deliveryInstructions: metadata.deliveryAddress?.instructions || '',
-                deliveryPhone: metadata.phone || metadata.deliveryAddress?.phone || '',
+                deliveryAddress: deliveryAddress?.address || metadata.deliveryAddress?.address || '',
+                deliveryInstructions: deliveryAddress?.instructions || metadata.deliveryAddress?.instructions || '',
+                deliveryPhone: metadata.phone || deliveryAddress?.phone || metadata.deliveryAddress?.phone || '',
                 paymentMethod: 'CARD',
                 paymentStatus: 'PAID',
                 status: 'PENDING',
                 paymentReference: reference,
               }
             });
+
+            // Send new order email to restaurant
+            if (restaurant?.user?.email) {
+              try {
+                await sendNewOrderEmailToRestaurant(
+                  restaurant.user.email,
+                  restaurant.name,
+                  orderNumber,
+                  {
+                    items: orderData.items,
+                    deliveryAddress: deliveryAddress?.address || metadata.deliveryAddress?.address || '',
+                    deliveryInstructions: deliveryAddress?.instructions || metadata.deliveryAddress?.instructions || '',
+                    total, subtotal, deliveryFee: DELIVERY_FEE
+                  }
+                );
+              } catch (emailError) {
+                console.error('Failed to send new order email to restaurant:', emailError);
+              }
+            }
+
+            return { createdOrder, orderData, restaurantName: restaurant?.name || 'Restaurant' };
           });
 
-          const createdOrders = await Promise.all(orderPromises);
+          const createdOrdersWithData = await Promise.all(orderPromises);
+          const createdOrders = createdOrdersWithData.map(item => item.createdOrder);
           
           console.log(`✅ Created ${createdOrders.length} order(s) for payment ${reference}`);
+
+          // Send order placed confirmation email to student (one email for all orders)
+          if (student?.email && createdOrders.length > 0) {
+            try {
+              // Use the first order's details for the email
+              const firstOrderData = createdOrdersWithData[0];
+              const firstOrder = firstOrderData.createdOrder;
+
+              await sendOrderPlacedEmailToStudent(
+                student.email,
+                student.name || 'Student',
+                firstOrder.orderNumber,
+                firstOrderData.restaurantName,
+                {
+                  items: firstOrderData.orderData.items,
+                  deliveryAddress: deliveryAddress?.address || metadata.deliveryAddress?.address || '',
+                  deliveryInstructions: deliveryAddress?.instructions || metadata.deliveryAddress?.instructions || '',
+                  total: firstOrder.total,
+                  subtotal: firstOrder.subtotal,
+                  deliveryFee: firstOrder.deliveryFee
+                }
+              );
+            } catch (emailError) {
+              console.error('Failed to send order placed email to student:', emailError);
+              // Don't fail the request if email fails
+            }
+          }
 
           return NextResponse.json({
             success: true,
@@ -100,6 +200,10 @@ export async function GET(request: NextRequest) {
           });
         } else {
           console.warn('⚠️ Payment verified but missing metadata for order creation:', reference);
+          console.log('Metadata received:', JSON.stringify(metadata, null, 2));
+          console.log('Parsed cart:', cart);
+          console.log('Parsed deliveryAddress:', deliveryAddress);
+          console.log('UserId:', metadata?.userId);
           return NextResponse.json({
             success: true,
             data: result.data,

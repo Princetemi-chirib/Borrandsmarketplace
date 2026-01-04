@@ -42,16 +42,21 @@ export async function GET(
         },
         student: {
           select: { id: true, name: true, phone: true }
+        },
+        rider: {
+          select: { id: true, name: true, phone: true, email: true }
         }
       }
     });
 
     if (!order) {
+      console.error(`Order not found: ${orderId} for user: ${user.id}`);
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
     // Check if the order belongs to the student
     if (order.studentId !== user.id) {
+      console.error(`Access denied: Order ${orderId} belongs to student ${order.studentId}, but user is ${user.id}`);
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 

@@ -47,8 +47,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     const body = await request.json();
     const nextStatus = (body.status || '').toUpperCase();
-    if (!ALLOWED_STATUSES.includes(nextStatus as any)) {
-      return NextResponse.json({ message: 'Invalid status' }, { status: 400 });
+    if (!nextStatus || !ALLOWED_STATUSES.includes(nextStatus as any)) {
+      console.error('Invalid status provided:', body.status, '->', nextStatus);
+      return NextResponse.json({ message: `Invalid status: ${body.status || 'missing'}` }, { status: 400 });
     }
 
     // Get order with student info for email notification (single query)
@@ -74,6 +75,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     const prevStatus = order.status as OrderStatus;
     if (!isValidTransition(prevStatus, nextStatus as OrderStatus)) {
+      console.error(`Invalid status transition: ${prevStatus} → ${nextStatus}`);
       return NextResponse.json({ message: `Invalid transition ${prevStatus} → ${nextStatus}` }, { status: 400 });
     }
 
@@ -95,7 +97,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
           console.error('Failed to parse order items:', parseError);
           items = [];
         }
-        await sendOrderNotificationEmail(
+        const emailResult = await sendOrderNotificationEmail(
           order.student.email,
           order.student.name,
           order.orderNumber,
@@ -107,6 +109,11 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
             items
           }
         );
+        if (!emailResult.success) {
+          console.error('Email sending failed:', emailResult.error);
+        } else {
+          console.log(`✅ Status update email sent to ${order.student.email} for order ${order.orderNumber}`);
+        }
       } catch (error) {
         console.error('Failed to send status update email to student:', error);
         // Don't fail the request if email fails
@@ -125,7 +132,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     return NextResponse.json({ order: updatedOrder });
   } catch (e: any) {
-    return NextResponse.json({ message: 'Failed to update order' }, { status: 400 });
+    console.error('Error updating order:', e);
+    console.error('Error details:', {
+      message: e.message,
+      stack: e.stack,
+      orderId: params.id
+    });
+    return NextResponse.json({ message: e.message || 'Failed to update order' }, { status: 400 });
   }
 }
 

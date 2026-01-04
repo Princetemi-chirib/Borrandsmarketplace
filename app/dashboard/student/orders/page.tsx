@@ -49,7 +49,9 @@ export default function MyOrders() {
       const normalizedOrders = (data.orders || []).map((order: any) => ({
         ...order,
         status: order.status?.toLowerCase() || 'pending',
-        items: typeof order.items === 'string' ? JSON.parse(order.items) : order.items
+        items: typeof order.items === 'string' ? JSON.parse(order.items) : order.items,
+        restaurantName: order.restaurant?.name || order.restaurantName || 'Restaurant',
+        total: typeof order.total === 'number' ? order.total : parseFloat(order.total) || 0
       }));
       
       setOrders(normalizedOrders);
@@ -180,13 +182,17 @@ export default function MyOrders() {
                       {getStatusIcon(order.status)}
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{order.restaurant}</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {order.restaurant?.name || order.restaurantName || 'Restaurant'}
+                      </h3>
                       <p className="text-sm text-gray-600">Order #{order.orderNumber}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-gray-900">{order.total}</div>
-                    <div className="text-sm text-gray-600">{order.orderTime}</div>
+                    <div className="text-lg font-bold text-gray-900">₦{typeof order.total === 'number' ? order.total.toLocaleString() : order.total}</div>
+                    <div className="text-sm text-gray-600">
+                      {order.orderTime || new Date(order.createdAt).toLocaleString()}
+                    </div>
                   </div>
                 </div>
               </div>

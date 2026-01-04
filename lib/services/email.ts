@@ -221,9 +221,11 @@ export async function sendOrderNotificationEmail(
                 <p><strong>Order Number:</strong> #${orderNumber}</p>
                 <p><strong>Status:</strong> <span class="status-badge">${status}</span></p>
                 <p><strong>Restaurant:</strong> ${orderDetails.restaurantName || 'N/A'}</p>
+                ${orderDetails.riderName ? `<p><strong>Assigned Rider:</strong> ${orderDetails.riderName}</p>` : ''}
                 <p><strong>Total:</strong> ₦${orderDetails.total?.toLocaleString() || '0'}</p>
+                ${orderDetails.deliveryAddress ? `<p><strong>Delivery Address:</strong> ${orderDetails.deliveryAddress}</p>` : ''}
               </div>
-              <p>Track your order in real-time on the Borrands app.</p>
+              ${orderDetails.customMessage ? `<p>${orderDetails.customMessage}</p>` : '<p>Track your order in real-time on the Borrands app.</p>'}
               <p>Best regards,<br><strong>The Borrands Team</strong></p>
             </div>
             <div class="footer">
@@ -596,6 +598,132 @@ export async function sendOrderAcceptanceEmailToStudent(
   }
 }
 
+/**
+ * Send order placed confirmation email to student
+ */
+export async function sendOrderPlacedEmailToStudent(
+  email: string,
+  studentName: string,
+  orderNumber: string,
+  restaurantName: string,
+  orderDetails: any
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!isEmailConfigured()) {
+      const errorMsg = 'Email service is not configured.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const transporter = getTransporter();
+    if (!transporter) {
+      const errorMsg = 'Email credentials are missing.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const items = typeof orderDetails.items === 'string' ? JSON.parse(orderDetails.items) : orderDetails.items;
+    const itemsList = Array.isArray(items) ? items.map((item: any) => 
+      `${item.name} x${item.quantity} - ₦${(item.price * item.quantity)?.toLocaleString() || item.total?.toLocaleString() || '0'}`
+    ).join('<br>') : 'N/A';
+
+    const mailOptions = {
+      from: `"${process.env.MAIL_FROM_NAME || 'Borrands'}" <${process.env.MAIL_FROM_ADDRESS || 'noreply@borrands.com.ng'}>`,
+      to: email,
+      subject: `Order #${orderNumber} Placed Successfully! 🎉`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 30px; text-align: center; color: white; }
+            .content { padding: 30px; }
+            .success-box { background: #d4edda; border-left: 4px solid #28a745; padding: 20px; margin: 20px 0; border-radius: 4px; }
+            .order-box { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎉 Order Placed Successfully!</h1>
+            </div>
+            <div class="content">
+              <h2>Hi ${studentName}!</h2>
+              <div class="success-box">
+                <p style="margin: 0; font-size: 18px; font-weight: 600;">Thank you for your order!</p>
+                <p style="margin: 10px 0 0 0;">Your order has been received and is being processed.</p>
+              </div>
+              <div class="order-box">
+                <p><strong>Order Number:</strong> #${orderNumber}</p>
+                <p><strong>Restaurant:</strong> ${restaurantName}</p>
+                <p><strong>Delivery Address:</strong> ${orderDetails.deliveryAddress || 'N/A'}</p>
+                ${orderDetails.deliveryInstructions ? `<p><strong>Delivery Instructions:</strong> ${orderDetails.deliveryInstructions}</p>` : ''}
+                <p><strong>Items:</strong></p>
+                <div style="margin-left: 20px;">${itemsList}</div>
+                <p style="margin-top: 15px;"><strong>Subtotal:</strong> ₦${orderDetails.subtotal?.toLocaleString() || '0'}</p>
+                ${orderDetails.deliveryFee ? `<p><strong>Delivery Fee:</strong> ₦${orderDetails.deliveryFee?.toLocaleString() || '0'}</p>` : ''}
+                <p style="font-size: 18px; font-weight: 600; margin-top: 15px; padding-top: 15px; border-top: 2px solid #dee2e6;"><strong>Total:</strong> ₦${orderDetails.total?.toLocaleString() || '0'}</p>
+              </div>
+              <p><strong>What's next?</strong></p>
+              <ul>
+                <li>The restaurant will review and confirm your order</li>
+                <li>You'll receive an email when your order is accepted</li>
+                <li>A rider will be assigned to deliver your order</li>
+                <li>You can track your order status in real-time on your dashboard</li>
+              </ul>
+              <p>We'll keep you updated every step of the way!</p>
+              <p>Best regards,<br><strong>The Borrands Team</strong></p>
+            </div>
+            <div class="footer">
+              <p>© ${new Date().getFullYear()} Borrands Marketplace</p>
+              <p>📧 support@borrands.com.ng | 🌐 www.borrands.com.ng</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `Hi ${studentName}!
+
+Thank you for your order!
+
+Your order has been received and is being processed.
+
+Order Number: #${orderNumber}
+Restaurant: ${restaurantName}
+Delivery Address: ${orderDetails.deliveryAddress || 'N/A'}
+${orderDetails.deliveryInstructions ? `Delivery Instructions: ${orderDetails.deliveryInstructions}\n` : ''}
+Items:
+${Array.isArray(items) ? items.map((item: any) => `  ${item.name} x${item.quantity} - ₦${(item.price * item.quantity)?.toLocaleString() || item.total?.toLocaleString() || '0'}`).join('\n') : 'N/A'}
+
+Subtotal: ₦${orderDetails.subtotal?.toLocaleString() || '0'}
+${orderDetails.deliveryFee ? `Delivery Fee: ₦${orderDetails.deliveryFee?.toLocaleString() || '0'}\n` : ''}Total: ₦${orderDetails.total?.toLocaleString() || '0'}
+
+What's next?
+- The restaurant will review and confirm your order
+- You'll receive an email when your order is accepted
+- A rider will be assigned to deliver your order
+- You can track your order status in real-time on your dashboard
+
+We'll keep you updated every step of the way!
+
+Best regards,
+The Borrands Team`
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Order placed email sent to student ${email}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Email sending error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export default {
   sendVerificationEmail,
   sendOrderNotificationEmail,
@@ -603,5 +731,6 @@ export default {
   sendOrderRejectionEmailToStudent,
   sendOrderAcceptanceNotificationToAdmin,
   sendOrderAcceptanceEmailToStudent,
+  sendOrderPlacedEmailToStudent,
 };
 

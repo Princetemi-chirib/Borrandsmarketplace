@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
 import { sendOrderRejectionEmailToStudent, sendOrderAcceptanceNotificationToAdmin, sendOrderAcceptanceEmailToStudent } from '@/lib/services/email';
+import { sendRiderCancellationEmail } from '@/lib/services/rider-notification';
 
 export async function PATCH(
   request: NextRequest,
@@ -45,6 +46,18 @@ export async function PATCH(
             name: true,
             email: true
           }
+        },
+        rider: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            user: {
+              select: {
+                email: true
+              }
+            }
+          }
         }
       }
     });
@@ -81,16 +94,36 @@ export async function PATCH(
         }
       }
 
+      // Send cancellation email to rider if rider was assigned
+      if (order.rider && order.rider.user?.email) {
+        try {
+          await sendRiderCancellationEmail(
+            order.rider.user.email,
+            order.rider.name,
+            order.orderNumber,
+            order.restaurant.name,
+            rejectionReason
+          );
+        } catch (error) {
+          console.error('Failed to send rider cancellation email:', error);
+          // Don't fail the request if email fails
+        }
+      }
+
       return NextResponse.json({ 
         message: 'Order rejected successfully',
         order: updatedOrder 
       });
     } else {
-      // Accept order - update status to ACCEPTED
+      // Accept order - update status based on whether rider is already assigned
+      // If rider is assigned: move directly to PREPARING
+      // If no rider: move to ACCEPTED
+      const newStatus = order.riderId ? 'PREPARING' : 'ACCEPTED';
+      
       const updatedOrder = await prisma.order.update({
         where: { id: params.id },
         data: {
-          status: 'ACCEPTED'
+          status: newStatus
         }
       });
 
