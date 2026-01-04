@@ -112,7 +112,7 @@ export async function PATCH(
     // Send email notification to rider
     if (rider.user.email) {
       try {
-        await sendRiderAssignmentEmail(
+        const emailResult = await sendRiderAssignmentEmail(
           rider.user.email,
           rider.name,
           order.orderNumber,
@@ -120,10 +120,17 @@ export async function PATCH(
           order.student.name,
           order.restaurant.name
         );
+        if (emailResult.success) {
+          console.log(`✅ Rider assignment email sent successfully to ${rider.user.email} for order ${order.orderNumber}`);
+        } else {
+          console.error(`❌ Failed to send rider assignment email: ${emailResult.error}`);
+        }
       } catch (error) {
-        console.error('Failed to send email to rider:', error);
+        console.error('❌ Failed to send email to rider:', error);
         // Don't fail the request if email fails
       }
+    } else {
+      console.warn(`⚠️ Rider ${rider.name} (ID: ${rider.id}) does not have an email address. Assignment email not sent.`);
     }
 
     // Send email notification to student that rider has been assigned
