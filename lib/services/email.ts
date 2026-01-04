@@ -416,6 +416,115 @@ export async function sendOrderRejectionEmailToStudent(
 }
 
 /**
+ * Send new order notification to admin when order is created
+ */
+export async function sendNewOrderNotificationToAdmin(
+  orderNumber: string,
+  restaurantName: string,
+  studentName: string,
+  orderDetails: any
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!isEmailConfigured()) {
+      const errorMsg = 'Email service is not configured.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const transporter = getTransporter();
+    if (!transporter) {
+      const errorMsg = 'Email credentials are missing.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const adminEmails = ['Miebaijoan15@gmail.com', 'Borrands1@gmail.com'];
+    const items = typeof orderDetails.items === 'string' ? JSON.parse(orderDetails.items) : orderDetails.items;
+    const itemsList = Array.isArray(items) ? items.map((item: any) => 
+      `${item.name} x${item.quantity} - ₦${(item.price * item.quantity)?.toLocaleString() || item.total?.toLocaleString() || '0'}`
+    ).join('<br>') : 'N/A';
+
+    const mailOptions = {
+      from: `"${process.env.MAIL_FROM_NAME || 'Borrands'}" <${process.env.MAIL_FROM_ADDRESS || 'noreply@borrands.com.ng'}>`,
+      to: adminEmails.join(', '),
+      subject: `New Order #${orderNumber} - Monitoring Required`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white; }
+            .content { padding: 30px; }
+            .order-box { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .info-box { background: #e7f3ff; border-left: 4px solid #2196F3; padding: 20px; margin: 20px 0; border-radius: 4px; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📦 New Order Created</h1>
+            </div>
+            <div class="content">
+              <h2>New Order Notification</h2>
+              <p>A new order has been placed and is awaiting restaurant confirmation.</p>
+              <div class="order-box">
+                <p><strong>Order Number:</strong> #${orderNumber}</p>
+                <p><strong>Restaurant:</strong> ${restaurantName}</p>
+                <p><strong>Student:</strong> ${studentName}</p>
+                <p><strong>Delivery Address:</strong> ${orderDetails.deliveryAddress || 'N/A'}</p>
+                ${orderDetails.deliveryInstructions ? `<p><strong>Delivery Instructions:</strong> ${orderDetails.deliveryInstructions}</p>` : ''}
+                <p><strong>Total:</strong> ₦${orderDetails.total?.toLocaleString() || '0'}</p>
+                <p><strong>Items:</strong></p>
+                <div>${itemsList}</div>
+              </div>
+              <div class="info-box">
+                <p><strong>ℹ️ Status:</strong></p>
+                <p>The restaurant will review and confirm this order. You will be notified when the order is accepted and rider assignment is required.</p>
+              </div>
+              <p>Best regards,<br><strong>The Borrands Team</strong></p>
+            </div>
+            <div class="footer">
+              <p>© ${new Date().getFullYear()} Borrands Marketplace</p>
+              <p>📧 support@borrands.com.ng | 🌐 www.borrands.com.ng</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `New Order Notification
+
+A new order has been placed and is awaiting restaurant confirmation.
+
+Order Number: #${orderNumber}
+Restaurant: ${restaurantName}
+Student: ${studentName}
+Delivery Address: ${orderDetails.deliveryAddress || 'N/A'}
+${orderDetails.deliveryInstructions ? `Delivery Instructions: ${orderDetails.deliveryInstructions}\n` : ''}Total: ₦${orderDetails.total?.toLocaleString() || '0'}
+
+Items:
+${Array.isArray(items) ? items.map((item: any) => `  ${item.name} x${item.quantity} - ₦${(item.price * item.quantity)?.toLocaleString() || item.total?.toLocaleString() || '0'}`).join('\n') : 'N/A'}
+
+Status: The restaurant will review and confirm this order. You will be notified when the order is accepted and rider assignment is required.
+
+Best regards,
+The Borrands Team`
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ New order notification sent to admin emails: ${adminEmails.join(', ')}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Email sending error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Send order acceptance notification to admin and Miebaijoan15@gmail.com
  */
 export async function sendOrderAcceptanceNotificationToAdmin(
