@@ -1,0 +1,21 @@
+{
+  "name": "Borrands University Marketplace",
+  "short_name": "Borrands",
+  "description": "University marketplace connecting students, restaurants, and riders",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#152d8f",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
+
+
+
+
+
