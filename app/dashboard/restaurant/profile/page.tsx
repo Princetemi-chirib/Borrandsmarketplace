@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import BackArrow from '@/components/ui/BackArrow';
@@ -27,6 +27,7 @@ import {
   Trash2,
   Settings
 } from 'lucide-react';
+import { getImageUrl, isValidImageUrl } from '@/lib/image-utils';
 
 interface RestaurantProfile {
   _id: string;
@@ -77,6 +78,8 @@ export default function RestaurantProfile() {
   const [activeTab, setActiveTab] = useState('basic');
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [error, setError] = useState<string>('');
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   const tabs: Array<{ id: string; label: string; icon: any }> = [
     { id: 'basic', label: 'Basic Info', icon: User },
@@ -577,9 +580,20 @@ export default function RestaurantProfile() {
                       {profile.images.map((image, index) => (
                         <div key={index} className="relative group">
                           <div className="aspect-w-16 aspect-h-12 bg-gray-200 rounded-lg overflow-hidden">
-                            <div className="w-full h-32 bg-gray-200 flex items-center justify-center">
-                              <ImageIcon className="h-8 w-8 text-gray-400" />
-                            </div>
+                            {isValidImageUrl(image) ? (
+                              <img
+                                src={getImageUrl(image)}
+                                alt={`Restaurant photo ${index + 1}`}
+                                className="w-full h-32 object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-32 bg-gray-200 flex items-center justify-center">
+                                <ImageIcon className="h-8 w-8 text-gray-400" />
+                              </div>
+                            )}
                           </div>
                           {isEditing && (
                             <button className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
@@ -606,14 +620,66 @@ export default function RestaurantProfile() {
                   <div>
                     <h4 className="text-md font-medium text-gray-900 mb-4">Restaurant Logo</h4>
                     <div className="flex items-center space-x-4">
-                      <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
-                        <ImageIcon className="h-8 w-8 text-gray-400" />
+                      <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                        {isValidImageUrl(profile.logo) ? (
+                          <img
+                            src={getImageUrl(profile.logo)}
+                            alt="Restaurant logo"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <ImageIcon className="h-8 w-8 text-gray-400" />
+                        )}
                       </div>
                       {isEditing && (
-                        <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                          <Upload className="h-4 w-4 mr-2 inline" />
-                          Upload New Logo
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => logoInputRef.current?.click()}
+                            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2 text-sm"
+                            disabled={isUploadingLogo}
+                          >
+                            <Upload className="h-4 w-4" />
+                            <span>{isUploadingLogo ? 'Uploading...' : 'Upload New Logo'}</span>
+                          </button>
+                          <input
+                            ref={logoInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file || !profile) return;
+                              try {
+                                setIsUploadingLogo(true);
+                                const token = localStorage.getItem('token') || '';
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                const headers: any = {};
+                                if (token) headers['Authorization'] = `Bearer ${token}`;
+                                const res = await fetch('/api/uploads', {
+                                  method: 'POST',
+                                  headers,
+                                  body: formData
+                                });
+                                const json = await res.json();
+                                if (res.ok && json.url) {
+                                  setProfile({ ...profile, logo: json.url });
+                                }
+                              } catch (e) {
+                                // swallow for now; could show toast
+                              } finally {
+                                setIsUploadingLogo(false);
+                                if (logoInputRef.current) {
+                                  logoInputRef.current.value = '';
+                                }
+                              }
+                            }}
+                          />
+                        </>
                       )}
                     </div>
                   </div>

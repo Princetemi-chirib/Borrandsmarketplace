@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plus, Pencil, Trash2, ArrowLeft, Image as ImageIcon, Save, X, ArrowUp, ArrowDown, ToggleLeft, ToggleRight, Power } from 'lucide-react';
+import { getImageUrl, isValidImageUrl } from '@/lib/image-utils';
 
 interface MenuItemForm {
 	name: string;
 	description: string;
-	price: number;
+	price: number | '';
 	categoryId?: string;
 	image?: string;
 	isAvailable: boolean;
@@ -27,7 +28,7 @@ export default function MenuManagementPage() {
 	const [activeTab, setActiveTab] = useState<'items' | 'categories' | 'packs'>('items');
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const [editIndex, setEditIndex] = useState<number | null>(null);
-	const [form, setForm] = useState<MenuItemForm>({ name: '', description: '', price: 0, categoryId: undefined, image: '', isAvailable: true, packId: undefined, priceDescription: '', isPublished: true });
+	const [form, setForm] = useState<MenuItemForm>({ name: '', description: '', price: '', categoryId: undefined, image: '', isAvailable: true, packId: undefined, priceDescription: '', isPublished: true });
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string>('');
 	const [optionUI, setOptionUI] = useState<{ open: boolean; itemId?: string; itemName?: string }>(() => ({ open: false }));
@@ -121,7 +122,7 @@ export default function MenuManagementPage() {
 	}, []);
 
 	const resetForm = () => {
-		setForm({ name: '', description: '', price: 0, categoryId: undefined, image: '', isAvailable: true, packId: undefined, priceDescription: '', isPublished: true });
+		setForm({ name: '', description: '', price: '', categoryId: undefined, image: '', isAvailable: true, packId: undefined, priceDescription: '', isPublished: true });
 		setEditIndex(null);
 		setIsEditing(false);
 	};
@@ -218,13 +219,13 @@ export default function MenuManagementPage() {
 	};
 
 	const saveItem = async () => {
-		if (!form.name || !form.description || !form.categoryId || !form.price) {
+		if (!form.name || !form.description || !form.categoryId || form.price === '' || form.price === 0) {
 			setError('Please fill in all required fields');
 			return;
 		}
 		
 		// Basic validation
-		if (form.price <= 0) {
+		if (typeof form.price === 'number' && form.price <= 0) {
 			setError('Price must be greater than 0');
 			return;
 		}
@@ -241,10 +242,11 @@ export default function MenuManagementPage() {
 			const headers: any = { 'Content-Type': 'application/json' };
 			if (token) headers['Authorization'] = `Bearer ${token}`;
 			
+			const numericPrice = typeof form.price === 'number' ? form.price : parseInt(String(form.price), 10);
 			const payload: any = {
 				name: form.name.trim(),
 				description: form.description.trim(),
-				price: form.price,
+				price: numericPrice,
 				priceDescription: form.priceDescription?.trim() || '',
 				image: form.image || '',
 				isAvailable: form.isAvailable,
@@ -420,7 +422,22 @@ export default function MenuManagementPage() {
 					</div>
 					<div>
 						<label className="block text-sm font-medium text-gray-700 mb-1">Price (₦)</label>
-						<input type="number" min={0} value={form.price} onChange={(e) => setForm({ ...form, price: parseInt(e.target.value || '0') })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900 placeholder-gray-400" placeholder="2000" />
+						<input
+							type="number"
+							min={0}
+							value={form.price}
+							onChange={(e) => {
+								const val = e.target.value;
+								if (val === '') {
+									setForm({ ...form, price: '' });
+								} else {
+									const parsed = parseInt(val, 10);
+									setForm({ ...form, price: isNaN(parsed) ? '' : parsed });
+								}
+							}}
+							className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900 placeholder-gray-400"
+							placeholder="2000"
+						/>
 					</div>
 					<div>
 						<label className="block text-sm font-medium text-gray-700 mb-1">Price description (optional)</label>
@@ -429,7 +446,7 @@ export default function MenuManagementPage() {
 					<div>
 						<label className="block text-sm font-medium text-gray-700 mb-1">Image URL (optional)</label>
 						<input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900 placeholder-gray-400" placeholder="https://..." />
-						<div className="mt-2 flex items-center gap-2">
+						<div className="mt-2 flex items-center gap-4">
 							<input type="file" accept="image/*" onChange={async (e) => {
 								const file = e.target.files?.[0];
 								if (!file) return;
@@ -455,6 +472,18 @@ export default function MenuManagementPage() {
 								}
 							}} />
 							{uploading && <span className="text-xs text-gray-500">Uploading...</span>}
+							{!uploading && isValidImageUrl(form.image || '') && (
+								<div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+									<img
+										src={getImageUrl(form.image || '')}
+										alt="Preview"
+										className="w-full h-full object-cover"
+										onError={(e) => {
+											(e.target as HTMLImageElement).style.display = 'none';
+										}}
+									/>
+								</div>
+							)}
 						</div>
 					</div>
 					<div>

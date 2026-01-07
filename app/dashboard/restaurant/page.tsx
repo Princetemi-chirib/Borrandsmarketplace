@@ -38,6 +38,7 @@ import {
   Plus as PlusIcon,
   Store
 } from 'lucide-react';
+import { getImageUrl, isValidImageUrl } from '@/lib/image-utils';
 
 interface Order {
   _id: string;
@@ -581,7 +582,18 @@ export default function RestaurantDashboard() {
                 <div key={item._id} className="p-3 sm:p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      <div className="w-10 h-10 bg-gray-200 rounded-lg flex-shrink-0"></div>
+                      <div className="w-10 h-10 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
+                        {isValidImageUrl(item.image) && (
+                          <img
+                            src={getImageUrl(item.image)}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-sm sm:text-base font-medium text-gray-900 truncate">{item.name}</h3>
                         <p className="text-xs sm:text-sm text-gray-500">₦{item.price.toLocaleString()}</p>
