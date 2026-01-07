@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
         id: true, 
         estimatedDeliveryTime: true,
         name: true,
+        isOpen: true,
         user: {
           select: {
             email: true
@@ -64,7 +65,12 @@ export async function POST(request: NextRequest) {
         }
       }
     });
-    if (!restaurant) return NextResponse.json({ message: 'Restaurant not found or inactive' }, { status: 404 });
+    if (!restaurant) {
+      return NextResponse.json({ message: 'Restaurant not found or inactive' }, { status: 404 });
+    }
+    if (!restaurant.isOpen) {
+      return NextResponse.json({ message: 'Restaurant is currently closed and cannot accept new orders' }, { status: 400 });
+    }
 
     // Get student information for email notification
     const student = await prisma.user.findUnique({

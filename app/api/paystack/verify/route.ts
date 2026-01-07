@@ -93,12 +93,15 @@ export async function GET(request: NextRequest) {
               sum + (item.price * item.quantity), 0
             );
             
-            // Get restaurant to calculate delivery fee
+            // Get restaurant to calculate delivery fee and check open/closed
             const restaurant = await prisma.restaurant.findUnique({
               where: { id: orderData.restaurantId },
               select: { 
                 id: true,
                 name: true,
+                isOpen: true,
+                isApproved: true,
+                isActive: true,
                 deliveryFee: true, 
                 estimatedDeliveryTime: true,
                 user: {
@@ -109,6 +112,18 @@ export async function GET(request: NextRequest) {
               }
             });
             
+            // If restaurant is missing or not active/approved, skip creating order
+            if (!restaurant || !restaurant.isApproved || !restaurant.isActive) {
+              console.warn(`Skipping order creation: restaurant ${orderData.restaurantId} not active/approved`);
+              return null;
+            }
+
+            // If restaurant is closed, skip order creation for this restaurant
+            if (!restaurant.isOpen) {
+              console.warn(`Skipping order creation: restaurant ${orderData.restaurantId} is closed`);
+              return null;
+            }
+
             const SERVICE_CHARGE = 150;
             const DELIVERY_FEE = 500; // Use fixed delivery fee to match /api/orders
             const total = subtotal + SERVICE_CHARGE + DELIVERY_FEE;
@@ -160,7 +175,7 @@ export async function GET(request: NextRequest) {
             return { createdOrder, orderData, restaurantName: restaurant?.name || 'Restaurant' };
           });
 
-          const createdOrdersWithData = await Promise.all(orderPromises);
+          const createdOrdersWithData = (await Promise.all(orderPromises)).filter(Boolean) as Array<any>;
           const createdOrders = createdOrdersWithData.map(item => item.createdOrder);
           
           console.log(`✅ Created ${createdOrders.length} order(s) for payment ${reference}`);

@@ -188,6 +188,10 @@ export default function RestaurantPage() {
 
   const addToCart = (item: MenuItem) => {
     if (!restaurant) return;
+    if (!restaurant.isOpen) {
+      // Prevent adding items to cart when restaurant is closed
+      return;
+    }
 
     const existingItem = cart.find(cartItem => 
       cartItem.restaurantId === restaurant._id && cartItem.itemId === item._id
@@ -477,9 +481,9 @@ export default function RestaurantPage() {
                         </div>
                         <button
                           onClick={() => addToCart(item)}
-                          disabled={!item.isAvailable}
+                          disabled={!item.isAvailable || !restaurant.isOpen}
                           className={`p-2 rounded-lg transition-colors ${
-                            item.isAvailable
+                            item.isAvailable && restaurant.isOpen
                               ? 'bg-brand-primary text-white hover:bg-brand-accent'
                               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           }`}
@@ -577,13 +581,23 @@ export default function RestaurantPage() {
                       <span className="font-semibold">Total:</span>
                       <span className="font-semibold text-lg">₦{getCartTotal()}</span>
                     </div>
-                    <Link
-                      href="/dashboard/student/checkout"
-                      className="w-full btn-primary text-center"
-                      onClick={() => setShowCart(false)}
-                    >
-                      Proceed to Checkout
-                    </Link>
+                    {restaurant.isOpen ? (
+                      <Link
+                        href="/dashboard/student/checkout"
+                        className="w-full btn-primary text-center"
+                        onClick={() => setShowCart(false)}
+                      >
+                        Proceed to Checkout
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled
+                        className="w-full btn-primary text-center cursor-not-allowed opacity-60"
+                      >
+                        Restaurant is closed
+                      </button>
+                    )}
                   </div>
                 )}
               </motion.div>
