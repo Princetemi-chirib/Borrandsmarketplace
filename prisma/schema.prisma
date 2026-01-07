@@ -314,6 +314,7 @@ enum VehicleType {
   MOTORCYCLE
   BICYCLE
   CAR
+  WALKING
 }
 
 enum OrderStatus {

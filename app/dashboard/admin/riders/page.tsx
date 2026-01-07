@@ -162,14 +162,12 @@ export default function AdminRiders() {
   };
 
   const getStatusColor = (rider: Rider) => {
-    if (!rider.isActive) return 'text-red-600 bg-red-100';
     if (rider.isOnline && rider.isAvailable) return 'text-green-600 bg-green-100';
     if (rider.isOnline) return 'text-blue-600 bg-blue-100';
     return 'text-gray-600 bg-gray-100';
   };
 
   const getStatusText = (rider: Rider) => {
-    if (!rider.isActive) return 'Inactive';
     if (rider.isOnline && rider.isAvailable) return 'Online & Available';
     if (rider.isOnline) return 'Online';
     return 'Offline';
@@ -572,6 +570,7 @@ export default function AdminRiders() {
                           <option value="MOTORCYCLE">Motorcycle</option>
                           <option value="BICYCLE">Bicycle</option>
                           <option value="CAR">Car</option>
+                          <option value="WALKING">Walking</option>
                         </select>
                       </div>
                       <div>

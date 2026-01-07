@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       currentAddress
     } = body;
 
-    // Validate required fields
+    // Validate required fields (license number is optional)
     if (!name || !email || !phone || !password || !university || !vehicleType || !vehicleNumber) {
       return NextResponse.json(
         { success: false, message: 'Name, email, phone, password, university, vehicleType, and vehicleNumber are required' },
