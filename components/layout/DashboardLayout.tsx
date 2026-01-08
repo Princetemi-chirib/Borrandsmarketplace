@@ -147,7 +147,7 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile sidebar overlay */}
       <AnimatePresence>
         {sidebarOpen && (
@@ -163,17 +163,17 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
 
       {/* Sidebar */}
       <motion.div 
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         initial={false}
       >
         {/* Logo Section - Optimized for mobile */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 bg-white">
+        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <Logo size="sm" />
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-colors"
+            className="lg:hidden p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -193,12 +193,12 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
                   className={`group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                     isActive
                       ? 'bg-brand-primary text-white shadow-sm'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
                   }`}
                   onClick={() => setSidebarOpen(false)}
                 >
                   <Icon className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                    isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'
+                    isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'
                   }`} />
                   <span className="truncate">{item.name}</span>
                 </Link>
@@ -208,7 +208,7 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
         </nav>
 
         {/* User section - Fixed positioning and better mobile design */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-10 h-10 bg-brand-primary rounded-full flex items-center justify-center">
@@ -216,10 +216,10 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
               </div>
             </div>
             <div className="ml-3 flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
+              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                 {userName}
               </p>
-              <p className="text-xs text-gray-500 capitalize">
+              <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
                 {userRole}
               </p>
             </div>
@@ -237,12 +237,12 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
       {/* Main content */}
       <div className="lg:pl-72">
         {/* Top navigation - Optimized for mobile */}
-        <div className="sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200">
+        <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-colors"
+                className="lg:hidden p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <Menu className="h-6 w-6" />
               </button>
@@ -270,10 +270,10 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
                       initial={{ opacity: 0, y: -10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+                      className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
                     >
-                      <div className="p-4 border-b border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+                      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Notifications</h3>
                       </div>
                       <div className="max-h-96 overflow-y-auto">
                         {notifications > 0 ? (
@@ -282,25 +282,25 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
                               <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
                                 <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                                 <div className="flex-1">
-                                  <p className="text-sm font-medium text-gray-900">Order Update</p>
-                                  <p className="text-xs text-gray-600">Your order #ORD-123 has been picked up</p>
-                                  <p className="text-xs text-gray-500 mt-1">2 minutes ago</p>
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white">Order Update</p>
+                                  <p className="text-xs text-gray-600 dark:text-gray-400">Your order #ORD-123 has been picked up</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">2 minutes ago</p>
                                 </div>
                               </div>
                               <div className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg">
                                 <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
                                 <div className="flex-1">
-                                  <p className="text-sm font-medium text-gray-900">Delivery Complete</p>
-                                  <p className="text-xs text-gray-600">Your order has been delivered successfully</p>
-                                  <p className="text-xs text-gray-500 mt-1">1 hour ago</p>
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white">Delivery Complete</p>
+                                  <p className="text-xs text-gray-600 dark:text-gray-400">Your order has been delivered successfully</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">1 hour ago</p>
                                 </div>
                               </div>
                             </div>
                           </div>
                         ) : (
                           <div className="p-8 text-center">
-                            <Bell className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                            <p className="text-gray-500">No notifications yet</p>
+                            <Bell className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                            <p className="text-gray-500 dark:text-gray-400">No notifications yet</p>
                           </div>
                         )}
                       </div>
@@ -320,7 +320,7 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
               <div className="relative user-menu-dropdown">
                 <button 
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center space-x-2 text-sm text-gray-700 hover:text-gray-900 p-2 rounded-md hover:bg-gray-100 transition-colors"
+                  className="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   <div className="w-8 h-8 bg-brand-primary rounded-full flex items-center justify-center">
                     <User className="h-4 w-4 text-white" />
@@ -335,16 +335,16 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
                       initial={{ opacity: 0, y: -10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+                      className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
                     >
-                      <div className="p-4 border-b border-gray-200">
-                        <p className="text-sm font-medium text-gray-900">{userName}</p>
-                        <p className="text-xs text-gray-500 capitalize">{userRole}</p>
+                      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{userName}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{userRole}</p>
                       </div>
                       <div className="py-2">
                         <Link
                           href={`/dashboard/${userRole}/profile`}
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                           onClick={() => setShowUserMenu(false)}
                         >
                           <User className="h-4 w-4 mr-3" />
@@ -367,13 +367,13 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
                           Support
                         </Link>
                       </div>
-                      <div className="border-t border-gray-200 py-2">
+                      <div className="border-t border-gray-200 dark:border-gray-700 py-2">
                         <button
                           onClick={() => {
                             handleLogout();
                             setShowUserMenu(false);
                           }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
                         >
                           <LogOut className="h-4 w-4 mr-3" />
                           Sign out

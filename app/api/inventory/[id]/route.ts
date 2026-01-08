@@ -38,6 +38,32 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (result.count === 0) return NextResponse.json({ message: 'Not found' }, { status: 404 });
     
     const item = await prisma.inventoryItem.findUnique({ where: { id: params.id } });
+
+    // Basic menu linkage: auto-toggle related menu items based on inventory status
+    // We link by restaurantId + item name. When stock is 0 => mark menu item unavailable.
+    if (item) {
+      const newStatus = item.status; // InventoryStatus enum: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK'
+      if (newStatus === 'OUT_OF_STOCK') {
+        // Mark matching menu items as unavailable
+        await prisma.menuItem.updateMany({
+          where: {
+            restaurantId: auth.restaurantId,
+            name: item.name
+          },
+          data: { isAvailable: false }
+        });
+      } else if (newStatus === 'IN_STOCK' || newStatus === 'LOW_STOCK') {
+        // Ensure matching menu items are available when stock returns
+        await prisma.menuItem.updateMany({
+          where: {
+            restaurantId: auth.restaurantId,
+            name: item.name
+          },
+          data: { isAvailable: true }
+        });
+      }
+    }
+
     return NextResponse.json({ item });
   } catch (e: any) {
     return NextResponse.json({ message: e.message || 'Failed to update item' }, { status: 400 });

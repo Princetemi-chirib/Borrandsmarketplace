@@ -178,7 +178,7 @@ export default function RegisterPage() {
 
   if (registrationStep === 'otp') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -191,16 +191,16 @@ export default function RegisterPage() {
               </div>
               <button
                 onClick={() => setRegistrationStep('form')}
-                className="inline-flex items-center text-primary-600 hover:text-primary-700 mb-4"
+                className="inline-flex items-center text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 mb-4"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Registration
               </button>
-              <h2 className="text-3xl font-bold text-gray-900">Verify Your Email</h2>
-              <p className="mt-2 text-sm text-gray-600">
-                We've sent a 6-digit code to <strong>{emailForOtp}</strong>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Verify Your Email</h2>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                We've sent a 6-digit code to <strong className="text-gray-900 dark:text-white">{emailForOtp}</strong>
               </p>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 Please check your email inbox (and spam folder) for the verification code
               </p>
             </div>
@@ -249,7 +249,7 @@ export default function RegisterPage() {
                 >
                   {isLoading ? 'Sending...' : 'Resend OTP'}
                 </button>
-                <p className="mt-2 text-xs text-gray-500">
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                   Check your email inbox (and spam folder) if you don't see the code
                 </p>
               </div>
@@ -261,7 +261,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -272,28 +272,28 @@ export default function RegisterPage() {
             <div className="mb-6">
               <Logo size="lg" />
             </div>
-            <Link href="/" className="inline-flex items-center text-primary-600 hover:text-primary-700 mb-4">
+            <Link href="/" className="inline-flex items-center text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 mb-4">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Home
             </Link>
-            <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Create Account</h2>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
               Join Borrands Marketplace and connect with your community
             </p>
           </div>
 
           <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
             {/* Student Registration Notice */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
+                <div className="w-10 h-10 bg-blue-500 dark:bg-blue-600 rounded-lg flex items-center justify-center mr-3">
                   <User className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-sm font-medium text-blue-900">Student Registration</h3>
-                  <p className="text-xs text-blue-700">You are registering as a student to order food and track deliveries</p>
+                  <h3 className="text-sm font-medium text-blue-900 dark:text-blue-200">Student Registration</h3>
+                  <p className="text-xs text-blue-700 dark:text-blue-300">You are registering as a student to order food and track deliveries</p>
                 </div>
-                <CheckCircle className="h-5 w-5 text-blue-500" />
+                <CheckCircle className="h-5 w-5 text-blue-500 dark:text-blue-400" />
               </div>
             </div>
 
@@ -539,13 +539,13 @@ export default function RegisterPage() {
                 />
               </div>
               <div className="ml-3 text-sm">
-                <label htmlFor="agreeToTerms" className="text-gray-700">
+                <label htmlFor="agreeToTerms" className="text-gray-700 dark:text-gray-300">
                   I agree to the{' '}
-                  <Link href="/terms" className="text-primary-600 hover:text-primary-500">
+                  <Link href="/terms" className="text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">
                     Terms and Conditions
                   </Link>{' '}
                   and{' '}
-                  <Link href="/privacy" className="text-primary-600 hover:text-primary-500">
+                  <Link href="/privacy" className="text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">
                     Privacy Policy
                   </Link>
                 </label>
@@ -576,9 +576,9 @@ export default function RegisterPage() {
 
             {/* Login Link */}
             <div className="text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Already have an account?{' '}
-                <Link href="/auth/login" className="text-primary-600 hover:text-primary-500 font-medium">
+                <Link href="/auth/login" className="text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 font-medium">
                   Sign in
                 </Link>
               </p>

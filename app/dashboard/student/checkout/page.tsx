@@ -219,9 +219,9 @@ export default function CheckoutPage() {
     return (
       <DashboardLayout userRole="student" userName={user?.name || 'Student'}>
         <div className="text-center py-12">
-          <AlertCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Your cart is empty</h2>
-          <p className="text-gray-500 mb-6">Add some items to your cart before checkout.</p>
+          <AlertCircle className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Your cart is empty</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">Add some items to your cart before checkout.</p>
           <button
             onClick={() => router.push('/dashboard/student/restaurants')}
             className="btn-primary"
@@ -243,7 +243,7 @@ export default function CheckoutPage() {
         
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Checkout</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Checkout</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -253,9 +253,9 @@ export default function CheckoutPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+              className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700"
             >
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                 <MapPin className="h-5 w-5 mr-2 text-brand-primary" />
                 Delivery Address
               </h2>
@@ -264,7 +264,7 @@ export default function CheckoutPage() {
                 {/* Popular Locations */}
                 {popularLocations.length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Popular Delivery Locations
                     </label>
                     <div className="grid grid-cols-1 gap-2 mb-4">
@@ -276,14 +276,14 @@ export default function CheckoutPage() {
                             setDeliveryAddress(prev => ({ ...prev, address: location.address }));
                             setLocationName(location.name);
                           }}
-                          className="text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-brand-primary transition-colors"
+                          className="text-left p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-brand-primary transition-colors"
                         >
                           <div className="flex items-start justify-between">
                             <div>
-                              <p className="font-medium text-gray-900 text-sm">{location.name}</p>
-                              <p className="text-xs text-gray-500 mt-1">{location.address}</p>
+                              <p className="font-medium text-gray-900 dark:text-white text-sm">{location.name}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{location.address}</p>
                             </div>
-                            <span className="text-xs text-gray-400 ml-2">
+                            <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">
                               {location.useCount} uses
                             </span>
                           </div>
@@ -301,11 +301,11 @@ export default function CheckoutPage() {
                     value={deliveryAddress.address}
                     onChange={(e) => setDeliveryAddress(prev => ({ ...prev, address: e.target.value }))}
                     placeholder="Enter your full delivery address (e.g., Student Hall A, Room 101)"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent resize-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent resize-none text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
                     rows={3}
                     required
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     💡 Your address will be saved and suggested to other students after 5 uses
                   </p>
                 </div>
@@ -318,7 +318,7 @@ export default function CheckoutPage() {
                     value={deliveryAddress.instructions}
                     onChange={(e) => setDeliveryAddress(prev => ({ ...prev, instructions: e.target.value }))}
                     placeholder="Any special instructions for delivery (optional)"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent resize-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent resize-none text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
                     rows={2}
                   />
                 </div>
@@ -344,13 +344,13 @@ export default function CheckoutPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+              className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700"
             >
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Payment Method</h2>
               
-              <div className="flex items-center p-4 border border-gray-200 rounded-lg bg-gray-50">
-                <CreditCard className="h-5 w-5 text-gray-400 mr-3" />
-                <span className="text-sm font-medium text-gray-900">Paystack Checkout</span>
+              <div className="flex items-center p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700">
+                <CreditCard className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
+                <span className="text-sm font-medium text-gray-900 dark:text-white">Paystack Checkout</span>
               </div>
             </motion.div>
 
@@ -359,7 +359,7 @@ export default function CheckoutPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+              className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700"
             >
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h2>
               
@@ -374,16 +374,16 @@ export default function CheckoutPage() {
                   acc[item.restaurantId].items.push(item);
                   return acc;
                 }, {} as Record<string, any>)).map(([restaurantId, restaurantData]: [string, any]) => (
-                  <div key={restaurantId} className="border-b border-gray-200 pb-4 last:border-b-0">
-                    <h3 className="font-medium text-gray-900 mb-3">{restaurantData.restaurantName}</h3>
+                  <div key={restaurantId} className="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-b-0">
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-3">{restaurantData.restaurantName}</h3>
                     <div className="space-y-2">
                       {restaurantData.items.map((item: CartItem) => (
                         <div key={item.itemId} className="flex items-center justify-between text-sm">
                           <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-gray-200 rounded"></div>
+                            <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
                             <div>
-                              <p className="font-medium">{item.name}</p>
-                              <p className="text-gray-500">Qty: {item.quantity}</p>
+                              <p className="font-medium dark:text-white">{item.name}</p>
+                              <p className="text-gray-500 dark:text-gray-400">Qty: {item.quantity}</p>
                             </div>
                           </div>
                           <span className="font-medium">₦{(item.price * item.quantity).toLocaleString()}</span>
@@ -403,24 +403,24 @@ export default function CheckoutPage() {
             transition={{ delay: 0.3 }}
             className="lg:col-span-1"
           >
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 sticky top-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 sticky top-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Order Summary</h2>
               
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">₦{getCartTotal().toLocaleString()}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
+                  <span className="font-medium dark:text-white">₦{getCartTotal().toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Service Charge</span>
-                  <span className="font-medium">₦{getServiceCharge().toLocaleString()}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Service Charge</span>
+                  <span className="font-medium dark:text-white">₦{getServiceCharge().toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Delivery Fee</span>
-                  <span className="font-medium">₦{getDeliveryFee().toLocaleString()}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Delivery Fee</span>
+                  <span className="font-medium dark:text-white">₦{getDeliveryFee().toLocaleString()}</span>
                 </div>
-                <div className="border-t border-gray-200 pt-3">
-                  <div className="flex justify-between text-lg font-semibold">
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+                  <div className="flex justify-between text-lg font-semibold dark:text-white">
                     <span>Total</span>
                     <span>₦{getTotal().toLocaleString()}</span>
                   </div>
@@ -428,8 +428,8 @@ export default function CheckoutPage() {
               </div>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600">{error}</p>
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                 </div>
               )}
 
@@ -451,7 +451,7 @@ export default function CheckoutPage() {
                 )}
               </button>
 
-              <div className="mt-4 text-xs text-gray-500 text-center">
+              <div className="mt-4 text-xs text-gray-500 dark:text-gray-400 text-center">
                 <p>Estimated delivery time: 30-45 minutes</p>
                 <p className="mt-1">You'll receive updates via WhatsApp</p>
               </div>

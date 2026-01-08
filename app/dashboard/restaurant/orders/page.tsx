@@ -245,8 +245,8 @@ export default function RestaurantOrders() {
           <div className="flex items-center space-x-3">
             <BackArrow href="/dashboard/restaurant" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-              <p className="text-gray-600">Manage incoming orders and track delivery status</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Orders</h1>
+              <p className="text-gray-600 dark:text-gray-400">Manage incoming orders and track delivery status</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -263,14 +263,14 @@ export default function RestaurantOrders() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3"
+            className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3"
           >
-            <svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
             <div>
-              <h3 className="text-sm font-medium text-red-800">Error Loading Orders</h3>
-              <p className="text-sm text-red-700 mt-1">{error}</p>
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Error Loading Orders</h3>
+              <p className="text-sm text-red-700 dark:text-red-300 mt-1">{error}</p>
             </div>
           </motion.div>
         )}
@@ -304,9 +304,9 @@ export default function RestaurantOrders() {
                 placeholder="Search orders..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent w-64"
+                className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent w-64 text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
               />
-              <Eye className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Eye className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
             </div>
           </div>
         </motion.div>
@@ -324,23 +324,23 @@ export default function RestaurantOrders() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
             >
               {/* Order Header */}
-              <div className="p-6 border-b border-gray-100">
+              <div className="p-6 border-b border-gray-100 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className={`p-2 rounded-lg ${getStatusColor(order.status)}`}>
                       {getStatusIcon(order.status)}
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Order #{order.orderNumber}</h3>
-                      <p className="text-sm text-gray-600">Placed at {new Date(order.createdAt).toLocaleTimeString()}</p>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Order #{order.orderNumber}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Placed at {new Date(order.createdAt).toLocaleTimeString()}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-gray-900">{fmt(order.total)}</div>
-                    <div className="text-sm text-gray-600">Est. delivery: {order.estimatedDeliveryTime} min</div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">{fmt(order.total)}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Est. delivery: {order.estimatedDeliveryTime} min</div>
                   </div>
                 </div>
               </div>
@@ -351,19 +351,19 @@ export default function RestaurantOrders() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-2">
-                      <User className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm font-medium text-gray-900">{order.customerName || 'Customer'}</span>
+                      <User className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">{order.customerName || 'Customer'}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Phone className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">{order.customerPhone || ''}</span>
+                      <Phone className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm text-gray-600 dark:text-gray-400">{order.customerPhone || ''}</span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
                       <Phone className="h-4 w-4" />
                     </button>
-                    <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
                       <MessageCircle className="h-4 w-4" />
                     </button>
                   </div>
@@ -374,18 +374,18 @@ export default function RestaurantOrders() {
                   {order.items.map((item:any, itemIndex:number) => (
                     <div key={itemIndex} className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <span className="text-sm text-gray-600">×{item.quantity}</span>
-                        <span className="text-gray-900">{item.name}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">×{item.quantity}</span>
+                        <span className="text-gray-900 dark:text-white">{item.name}</span>
                       </div>
-                      <span className="text-gray-900 font-medium">{fmt(item.price)}</span>
+                      <span className="text-gray-900 dark:text-white font-medium">{fmt(item.price)}</span>
                     </div>
                   ))}
                 </div>
 
                 {/* Special Instructions */}
                 {order.specialInstructions && (
-                  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-sm text-yellow-800">
+                  <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
                       <strong>Special Instructions:</strong> {order.specialInstructions}
                     </p>
                   </div>
@@ -393,7 +393,7 @@ export default function RestaurantOrders() {
 
                 {/* Delivery Address */}
                 <div className="mb-4">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                     <MapPin className="h-4 w-4" />
                     <span>{order.deliveryAddress}</span>
                   </div>
@@ -401,25 +401,25 @@ export default function RestaurantOrders() {
 
                 {/* Review (for delivered orders) */}
                 {order.status === 'delivered' && order.rating && (
-                  <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div className="flex items-center space-x-2 mb-2">
                       <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className="text-sm font-medium text-gray-900">{order.rating}/5 stars</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">{order.rating}/5 stars</span>
                     </div>
-                    <p className="text-sm text-gray-600">{order.review}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{order.review}</p>
                   </div>
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
                   <div className="flex space-x-2">
-                    <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Eye className="h-4 w-4 text-gray-600" />
-                      <span className="text-sm text-gray-700">View Details</span>
+                    <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <Eye className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">View Details</span>
                     </button>
-                    <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                      <MessageCircle className="h-4 w-4 text-gray-600" />
-                      <span className="text-sm text-gray-700">Message Customer</span>
+                    <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <MessageCircle className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Message Customer</span>
                     </button>
                   </div>
                   <div className="flex space-x-2">
@@ -448,11 +448,11 @@ export default function RestaurantOrders() {
               transition={{ delay: 0.3 }}
               className="text-center py-12"
             >
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Package className="h-8 w-8 text-gray-400" />
+              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Package className="h-8 w-8 text-gray-400 dark:text-gray-500" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
-              <p className="text-gray-600">No orders match your current filters</p>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No orders found</h3>
+              <p className="text-gray-600 dark:text-gray-400">No orders match your current filters</p>
             </motion.div>
           )}
         </motion.div>

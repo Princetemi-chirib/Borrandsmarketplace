@@ -277,8 +277,8 @@ export default function RestaurantPage() {
     return (
       <DashboardLayout userRole="student" userName={user?.name || 'Student'}>
         <div className="text-center py-12">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Restaurant not found</h2>
-          <p className="text-gray-500 mb-4">The restaurant you're looking for doesn't exist.</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Restaurant not found</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">The restaurant you're looking for doesn't exist.</p>
           <Link href="/dashboard/student/restaurants" className="btn-primary">
             Back to Restaurants
           </Link>
@@ -299,8 +299,8 @@ export default function RestaurantPage() {
         
 
         {/* Restaurant Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="relative h-64 bg-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="relative h-64 bg-gray-200 dark:bg-gray-700">
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute top-4 right-4">
               <button
@@ -327,38 +327,38 @@ export default function RestaurantPage() {
                   <div className="flex items-center space-x-2">
                     <Star className="h-5 w-5 text-yellow-500 fill-current" />
                     <span className="font-semibold">{restaurant.rating}</span>
-                    <span className="text-gray-500">({restaurant.reviewCount} reviews)</span>
+                    <span className="text-gray-500 dark:text-gray-400">({restaurant.reviewCount} reviews)</span>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                     restaurant.isOpen 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' 
+                      : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                   }`}>
                     {restaurant.isOpen ? 'Open Now' : 'Closed'}
                   </span>
                 </div>
 
-                <p className="text-gray-600 mb-4">{restaurant.description}</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">{restaurant.description}</p>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">{restaurant.distance}km away</span>
+                    <MapPin className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{restaurant.distance}km away</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Clock className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">{restaurant.estimatedDeliveryTime}min delivery</span>
+                    <Clock className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{restaurant.estimatedDeliveryTime}min delivery</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Truck className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">₦{restaurant.deliveryFee} delivery</span>
+                    <Truck className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">₦{restaurant.deliveryFee} delivery</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">Min. ₦{restaurant.minimumOrder}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Min. ₦{restaurant.minimumOrder}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
                   <div className="flex items-center space-x-2">
                     <Phone className="h-4 w-4" />
                     <span>{restaurant.phone}</span>
@@ -378,9 +378,9 @@ export default function RestaurantPage() {
         </div>
 
         {/* Menu Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Menu</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Menu</h2>
             
             {/* Search and Filters */}
             <div className="flex flex-col lg:flex-row gap-4">
@@ -392,7 +392,7 @@ export default function RestaurantPage() {
                     placeholder="Search menu items..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
                   />
                 </div>
               </div>
@@ -401,7 +401,7 @@ export default function RestaurantPage() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
                 >
                   {categories.map(category => (
                     <option key={category} value={category}>
@@ -413,7 +413,7 @@ export default function RestaurantPage() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
                 >
                   <option value="name">Sort by Name</option>
                   <option value="price">Sort by Price</option>
@@ -453,8 +453,8 @@ export default function RestaurantPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900 truncate">{item.name}</h3>
-                          <p className="text-sm text-gray-600 line-clamp-2">{item.description}</p>
+                          <h3 className="font-semibold text-gray-900 dark:text-white truncate">{item.name}</h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{item.description}</p>
                         </div>
                         <div className="flex items-center space-x-1 ml-2">
                           {item.isVegetarian && (
@@ -468,8 +468,8 @@ export default function RestaurantPage() {
                       
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center space-x-2">
-                          <span className="font-semibold text-gray-900">₦{item.price}</span>
-                          <span className="text-xs text-gray-500">{item.preparationTime}min</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">₦{item.price}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{item.preparationTime}min</span>
                         </div>
                         <motion.button
                           onClick={() => addToCart(item)}
@@ -486,7 +486,7 @@ export default function RestaurantPage() {
                       </div>
 
                       {!item.isAvailable && (
-                        <p className="text-xs text-red-600 mt-1">Currently unavailable</p>
+                        <p className="text-xs text-red-600 dark:text-red-400 mt-1">Currently unavailable</p>
                       )}
                     </div>
                   </div>
@@ -496,9 +496,9 @@ export default function RestaurantPage() {
 
             {getFilteredMenu().length === 0 && (
               <div className="text-center py-8">
-                <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No menu items found</h3>
-                <p className="text-gray-500">Try adjusting your search or filters.</p>
+                <Search className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No menu items found</h3>
+                <p className="text-gray-500 dark:text-gray-400">Try adjusting your search or filters.</p>
               </div>
             )}
           </div>
@@ -507,9 +507,9 @@ export default function RestaurantPage() {
 
         {/* Always Visible Cart Sidebar */}
         <div className="hidden lg:block w-80 flex-shrink-0">
-          <div className="sticky top-6 bg-white rounded-lg shadow-sm border border-gray-200 h-[calc(100vh-3rem)] flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold">Your Order</h2>
+          <div className="sticky top-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[calc(100vh-3rem)] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold dark:text-white">Your Order</h2>
               {cart.length > 0 && (
                 <span className="h-6 w-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                   {cart.length}
@@ -531,9 +531,9 @@ export default function RestaurantPage() {
                         damping: 30,
                         duration: 0.3
                       }}
-                      className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
+                      className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                     >
-                      <div className="w-12 h-12 bg-gray-200 rounded overflow-hidden">
+                      <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded overflow-hidden">
                         {isValidImageUrl(item.image) ? (
                           <img 
                             src={getImageUrl(item.image)} 
@@ -547,23 +547,23 @@ export default function RestaurantPage() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{item.name}</p>
-                        <p className="text-gray-500 text-xs truncate">{item.restaurantName}</p>
-                        <p className="text-sm font-medium">₦{item.price.toLocaleString()}</p>
+                        <p className="font-medium text-sm truncate dark:text-white">{item.name}</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs truncate">{item.restaurantName}</p>
+                        <p className="text-sm font-medium dark:text-white">₦{item.price.toLocaleString()}</p>
                       </div>
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => updateCartQuantity(item.itemId, item.quantity - 1)}
-                          className="p-1 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+                          className="p-1 bg-gray-200 dark:bg-gray-600 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
                         >
-                          <Minus className="h-3 w-3" />
+                          <Minus className="h-3 w-3 dark:text-white" />
                         </button>
-                        <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+                        <span className="w-8 text-center text-sm font-medium dark:text-white">{item.quantity}</span>
                         <button
                           onClick={() => updateCartQuantity(item.itemId, item.quantity + 1)}
-                          className="p-1 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+                          className="p-1 bg-gray-200 dark:bg-gray-600 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
                         >
-                          <Plus className="h-3 w-3" />
+                          <Plus className="h-3 w-3 dark:text-white" />
                         </button>
                       </div>
                     </motion.div>
@@ -571,18 +571,18 @@ export default function RestaurantPage() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">Your cart is empty</p>
-                  <p className="text-xs text-gray-400 mt-2">Add items to get started</p>
+                  <ShoppingBag className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400">Your cart is empty</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Add items to get started</p>
                 </div>
               )}
             </div>
 
             {cart.length > 0 && (
-              <div className="border-t border-gray-200 p-4">
+              <div className="border-t border-gray-200 dark:border-gray-700 p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="font-semibold">Total:</span>
-                  <span className="font-semibold text-lg">₦{getCartTotal().toLocaleString()}</span>
+                  <span className="font-semibold dark:text-white">Total:</span>
+                  <span className="font-semibold text-lg dark:text-white">₦{getCartTotal().toLocaleString()}</span>
                 </div>
                 {restaurant?.isOpen ? (
                   <Link

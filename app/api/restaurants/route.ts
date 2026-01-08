@@ -120,7 +120,9 @@ export async function POST(request: NextRequest) {
       ownerPhone,
       ownerPassword,
       university,
-      coordinates
+      coordinates,
+      openingTime,
+      closingTime
     } = body;
     
     // Validation
@@ -207,6 +209,19 @@ export async function POST(request: NextRequest) {
       // Create restaurant for existing user
       console.log('Creating restaurant for existing user:', updatedUser.id);
       
+      // Build default operating hours from opening/closing time (same for all days)
+      const openTime = openingTime || '08:00';
+      const closeTime = closingTime || '22:00';
+      const defaultOperatingHours = {
+        monday: { open: openTime, close: closeTime, isOpen: true },
+        tuesday: { open: openTime, close: closeTime, isOpen: true },
+        wednesday: { open: openTime, close: closeTime, isOpen: true },
+        thursday: { open: openTime, close: closeTime, isOpen: true },
+        friday: { open: openTime, close: closeTime, isOpen: true },
+        saturday: { open: openTime, close: closeTime, isOpen: true },
+        sunday: { open: openTime, close: closeTime, isOpen: true },
+      };
+
       try {
         const restaurant = await prisma.restaurant.create({
           data: {
@@ -226,7 +241,7 @@ export async function POST(request: NextRequest) {
             isOpen: false,
             rating: 0,
             reviewCount: 0,
-            operatingHours: JSON.stringify({}),
+            operatingHours: JSON.stringify(defaultOperatingHours),
             features: JSON.stringify([]),
             paymentMethods: JSON.stringify([]),
             stats: JSON.stringify({})
@@ -296,6 +311,19 @@ export async function POST(request: NextRequest) {
     // Create restaurant
     let restaurant;
     try {
+      // Build default operating hours from opening/closing time (same for all days)
+      const openTime = openingTime || '08:00';
+      const closeTime = closingTime || '22:00';
+      const defaultOperatingHours = {
+        monday: { open: openTime, close: closeTime, isOpen: true },
+        tuesday: { open: openTime, close: closeTime, isOpen: true },
+        wednesday: { open: openTime, close: closeTime, isOpen: true },
+        thursday: { open: openTime, close: closeTime, isOpen: true },
+        friday: { open: openTime, close: closeTime, isOpen: true },
+        saturday: { open: openTime, close: closeTime, isOpen: true },
+        sunday: { open: openTime, close: closeTime, isOpen: true },
+      };
+
       restaurant = await prisma.restaurant.create({
         data: {
           userId: owner.id,
@@ -314,7 +342,7 @@ export async function POST(request: NextRequest) {
           isOpen: false,
           rating: 0,
           reviewCount: 0,
-          operatingHours: JSON.stringify({}),
+          operatingHours: JSON.stringify(defaultOperatingHours),
           features: JSON.stringify([]),
           paymentMethods: JSON.stringify([]),
           stats: JSON.stringify({})
