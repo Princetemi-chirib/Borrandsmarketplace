@@ -531,7 +531,7 @@ export default function RestaurantPage() {
                         damping: 30,
                         duration: 0.3
                       }}
-                      className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                      className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
                     >
                       <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded overflow-hidden">
                         {isValidImageUrl(item.image) ? (
@@ -547,9 +547,9 @@ export default function RestaurantPage() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate text-gray-900 dark:text-white">{item.name}</p>
-                        <p className="text-gray-500 dark:text-gray-400 text-xs truncate">{item.restaurantName}</p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">₦{item.price.toLocaleString()}</p>
+                        <p className="font-medium text-sm truncate text-gray-900 dark:text-gray-100">{item.name}</p>
+                        <p className="text-gray-500 dark:text-gray-300 text-xs truncate">{item.restaurantName}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">₦{item.price.toLocaleString()}</p>
                       </div>
                       <div className="flex items-center space-x-2">
                         <button
@@ -581,8 +581,8 @@ export default function RestaurantPage() {
             {cart.length > 0 && (
               <div className="border-t border-gray-200 dark:border-gray-700 p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="font-semibold dark:text-white">Total:</span>
-                  <span className="font-semibold text-lg dark:text-white">₦{getCartTotal().toLocaleString()}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">Total:</span>
+                  <span className="font-semibold text-lg text-gray-900 dark:text-white">₦{getCartTotal().toLocaleString()}</span>
                 </div>
                 {restaurant?.isOpen ? (
                   <Link

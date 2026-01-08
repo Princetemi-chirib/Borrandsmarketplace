@@ -220,8 +220,8 @@ export default function AdminRestaurants() {
       <div className="p-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Restaurant Management</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Restaurant Management</h1>
+          <p className="text-gray-600 dark:text-gray-400">
             Manage restaurant applications and monitor platform restaurants
           </p>
         </div>
@@ -331,7 +331,7 @@ export default function AdminRestaurants() {
                   placeholder="Search restaurants, cuisine, or owner..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
             </div>
@@ -341,7 +341,7 @@ export default function AdminRestaurants() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
               >
                 <option value="all">All Statuses</option>
                 <option value="pending">Pending</option>
@@ -496,13 +496,13 @@ export default function AdminRestaurants() {
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Restaurant Details</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Restaurant Details</h2>
                   <button
                     onClick={() => {
                       setShowDetails(false);
                       setSelectedRestaurant(null);
                     }}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     <X className="w-6 h-6" />
                   </button>

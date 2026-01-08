@@ -243,24 +243,24 @@ export default function AdminOrders() {
       <div className="p-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Order Management</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Order Management</h1>
+          <p className="text-gray-600 dark:text-gray-400">
             Manage orders and assign riders to accepted orders
           </p>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
                 <input
                   type="text"
                   placeholder="Search by order number, restaurant, or student..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
             </div>
@@ -268,7 +268,7 @@ export default function AdminOrders() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
               >
                 <option value="all">All Orders</option>
                 <option value="pending">Pending</option>
@@ -296,10 +296,10 @@ export default function AdminOrders() {
           className="space-y-4"
         >
           {filteredOrders.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-              <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No orders found</h3>
-              <p className="text-gray-600">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+              <Package className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No orders found</h3>
+              <p className="text-gray-600 dark:text-gray-400">
                 {statusFilter === 'accepted' 
                   ? 'No accepted orders awaiting rider assignment'
                   : 'No orders match your filters'}
@@ -313,12 +313,12 @@ export default function AdminOrders() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
                 >
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                           Order #{order.orderNumber}
                         </h3>
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
@@ -326,35 +326,35 @@ export default function AdminOrders() {
                         </span>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
                         <div>
-                          <p className="font-medium text-gray-900 mb-1">Restaurant</p>
+                          <p className="font-medium text-gray-900 dark:text-white mb-1">Restaurant</p>
                           <p className="flex items-center gap-2">
                             <Package className="w-4 h-4" />
                             {order.restaurant.name}
                           </p>
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900 mb-1">Student</p>
+                          <p className="font-medium text-gray-900 dark:text-white mb-1">Student</p>
                           <p className="flex items-center gap-2">
                             <User className="w-4 h-4" />
                             {order.student.name}
                           </p>
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900 mb-1">Delivery Address</p>
+                          <p className="font-medium text-gray-900 dark:text-white mb-1">Delivery Address</p>
                           <p className="flex items-center gap-2">
                             <MapPin className="w-4 h-4" />
                             {order.deliveryAddress}
                           </p>
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900 mb-1">Total</p>
-                          <p className="text-lg font-semibold text-gray-900">₦{order.total.toLocaleString()}</p>
+                          <p className="font-medium text-gray-900 dark:text-white mb-1">Total</p>
+                          <p className="text-lg font-semibold text-gray-900 dark:text-white">₦{order.total.toLocaleString()}</p>
                         </div>
                         {order.rider && (
                           <div>
-                            <p className="font-medium text-gray-900 mb-1">Assigned Rider</p>
+                            <p className="font-medium text-gray-900 dark:text-white mb-1">Assigned Rider</p>
                             <p className="flex items-center gap-2">
                               <Truck className="w-4 h-4" />
                               {order.rider.name}
@@ -362,7 +362,7 @@ export default function AdminOrders() {
                           </div>
                         )}
                         <div>
-                          <p className="font-medium text-gray-900 mb-1">Created</p>
+                          <p className="font-medium text-gray-900 dark:text-white mb-1">Created</p>
                           <p className="flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
                             {formatDate(order.createdAt)}
@@ -385,7 +385,7 @@ export default function AdminOrders() {
                         </button>
                       )}
                       {order.rider && order.rider.id && (
-                        <div className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
+                        <div className="px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg text-sm font-medium">
                           Rider: {order.rider.name}
                         </div>
                       )}
@@ -403,38 +403,38 @@ export default function AdminOrders() {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-2xl shadow-xl max-w-md w-full"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full"
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Assign Rider</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Assign Rider</h2>
                   <button
                     onClick={() => {
                       setShowAssignModal(false);
                       setSelectedOrder(null);
                       setSelectedRiderId('');
                     }}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     <X className="w-6 h-6" />
                   </button>
                 </div>
 
                 <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-2">Order: <span className="font-semibold text-gray-900">#{selectedOrder.orderNumber}</span></p>
-                  <p className="text-sm text-gray-600">Restaurant: <span className="font-semibold text-gray-900">{selectedOrder.restaurant.name}</span></p>
-                  <p className="text-sm text-gray-600">Customer: <span className="font-semibold text-gray-900">{selectedOrder.student.name}</span></p>
-                  <p className="text-sm text-gray-600">Delivery: <span className="font-semibold text-gray-900">{selectedOrder.deliveryAddress}</span></p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Order: <span className="font-semibold text-gray-900 dark:text-white">#{selectedOrder.orderNumber}</span></p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Restaurant: <span className="font-semibold text-gray-900 dark:text-white">{selectedOrder.restaurant.name}</span></p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Customer: <span className="font-semibold text-gray-900 dark:text-white">{selectedOrder.student.name}</span></p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Delivery: <span className="font-semibold text-gray-900 dark:text-white">{selectedOrder.deliveryAddress}</span></p>
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Select Rider
                   </label>
                   <select
                     value={selectedRiderId}
                     onChange={(e) => setSelectedRiderId(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
                   >
                     <option value="">-- Select a rider --</option>
                     {riders.filter(r => r.isAvailable).map(rider => (
@@ -444,7 +444,7 @@ export default function AdminOrders() {
                     ))}
                   </select>
                   {riders.filter(r => r.isAvailable).length === 0 && (
-                    <p className="text-sm text-red-600 mt-2">No available riders</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-2">No available riders</p>
                   )}
                 </div>
 
@@ -455,7 +455,7 @@ export default function AdminOrders() {
                       setSelectedOrder(null);
                       setSelectedRiderId('');
                     }}
-                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     Cancel
                   </button>

@@ -158,7 +158,7 @@ export default function AdminUsers() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">User Management</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">User Management</h1>
             <p className="text-gray-600 mt-1">Manage all platform users</p>
           </div>
           <button
@@ -248,14 +248,14 @@ export default function AdminUsers() {
                 placeholder="Search by name, email, or phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
               />
             </div>
 
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
             >
               <option value="all">All Roles</option>
               <option value="student">Students</option>
@@ -267,7 +267,7 @@ export default function AdminUsers() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -286,7 +286,7 @@ export default function AdminUsers() {
           ) : filteredUsers.length === 0 ? (
             <div className="p-12 text-center">
               <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600">No users found</p>
+              <p className="text-gray-600 dark:text-gray-400">No users found</p>
             </div>
           ) : (
             <div className="overflow-x-auto">

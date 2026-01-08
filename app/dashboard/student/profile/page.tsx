@@ -272,9 +272,9 @@ export default function Profile() {
           </button>
         </div>
         <div>
-          <h3 className="text-xl font-semibold text-gray-900">{profile.firstName} {profile.lastName}</h3>
-          <p className="text-gray-600">{profile.studentId || 'No student ID'}</p>
-          <p className="text-sm text-gray-500">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{profile.firstName} {profile.lastName}</h3>
+          <p className="text-gray-600 dark:text-gray-400">{profile.studentId || 'No student ID'}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {profile.department || 'No department'} {profile.department && profile.level ? '•' : ''} {profile.level || ''}
           </p>
         </div>
@@ -283,7 +283,7 @@ export default function Profile() {
       {/* Personal Information Form */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">First Name</label>
           <input
             type="text"
             value={profile.firstName}
@@ -293,7 +293,7 @@ export default function Profile() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Last Name</label>
           <input
             type="text"
             value={profile.lastName}
@@ -303,7 +303,7 @@ export default function Profile() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
           <input
             type="email"
             value={profile.email}
@@ -312,7 +312,7 @@ export default function Profile() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
           <input
             type="tel"
             value={profile.phone}
@@ -322,7 +322,7 @@ export default function Profile() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Student ID</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Student ID</label>
           <input
             type="text"
             value={profile.studentId}
@@ -331,7 +331,7 @@ export default function Profile() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Department</label>
           <input
             type="text"
             value={profile.department}
@@ -341,7 +341,7 @@ export default function Profile() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Level</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Level</label>
           <input
             type="text"
             value={profile.level}
@@ -351,7 +351,7 @@ export default function Profile() {
           />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address</label>
           <input
             type="text"
             value={profile.address}
@@ -369,15 +369,15 @@ export default function Profile() {
     <div className="space-y-6">
       {/* Notifications */}
       <div>
-        <h4 className="text-lg font-medium text-gray-900 mb-4">Notification Preferences</h4>
+        <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Notification Preferences</h4>
         <div className="space-y-3">
           {Object.entries(preferences.notifications).map(([key, value]) => (
             <div key={key} className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
                   {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                 </p>
-                <p className="text-xs text-gray-500">Receive notifications for {key.toLowerCase()}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Receive notifications for {key.toLowerCase()}</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -402,7 +402,7 @@ export default function Profile() {
 
       {/* Dietary Restrictions */}
       <div>
-        <h4 className="text-lg font-medium text-gray-900 mb-4">Dietary Restrictions</h4>
+        <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Dietary Restrictions</h4>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {['Vegetarian', 'Vegan', 'Halal', 'Kosher', 'Gluten-Free', 'Dairy-Free'].map((restriction) => (
             <label key={restriction} className="flex items-center space-x-2">
@@ -425,7 +425,7 @@ export default function Profile() {
                 disabled={!isEditing}
                 className="rounded border-gray-300 text-brand-primary focus:ring-brand-primary disabled:opacity-50"
               />
-              <span className="text-sm text-gray-700">{restriction}</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">{restriction}</span>
             </label>
           ))}
         </div>
@@ -433,7 +433,7 @@ export default function Profile() {
 
       {/* Favorite Cuisines */}
       <div>
-        <h4 className="text-lg font-medium text-gray-900 mb-4">Favorite Cuisines</h4>
+        <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Favorite Cuisines</h4>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {['Nigerian', 'Italian', 'Asian', 'American', 'African', 'Mexican', 'Indian', 'Mediterranean'].map((cuisine) => (
             <label key={cuisine} className="flex items-center space-x-2">
@@ -456,7 +456,7 @@ export default function Profile() {
                 disabled={!isEditing}
                 className="rounded border-gray-300 text-brand-primary focus:ring-brand-primary disabled:opacity-50"
               />
-              <span className="text-sm text-gray-700">{cuisine}</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">{cuisine}</span>
             </label>
           ))}
         </div>
@@ -467,18 +467,18 @@ export default function Profile() {
   const renderSecurity = () => (
     <div className="space-y-6">
       <div>
-        <h4 className="text-lg font-medium text-gray-900 mb-4">Password</h4>
+        <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Password</h4>
         <button className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-accent transition-colors">
           Change Password
         </button>
       </div>
       
       <div>
-        <h4 className="text-lg font-medium text-gray-900 mb-4">Two-Factor Authentication</h4>
+        <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Two-Factor Authentication</h4>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-900">SMS Authentication</p>
-            <p className="text-xs text-gray-500">Receive codes via SMS</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">SMS Authentication</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Receive codes via SMS</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" className="sr-only peer" disabled />
@@ -492,9 +492,9 @@ export default function Profile() {
   const renderPayment = () => (
     <div className="space-y-6">
       <div>
-        <h4 className="text-lg font-medium text-gray-900 mb-4">Payment Methods</h4>
+        <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Payment Methods</h4>
         <div className="space-y-3">
-          <div className="p-4 border border-gray-200 rounded-lg text-center text-gray-500">
+          <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg text-center text-gray-500 dark:text-gray-400">
             <CreditCard className="h-8 w-8 mx-auto mb-2 text-gray-400" />
             <p className="text-sm">No payment methods saved</p>
             <p className="text-xs text-gray-400 mt-1">Payment methods are managed during checkout</p>
@@ -509,7 +509,7 @@ export default function Profile() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="spinner mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading profile...</p>
+          <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
         </div>
       </div>
     );
@@ -518,7 +518,7 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Back Arrow */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-start">
             <BackArrow href="/dashboard/student" />
@@ -527,12 +527,12 @@ export default function Profile() {
       </div>
       
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
-              <p className="text-gray-600 mt-1">Manage your account settings and preferences</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profile</h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your account settings and preferences</p>
             </div>
             <div className="flex items-center space-x-3">
               {isEditing ? (
@@ -588,7 +588,7 @@ export default function Profile() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <nav className="space-y-2">
                 {tabs.map((tab) => (
                   <button
@@ -597,7 +597,7 @@ export default function Profile() {
                     className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       activeTab === tab.id
                         ? 'bg-brand-primary text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }`}
                   >
                     <tab.icon className="h-4 w-4" />
@@ -620,7 +620,7 @@ export default function Profile() {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               {activeTab === 'personal' && renderPersonalInfo()}
               {activeTab === 'preferences' && renderPreferences()}
               {activeTab === 'security' && renderSecurity()}

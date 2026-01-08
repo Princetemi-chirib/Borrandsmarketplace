@@ -221,13 +221,13 @@ export default function FavoritesPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">My Favorites</h1>
-            <p className="text-gray-600">Your saved restaurants and quick access to order</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Favorites</h1>
+            <p className="text-gray-600 dark:text-gray-400">Your saved restaurants and quick access to order</p>
           </div>
           <div className="flex items-center space-x-3">
             <button
               onClick={() => setShowCart(true)}
-              className="relative p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+              className="relative p-2 text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
               <ShoppingBag className="h-6 w-6" />
               {cart.length > 0 && (
@@ -240,18 +240,18 @@ export default function FavoritesPage() {
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search */}
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
                 <input
                   type="text"
                   placeholder="Search favorites..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
             </div>
@@ -261,7 +261,7 @@ export default function FavoritesPage() {
               <select
                 value={selectedCuisine}
                 onChange={(e) => setSelectedCuisine(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
               >
                 {cuisines.map(cuisine => (
                   <option key={cuisine} value={cuisine}>
@@ -276,7 +276,7 @@ export default function FavoritesPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
               >
                 <option value="name">Sort by Name</option>
                 <option value="rating">Sort by Rating</option>
@@ -296,10 +296,10 @@ export default function FavoritesPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
               >
                 {/* Restaurant Image */}
-                <div className="relative h-48 bg-gray-200">
+                <div className="relative h-48 bg-gray-200 dark:bg-gray-700">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <div className="absolute top-3 right-3">
                     <button
@@ -320,21 +320,21 @@ export default function FavoritesPage() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
                       <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                      <span className="text-sm font-medium">{restaurant.rating}</span>
-                      <span className="text-sm text-gray-500">({restaurant.reviewCount})</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">{restaurant.rating}</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">({restaurant.reviewCount})</span>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       restaurant.isOpen 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' 
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                     }`}>
                       {restaurant.isOpen ? 'Open' : 'Closed'}
                     </span>
                   </div>
 
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">{restaurant.description}</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">{restaurant.description}</p>
 
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
+                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3">
                     <div className="flex items-center space-x-4">
                       <span className="flex items-center">
                         <MapPin className="h-3 w-3 mr-1" />
@@ -350,14 +350,14 @@ export default function FavoritesPage() {
 
                   {/* Featured Items */}
                   <div className="space-y-2 mb-4">
-                    <h4 className="text-sm font-medium text-gray-900">Featured Items</h4>
+                    <h4 className="text-sm font-medium text-gray-900 dark:text-white">Featured Items</h4>
                     {restaurant.featuredItems.slice(0, 2).map((item, itemIndex) => (
-                      <div key={itemIndex} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                      <div key={itemIndex} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
                         <div className="flex items-center space-x-2">
-                          <div className="w-8 h-8 bg-gray-200 rounded"></div>
+                          <div className="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
                           <div>
-                            <p className="text-sm font-medium">{item.name}</p>
-                            <p className="text-xs text-gray-500">₦{item.price}</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">{item.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">₦{item.price}</p>
                           </div>
                         </div>
                         <button
@@ -392,11 +392,11 @@ export default function FavoritesPage() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <Heart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <Heart className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               {searchTerm || selectedCuisine !== 'all' ? 'No favorites found' : 'No favorites yet'}
             </h3>
-            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+            <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
               {searchTerm || selectedCuisine !== 'all' 
                 ? 'Try adjusting your search or filters to find your favorites.'
                 : 'Start exploring restaurants and add them to your favorites for quick access!'

@@ -359,18 +359,18 @@ export default function MenuManagementPage() {
 		<div className="min-h-screen bg-gray-50">
 			<div className="max-w-4xl mx-auto px-4 py-4 sm:py-6">
 				{/* Tabs */}
-				<div className="mb-4 border-b border-gray-200">
+				<div className="mb-4 border-b border-gray-200 dark:border-gray-700">
 					<nav className="flex space-x-4">
-						<button onClick={() => setActiveTab('items')} className={`px-3 py-2 text-sm font-medium rounded-t ${activeTab==='items'?'bg-white border border-b-0 border-gray-200 text-gray-900':'text-gray-600 hover:text-gray-900'}`}>Items</button>
-						<button onClick={() => setActiveTab('categories')} className={`px-3 py-2 text-sm font-medium rounded-t ${activeTab==='categories'?'bg-white border border-b-0 border-gray-200 text-gray-900':'text-gray-600 hover:text-gray-900'}`}>Categories</button>
-						<button onClick={() => setActiveTab('packs')} className={`px-3 py-2 text-sm font-medium rounded-t ${activeTab==='packs'?'bg-white border border-b-0 border-gray-200 text-gray-900':'text-gray-600 hover:text-gray-900'}`}>Packs</button>
+						<button onClick={() => setActiveTab('items')} className={`px-3 py-2 text-sm font-medium rounded-t ${activeTab==='items'?'bg-white dark:bg-gray-800 border border-b-0 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white':'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}>Items</button>
+						<button onClick={() => setActiveTab('categories')} className={`px-3 py-2 text-sm font-medium rounded-t ${activeTab==='categories'?'bg-white dark:bg-gray-800 border border-b-0 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white':'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}>Categories</button>
+						<button onClick={() => setActiveTab('packs')} className={`px-3 py-2 text-sm font-medium rounded-t ${activeTab==='packs'?'bg-white dark:bg-gray-800 border border-b-0 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white':'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}>Packs</button>
 					</nav>
 				</div>
 				<div className="flex items-center gap-3 mb-4 sm:mb-6">
-					<button onClick={() => router.back()} className="p-2 rounded-md bg-white border border-gray-200 hover:bg-gray-50">
-						<ArrowLeft className="h-5 w-5 text-gray-700" />
+					<button onClick={() => router.back()} className="p-2 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+						<ArrowLeft className="h-5 w-5 text-gray-700 dark:text-gray-300" />
 					</button>
-					<h1 className="text-lg sm:text-2xl font-bold text-gray-900">Menu Management</h1>
+					<h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">Menu Management</h1>
 					<div className="ml-auto">
 						<Link href="/dashboard/restaurant" className="text-sm text-brand-primary hover:text-brand-accent">Dashboard</Link>
 					</div>
@@ -378,13 +378,13 @@ export default function MenuManagementPage() {
 
 				{/* Error Banner */}
 				{error && (
-					<div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-						<svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+					<div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
+						<svg className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
 							<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
 						</svg>
 						<div>
-							<h3 className="text-sm font-medium text-red-800">Error Loading Menu</h3>
-							<p className="text-sm text-red-700 mt-1">{error}</p>
+							<h3 className="text-sm font-medium text-red-800 dark:text-red-200">Error Loading Menu</h3>
+							<p className="text-sm text-red-700 dark:text-red-300 mt-1">{error}</p>
 						</div>
 					</div>
 				)}
@@ -392,9 +392,9 @@ export default function MenuManagementPage() {
 			{/* Items Tab: Editor Card - Mobile-first stacked layout */}
 			{activeTab==='items' && (
 			<>
-			<div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 mb-5">
+			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5 mb-5">
 				<div className="flex items-center justify-between mb-3">
-					<h2 className="text-base sm:text-lg font-semibold text-gray-900">{editIndex === null ? 'Add New Item' : 'Edit Item'}</h2>
+					<h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">{editIndex === null ? 'Add New Item' : 'Edit Item'}</h2>
 					{!isEditing && (
 						<button onClick={startCreate} className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm">
 							<Plus className="h-4 w-4" /> New
@@ -404,12 +404,12 @@ export default function MenuManagementPage() {
 
 				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-						<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900 placeholder-gray-400" placeholder="e.g., Suya Wrap" />
+						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+						<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500" placeholder="e.g., Suya Wrap" />
 					</div>
 					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-						<select value={form.categoryId || ''} onChange={(e) => setForm({ ...form, categoryId: e.target.value || undefined })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900">
+						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+						<select value={form.categoryId || ''} onChange={(e) => setForm({ ...form, categoryId: e.target.value || undefined })} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700">
 							<option value="">Select category</option>
 							{categories.map(c => (
 								<option key={c._id} value={c._id}>{c.name}</option>
@@ -417,11 +417,11 @@ export default function MenuManagementPage() {
 						</select>
 					</div>
 					<div className="sm:col-span-2">
-						<label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-						<textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900 placeholder-gray-400" placeholder="Short tasty description" />
+						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+						<textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500" placeholder="Short tasty description" />
 					</div>
 					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-1">Price (₦)</label>
+						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Price (₦)</label>
 						<input
 							type="number"
 							min={0}
@@ -435,7 +435,7 @@ export default function MenuManagementPage() {
 									setForm({ ...form, price: isNaN(parsed) ? '' : parsed });
 								}
 							}}
-							className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900 placeholder-gray-400"
+							className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
 							placeholder="2000"
 						/>
 					</div>
@@ -487,8 +487,8 @@ export default function MenuManagementPage() {
 						</div>
 					</div>
 					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-1">Pack (optional)</label>
-						<select value={(form as any).packId || ''} onChange={(e)=> setForm({ ...form, ...(e.target.value? { packId: e.target.value } : { packId: undefined }) } as any)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900">
+						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pack (optional)</label>
+						<select value={(form as any).packId || ''} onChange={(e)=> setForm({ ...form, ...(e.target.value? { packId: e.target.value } : { packId: undefined }) } as any)} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700">
 							<option value="">No pack</option>
 							{packs.map(p => (
 								<option key={p._id} value={p._id}>{p.name} (₦{p.price})</option>
@@ -497,9 +497,9 @@ export default function MenuManagementPage() {
 					</div>
 					<div className="flex items-center gap-2 sm:col-span-2">
 						<input id="isAvailable" type="checkbox" checked={form.isAvailable} onChange={(e) => setForm({ ...form, isAvailable: e.target.checked })} className="h-4 w-4" />
-						<label htmlFor="isAvailable" className="text-sm text-gray-700">Available</label>
+						<label htmlFor="isAvailable" className="text-sm text-gray-700 dark:text-gray-300">Available</label>
 						<input id="isPublished" type="checkbox" checked={form.isPublished!==false} onChange={(e) => setForm({ ...form, isPublished: e.target.checked })} className="h-4 w-4 ml-4" />
-						<label htmlFor="isPublished" className="text-sm text-gray-700">Published</label>
+						<label htmlFor="isPublished" className="text-sm text-gray-700 dark:text-gray-300">Published</label>
 					</div>
 				</div>
 
@@ -508,7 +508,7 @@ export default function MenuManagementPage() {
 						<button onClick={saveItem} className="inline-flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-accent text-white px-4 py-2 rounded-lg text-sm">
 							<Save className="h-4 w-4" /> Save
 						</button>
-						<button onClick={resetForm} className="inline-flex items-center justify-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm">
+						<button onClick={resetForm} className="inline-flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 px-4 py-2 rounded-lg text-sm">
 							<X className="h-4 w-4" /> Cancel
 						</button>
 					</div>
@@ -516,15 +516,15 @@ export default function MenuManagementPage() {
 			</div>
 
 			{/* Quick Availability Control - Toggle all items on/off */}
-			<div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 mb-5">
+			<div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5 mb-5">
 				<div className="flex items-center gap-2 mb-4">
 					<Power className="h-5 w-5 text-brand-primary" />
-					<h2 className="text-base sm:text-lg font-semibold text-gray-900">Quick Availability Control</h2>
+					<h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Quick Availability Control</h2>
 				</div>
-				<p className="text-sm text-gray-600 mb-4">Quickly toggle menu items on or off based on what's available in the kitchen</p>
+				<p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Quickly toggle menu items on or off based on what's available in the kitchen</p>
 				
 				{items.length === 0 ? (
-					<div className="text-center py-8 text-gray-500 text-sm">
+					<div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
 						No menu items yet. Add items to manage availability.
 					</div>
 				) : (() => {
@@ -557,15 +557,15 @@ export default function MenuManagementPage() {
 						<div className="space-y-4">
 							{/* Group items by category */}
 							{categorizedItemsByCategory.map(({ category, items: categoryItems }) => (
-								<div key={category._id} className="border border-gray-200 rounded-lg p-4">
-									<h3 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">{category.name}</h3>
+								<div key={category._id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+									<h3 className="font-medium text-gray-900 dark:text-white mb-3 text-sm sm:text-base">{category.name}</h3>
 									<div className="space-y-2">
 										{categoryItems.map((item: any, itemIndex) => (
-											<div key={(item as any)._id || itemIndex} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+											<div key={(item as any)._id || itemIndex} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
 												<div className="flex-1 min-w-0">
 													<div className="flex items-center gap-2">
-														<h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{item.name}</h4>
-														<span className="text-xs text-gray-500">₦{item.price.toLocaleString()}</span>
+														<h4 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base truncate">{item.name}</h4>
+														<span className="text-xs text-gray-500 dark:text-gray-400">₦{item.price.toLocaleString()}</span>
 													</div>
 													<p className="text-xs text-gray-600 truncate mt-0.5">{item.description}</p>
 												</div>

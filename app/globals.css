@@ -368,4 +368,12 @@ a {
   background-color: #fc1c15;
 }
 
+/* Dark mode select options */
+@media (prefers-color-scheme: dark) {
+  select option {
+    background-color: #1f2937;
+    color: #ffffff;
+  }
+}
+
 
