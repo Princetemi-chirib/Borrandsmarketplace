@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PaystackService from '@/lib/paystack';
 import { dbConnect, prisma } from '@/lib/db-prisma';
-import { sendNewOrderEmailToRestaurant, sendOrderPlacedEmailToStudent, sendNewOrderNotificationToAdmin } from '@/lib/services/email';
+import { sendNewOrderEmailToRestaurant, sendOrderPlacedEmailToStudent } from '@/lib/services/email';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -207,31 +207,8 @@ export async function GET(request: NextRequest) {
             }
           }
 
-          // Send new order notification to admin (one email for all orders)
-          if (createdOrders.length > 0) {
-            try {
-              // Use the first order's details for the email
-              const firstOrderData = createdOrdersWithData[0];
-              const firstOrder = firstOrderData.createdOrder;
-
-              await sendNewOrderNotificationToAdmin(
-                firstOrder.orderNumber,
-                firstOrderData.restaurantName,
-                student?.name || 'Student',
-                {
-                  items: firstOrderData.orderData.items,
-                  deliveryAddress: deliveryAddress?.address || metadata.deliveryAddress?.address || '',
-                  deliveryInstructions: deliveryAddress?.instructions || metadata.deliveryAddress?.instructions || '',
-                  total: firstOrder.total,
-                  subtotal: firstOrder.subtotal,
-                  deliveryFee: firstOrder.deliveryFee
-                }
-              );
-            } catch (emailError) {
-              console.error('Failed to send new order notification to admin:', emailError);
-              // Don't fail the request if email fails
-            }
-          }
+          // Note: Admin notification is sent when restaurant ACCEPTS the order (not on creation)
+          // This ensures the admin is only notified when there's an order ready for rider assignment
 
           return NextResponse.json({
             success: true,

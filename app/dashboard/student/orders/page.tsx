@@ -178,6 +178,19 @@ export default function MyOrders() {
               <div className="p-6 border-b border-gray-100 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
+                    {/* Restaurant Logo */}
+                    {order.restaurant?.logo && order.restaurant.logo.trim() !== '' && (
+                      <div className="w-12 h-12 bg-white dark:bg-gray-700 rounded-lg shadow-sm flex items-center justify-center overflow-hidden border border-gray-200 dark:border-gray-600">
+                        <img
+                          src={order.restaurant.logo.startsWith('http') || order.restaurant.logo.startsWith('/') ? order.restaurant.logo : `/${order.restaurant.logo}`}
+                          alt={`${order.restaurant?.name || 'Restaurant'} logo`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
                     <div className={`p-2 rounded-lg ${getStatusColor(order.status)}`}>
                       {getStatusIcon(order.status)}
                     </div>

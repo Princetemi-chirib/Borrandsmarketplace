@@ -163,7 +163,7 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
 
       {/* Sidebar */}
       <motion.div 
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         initial={false}
@@ -181,7 +181,7 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
 
         {/* Navigation - Improved mobile spacing */}
         <nav className="mt-2 px-3 pb-24 overflow-y-auto h-full">
-          <div className="space-y-1">
+          <div className="space-y-1 pt-4">
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = isActiveRoute(item.href);
@@ -236,8 +236,8 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
 
       {/* Main content */}
       <div className="lg:pl-72">
-        {/* Top navigation - Optimized for mobile */}
-        <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        {/* Top navigation - Fixed header */}
+        <div className="fixed top-0 right-0 left-0 lg:left-72 z-40 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center">
               <button
@@ -387,8 +387,8 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
           </div>
         </div>
 
-        {/* Page content - Optimized padding for mobile */}
-        <main className="py-3 sm:py-4">
+        {/* Page content - Optimized padding for mobile, with top margin for fixed header */}
+        <main className="pt-20 pb-3 sm:pt-20 sm:pb-4">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
             {children}
           </div>

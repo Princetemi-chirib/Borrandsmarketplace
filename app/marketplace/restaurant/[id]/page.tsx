@@ -253,6 +253,19 @@ export default function PublicRestaurantDetail() {
               >
                 <ArrowLeft className="h-5 w-5 text-gray-600" />
               </Link>
+              {/* Restaurant Logo */}
+              {restaurant.logo && restaurant.logo.trim() !== '' && (
+                <div className="w-12 h-12 bg-white rounded-lg shadow-sm flex items-center justify-center overflow-hidden border border-gray-200">
+                  <img
+                    src={restaurant.logo.startsWith('http') || restaurant.logo.startsWith('/') ? restaurant.logo : `/${restaurant.logo}`}
+                    alt={`${restaurant.name} logo`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
               <div>
                 <h1 className="text-xl font-bold text-gray-900">{restaurant.name}</h1>
                 <p className="text-sm text-gray-600">{restaurant.cuisine.join(', ')}</p>
@@ -282,6 +295,21 @@ export default function PublicRestaurantDetail() {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2">
+              {/* Restaurant Logo - Large Display */}
+              {restaurant.logo && restaurant.logo.trim() !== '' && (
+                <div className="mb-4">
+                  <div className="w-24 h-24 bg-white rounded-xl shadow-md flex items-center justify-center overflow-hidden border-2 border-gray-200">
+                    <img
+                      src={restaurant.logo.startsWith('http') || restaurant.logo.startsWith('/') ? restaurant.logo : `/${restaurant.logo}`}
+                      alt={`${restaurant.name} logo`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
               <div className="flex items-center space-x-2 mb-2">
                 <Star className="h-5 w-5 text-yellow-400 fill-current" />
                 <span className="font-semibold text-gray-900">{restaurant.rating}</span>

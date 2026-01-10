@@ -37,7 +37,9 @@ export async function PATCH(
         restaurant: {
           select: {
             id: true,
-            name: true
+            name: true,
+            logo: true,
+            image: true
           }
         },
         student: {

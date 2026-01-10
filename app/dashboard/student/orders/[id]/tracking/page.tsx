@@ -61,6 +61,7 @@ interface Order {
     name: string;
     address: string;
     phone: string;
+    logo?: string;
   };
   rider?: Rider;
 }
@@ -141,6 +142,7 @@ export default function OrderTrackingPage() {
           name: o.restaurant?.name || 'Restaurant',
           address: o.restaurant?.address || '',
           phone: o.restaurant?.phone || '',
+          logo: o.restaurant?.logo || '',
         },
         rider: o.rider && {
           _id: o.rider._id,
@@ -275,6 +277,21 @@ export default function OrderTrackingPage() {
         >
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between space-y-4 lg:space-y-0">
             <div className="flex-1">
+              {/* Restaurant Logo */}
+              {order.restaurant.logo && order.restaurant.logo.trim() !== '' && (
+                <div className="mb-4">
+                  <div className="w-20 h-20 bg-white rounded-xl shadow-sm flex items-center justify-center overflow-hidden border-2 border-gray-200">
+                    <img
+                      src={order.restaurant.logo.startsWith('http') || order.restaurant.logo.startsWith('/') ? order.restaurant.logo : `/${order.restaurant.logo}`}
+                      alt={`${order.restaurant.name} logo`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
               <h2 className="text-lg font-semibold text-gray-900 mb-2">{order.restaurant.name}</h2>
               <p className="text-gray-600 mb-4">{order.restaurant.address}</p>
               
