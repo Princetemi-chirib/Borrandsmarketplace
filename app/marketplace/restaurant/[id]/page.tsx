@@ -60,6 +60,7 @@ interface Restaurant {
   phone: string;
   categories: string[];
   menu: MenuItem[];
+  logo?: string;
 }
 
 export default function PublicRestaurantDetail() {
