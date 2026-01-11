@@ -66,7 +66,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         restaurant: {
           select: {
             id: true,
-            name: true
+            name: true,
+            logo: true,
+            image: true
           }
         }
       }

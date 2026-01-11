@@ -27,6 +27,8 @@ interface Restaurant {
   name: string;
   description: string;
   image: string;
+  logo?: string;
+  bannerImage?: string;
   rating: number;
   reviewCount: number;
   cuisine: string;
@@ -363,9 +365,28 @@ export default function RestaurantsPage() {
               >
                 {/* Restaurant Image */}
                 <div className="relative h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                  {restaurant.image && restaurant.image.trim() !== '' ? (
+                  {/* Main background image - use bannerImage first, fallback to image, then logo */}
+                  {(restaurant.bannerImage && restaurant.bannerImage.trim() !== '') ? (
                     <img 
-                      src={restaurant.image.startsWith('http') ? restaurant.image : restaurant.image}
+                      src={restaurant.bannerImage.startsWith('http') || restaurant.bannerImage.startsWith('/') ? restaurant.bannerImage : `/${restaurant.bannerImage}`}
+                      alt={restaurant.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (restaurant.image && restaurant.image.trim() !== '') ? (
+                    <img 
+                      src={restaurant.image.startsWith('http') || restaurant.image.startsWith('/') ? restaurant.image : `/${restaurant.image}`}
+                      alt={restaurant.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (restaurant.logo && restaurant.logo.trim() !== '') ? (
+                    <img 
+                      src={restaurant.logo.startsWith('http') || restaurant.logo.startsWith('/') ? restaurant.logo : `/${restaurant.logo}`}
                       alt={restaurant.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -374,6 +395,21 @@ export default function RestaurantsPage() {
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700" />
+                  )}
+                  {/* Restaurant Logo Overlay - show logo if available */}
+                  {restaurant.logo && restaurant.logo.trim() !== '' && (
+                    <div className="absolute top-3 left-3">
+                      <div className="w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center overflow-hidden border-2 border-white">
+                        <img
+                          src={restaurant.logo.startsWith('http') || restaurant.logo.startsWith('/') ? restaurant.logo : `/${restaurant.logo}`}
+                          alt={`${restaurant.name} logo`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <div className="absolute top-3 right-3">
@@ -427,8 +463,17 @@ export default function RestaurantsPage() {
                     <span>₦{restaurant.deliveryFee}</span>
                   </div>
 
+                  {/* Closed Warning */}
+                  {!restaurant.isOpen && (
+                    <div className="mb-3 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                      <p className="text-red-700 dark:text-red-300 text-xs font-medium">
+                        🚫 Currently closed - ordering unavailable
+                      </p>
+                    </div>
+                  )}
+
                   {/* Featured Items */}
-                  {restaurant.featuredItems && restaurant.featuredItems.length > 0 && (
+                  {restaurant.featuredItems && restaurant.featuredItems.length > 0 && restaurant.isOpen && (
                     <div className="space-y-2 mb-4">
                       <h4 className="text-sm font-medium text-gray-900 dark:text-white">Featured Items</h4>
                       {restaurant.featuredItems.slice(0, 2).map((item) => (
@@ -460,7 +505,7 @@ export default function RestaurantsPage() {
                       <Eye className="h-4 w-4 mr-1" />
                       View Menu
                     </Link>
-                    {restaurant.featuredItems && restaurant.featuredItems.length > 0 && (
+                    {restaurant.featuredItems && restaurant.featuredItems.length > 0 && restaurant.isOpen && (
                       <button
                         onClick={() => addToCart(restaurant._id, restaurant.name, restaurant.featuredItems![0])}
                         className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"

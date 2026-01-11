@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
         status: restaurant.status?.toLowerCase() || 'pending', // Normalize status to lowercase
         // Filter out the old non-existent default image path
         image: restaurant.image && restaurant.image !== '/images/default-restaurant.jpg' ? restaurant.image : '',
+        logo: restaurant.logo || '',
         bannerImage: restaurant.bannerImage && restaurant.bannerImage !== '/images/default-restaurant.jpg' ? restaurant.bannerImage : (restaurant.bannerImage || ''),
         owner: restaurant.user ? {
           _id: restaurant.user.id,

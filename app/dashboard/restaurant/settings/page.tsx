@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import BackArrow from '@/components/ui/BackArrow';
@@ -21,8 +21,10 @@ import {
   Upload,
   X,
   Plus,
-  Minus
+  Minus,
+  Image as ImageIcon
 } from 'lucide-react';
+import { getImageUrl, isValidImageUrl } from '@/lib/image-utils';
 
 interface RestaurantSettings {
   _id: string;
@@ -38,6 +40,7 @@ interface RestaurantSettings {
   minimumOrder: number;
   estimatedDeliveryTime: number;
   image: string;
+  logo: string;
   bannerImage: string;
   features: string[];
   paymentMethods: string[];
@@ -84,6 +87,8 @@ export default function RestaurantSettings() {
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [newCuisine, setNewCuisine] = useState('');
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
 
   // Form states
   const [formData, setFormData] = useState<RestaurantSettings | null>(null);
@@ -193,12 +198,22 @@ export default function RestaurantSettings() {
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
+          name: formData?.name,
+          description: formData?.description,
+          address: formData?.address,
+          phone: formData?.phone,
+          website: formData?.website,
+          university: formData?.university,
+          cuisine: formData?.cuisine,
           operatingHours: formData?.operatingHours,
           deliveryFee: formData?.deliveryFee,
           minimumOrder: formData?.minimumOrder,
           estimatedDeliveryTime: formData?.estimatedDeliveryTime,
           features: formData?.features,
           paymentMethods: formData?.paymentMethods,
+          logo: formData?.logo,
+          image: formData?.image,
+          bannerImage: formData?.bannerImage,
         }),
       });
 
@@ -499,6 +514,144 @@ export default function RestaurantSettings() {
                       <Plus className="h-4 w-4" />
                     </button>
                   </div>
+                </div>
+
+                {/* Restaurant Logo Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Restaurant Logo
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden border-2 border-gray-300">
+                      {formData.logo && isValidImageUrl(formData.logo) ? (
+                        <img
+                          src={getImageUrl(formData.logo)}
+                          alt="Restaurant logo"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            const parent = (e.target as HTMLImageElement).parentElement;
+                            if (parent) {
+                              const icon = parent.querySelector('svg');
+                              if (icon) icon.classList.remove('hidden');
+                            }
+                          }}
+                        />
+                      ) : null}
+                      <ImageIcon className={`h-10 w-10 text-gray-400 ${formData.logo && isValidImageUrl(formData.logo) ? 'hidden' : ''}`} />
+                    </div>
+                    <div className="flex flex-col space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => logoInputRef.current?.click()}
+                        disabled={isUploadingLogo}
+                        className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                      >
+                        <Upload className="h-4 w-4" />
+                        <span>{isUploadingLogo ? 'Uploading...' : formData.logo ? 'Change Logo' : 'Upload Logo'}</span>
+                      </button>
+                      {formData.logo && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => prev ? ({ ...prev, logo: '' }) : null);
+                            if (logoInputRef.current) {
+                              logoInputRef.current.value = '';
+                            }
+                          }}
+                          className="flex items-center space-x-2 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm"
+                        >
+                          <X className="h-4 w-4" />
+                          <span>Remove Logo</span>
+                        </button>
+                      )}
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file || !formData) return;
+                          
+                          // Validate file size (max 5MB)
+                          if (file.size > 5 * 1024 * 1024) {
+                            setErrorMessage('File size must be less than 5MB');
+                            setShowError(true);
+                            setTimeout(() => setShowError(false), 5000);
+                            return;
+                          }
+                          
+                          // Validate file type
+                          if (!file.type.startsWith('image/')) {
+                            setErrorMessage('Please select an image file');
+                            setShowError(true);
+                            setTimeout(() => setShowError(false), 5000);
+                            return;
+                          }
+                          
+                          try {
+                            setIsUploadingLogo(true);
+                            setShowError(false);
+                            const token = localStorage.getItem('token') || '';
+                            const formDataObj = new FormData();
+                            formDataObj.append('file', file);
+                            
+                            const headers: any = {};
+                            if (token) headers['Authorization'] = `Bearer ${token}`;
+                            
+                            const res = await fetch('/api/uploads', {
+                              method: 'POST',
+                              headers,
+                              body: formDataObj
+                            });
+                            
+                            const json = await res.json();
+                            
+                            if (res.ok && json.url) {
+                              // Update local state immediately
+                              setFormData(prev => prev ? ({ ...prev, logo: json.url }) : null);
+                              
+                              // Save to database immediately
+                              const updateRes = await fetch('/api/restaurant/settings', {
+                                method: 'PATCH',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  ...(token ? { Authorization: `Bearer ${token}` } : {})
+                                },
+                                body: JSON.stringify({ logo: json.url })
+                              });
+                              
+                              if (updateRes.ok) {
+                                const updateData = await updateRes.json();
+                                if (updateData.settings) {
+                                  setFormData(updateData.settings);
+                                }
+                                setShowSuccess(true);
+                                setTimeout(() => setShowSuccess(false), 3000);
+                              } else {
+                                const errorJson = await updateRes.json().catch(() => ({}));
+                                throw new Error(errorJson.message || 'Failed to save logo');
+                              }
+                            } else {
+                              throw new Error(json.message || 'Upload failed');
+                            }
+                          } catch (e: any) {
+                            console.error('Logo upload error:', e);
+                            setErrorMessage(e.message || 'Failed to upload logo. Please try again.');
+                            setShowError(true);
+                            setTimeout(() => setShowError(false), 5000);
+                          } finally {
+                            setIsUploadingLogo(false);
+                            if (logoInputRef.current) {
+                              logoInputRef.current.value = '';
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">Recommended size: 200x200px. Max file size: 5MB. Supported formats: JPG, PNG, WebP</p>
                 </div>
               </motion.div>
             )}

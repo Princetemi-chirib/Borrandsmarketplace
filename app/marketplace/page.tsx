@@ -38,7 +38,23 @@ export default function MarketplacePage() {
             const restaurantId = r.id || r._id;
             return (
               <Link key={restaurantId} href={`/marketplace/${restaurantId}`} className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
-                <div className="h-36 bg-gray-100" style={{backgroundImage: `url(${r.bannerImage || r.image || ''})`, backgroundSize: 'cover', backgroundPosition: 'center'}} />
+                <div className="relative h-36 bg-gray-100" style={{backgroundImage: `url(${r.bannerImage || r.image || ''})`, backgroundSize: 'cover', backgroundPosition: 'center'}}>
+                  {/* Restaurant Logo Overlay */}
+                  {r.logo && r.logo.trim() !== '' && (
+                    <div className="absolute top-3 left-3">
+                      <div className="w-14 h-14 bg-white rounded-lg shadow-lg flex items-center justify-center overflow-hidden border-2 border-white">
+                        <img
+                          src={r.logo.startsWith('http') || r.logo.startsWith('/') ? r.logo : `/${r.logo}`}
+                          alt={`${r.name} logo`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <div className="p-4">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-gray-900 truncate">{r.name}</h3>

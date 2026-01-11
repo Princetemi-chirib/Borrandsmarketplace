@@ -16,6 +16,7 @@ export async function GET() {
         rating: true,
         reviewCount: true,
         image: true,
+        logo: true,
         bannerImage: true,
         estimatedDeliveryTime: true,
         deliveryFee: true,
@@ -49,6 +50,7 @@ export async function GET() {
         cuisine: cuisineArray,
         // Filter out the old non-existent default image path
         image: r.image && r.image !== '/images/default-restaurant.jpg' ? r.image : '',
+        logo: r.logo || '',
         bannerImage: r.bannerImage && r.bannerImage !== '/images/default-restaurant.jpg' ? r.bannerImage : (r.bannerImage || '')
       };
     });

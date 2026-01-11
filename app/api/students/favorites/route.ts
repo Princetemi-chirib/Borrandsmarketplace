@@ -30,6 +30,8 @@ export async function GET(request: NextRequest) {
             name: true,
             description: true,
             image: true,
+            logo: true,
+            bannerImage: true,
             rating: true,
             reviewCount: true,
             cuisine: true,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
-import { sendNewOrderEmailToRestaurant, sendOrderPlacedEmailToStudent, sendNewOrderNotificationToAdmin } from '@/lib/services/email';
+import { sendNewOrderEmailToRestaurant, sendOrderPlacedEmailToStudent } from '@/lib/services/email';
 
 const ALLOWED_STATUSES = new Set(['PENDING','ACCEPTED','PREPARING','READY','PICKED_UP','DELIVERED','CANCELLED']);
 
@@ -180,25 +180,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Send new order notification to admin
-    try {
-      await sendNewOrderNotificationToAdmin(
-        orderNumber,
-        restaurant.name,
-        student?.name || 'Student',
-        {
-          items: normalizedItems,
-          deliveryAddress,
-          deliveryInstructions,
-          total,
-          subtotal,
-          deliveryFee: DELIVERY_FEE
-        }
-      );
-    } catch (error) {
-      console.error('Failed to send new order notification to admin:', error);
-      // Don't fail the request if email fails
-    }
+    // Note: Admin notification is sent when restaurant ACCEPTS the order (not on creation)
+    // This ensures the admin is only notified when there's an order ready for rider assignment
 
     return NextResponse.json({ order, fees: { serviceCharge: SERVICE_CHARGE, deliveryFee: DELIVERY_FEE } }, { status: 201 });
   } catch (e: any) {
