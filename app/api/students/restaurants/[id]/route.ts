@@ -2,6 +2,91 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyToken } from '@/lib/auth';
 
+// Helper function to check if restaurant is currently open based on operating hours
+function isRestaurantOpen(operatingHours: any, manualIsOpen: boolean): boolean {
+  // If manually set to closed, respect that
+  if (!manualIsOpen) return false;
+  
+  // If no operating hours defined, use the manual isOpen value
+  if (!operatingHours) return manualIsOpen;
+  
+  // Parse operating hours if it's a string
+  let hours = operatingHours;
+  if (typeof operatingHours === 'string') {
+    try {
+      hours = JSON.parse(operatingHours);
+    } catch {
+      return manualIsOpen; // If can't parse, use manual value
+    }
+  }
+  
+  if (!hours || typeof hours !== 'object') return manualIsOpen;
+  
+  // Get current day and time
+  const now = new Date();
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const currentDay = days[now.getDay()];
+  const currentTime = now.getHours() * 60 + now.getMinutes(); // Time in minutes from midnight
+  
+  // Get today's schedule
+  const todaySchedule = hours[currentDay];
+  if (!todaySchedule) return manualIsOpen;
+  
+  // Check if restaurant is set to open today
+  if (todaySchedule.isOpen === false) return false;
+  
+  // Parse open and close times
+  const openTime = todaySchedule.open;
+  const closeTime = todaySchedule.close;
+  
+  if (!openTime || !closeTime) return manualIsOpen;
+  
+  // Convert time strings (e.g., "09:00") to minutes from midnight
+  const parseTime = (timeStr: string): number => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + (minutes || 0);
+  };
+  
+  const openMinutes = parseTime(openTime);
+  const closeMinutes = parseTime(closeTime);
+  
+  // Check if current time is within operating hours
+  if (closeMinutes > openMinutes) {
+    // Normal case: open and close on same day
+    return currentTime >= openMinutes && currentTime < closeMinutes;
+  } else {
+    // Overnight case: closes after midnight
+    return currentTime >= openMinutes || currentTime < closeMinutes;
+  }
+}
+
+// Helper to get today's hours for display
+function getTodayHours(operatingHours: any): { open: string; close: string } | null {
+  if (!operatingHours) return null;
+  
+  let hours = operatingHours;
+  if (typeof operatingHours === 'string') {
+    try {
+      hours = JSON.parse(operatingHours);
+    } catch {
+      return null;
+    }
+  }
+  
+  if (!hours || typeof hours !== 'object') return null;
+  
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const currentDay = days[new Date().getDay()];
+  const todaySchedule = hours[currentDay];
+  
+  if (!todaySchedule || todaySchedule.isOpen === false) return null;
+  
+  return {
+    open: todaySchedule.open || '09:00',
+    close: todaySchedule.close || '22:00'
+  };
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -49,6 +134,8 @@ export async function GET(
         name: true,
         description: true,
         image: true,
+        logo: true,
+        bannerImage: true,
         rating: true,
         reviewCount: true,
         cuisine: true,
@@ -56,6 +143,7 @@ export async function GET(
         minimumOrder: true,
         estimatedDeliveryTime: true,
         isOpen: true,
+        operatingHours: true, // Include operating hours
         distance: true,
         address: true,
         phone: true,
@@ -150,10 +238,16 @@ export async function GET(
     // Get favorites IDs
     const favoritesIds = user.restaurants_userfavorites.map(f => f.id);
 
-    // Add favorite status and menu
+    // Calculate actual open status based on operating hours
+    const actuallyOpen = isRestaurantOpen(restaurant.operatingHours, restaurant.isOpen);
+    const todayHours = getTodayHours(restaurant.operatingHours);
+
+    // Add favorite status, menu, and calculated isOpen
     const restaurantWithFavorite = {
       ...restaurant,
       _id: restaurant.id,
+      isOpen: actuallyOpen, // Override with calculated value
+      todayHours: todayHours, // Include today's hours for display
       isFavorite: favoritesIds.includes(restaurant.id) || false,
       menu: menuWithCategories
     };

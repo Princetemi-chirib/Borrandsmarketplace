@@ -46,6 +46,8 @@ interface Restaurant {
   name: string;
   description: string;
   image: string;
+  logo?: string;
+  bannerImage?: string;
   rating: number;
   reviewCount: number;
   cuisine: string;
@@ -53,6 +55,7 @@ interface Restaurant {
   minimumOrder: number;
   estimatedDeliveryTime: number;
   isOpen: boolean;
+  todayHours?: { open: string; close: string } | null;
   distance: number;
   address: string;
   phone: string;
@@ -101,7 +104,9 @@ export default function RestaurantPage() {
         _id: r._id,
         name: r.name,
         description: r.description,
-        image: r.image,
+        image: r.image || '',
+        logo: r.logo || '',
+        bannerImage: r.bannerImage || '',
         rating: r.rating,
         reviewCount: r.reviewCount,
         cuisine: r.cuisine,
@@ -109,6 +114,7 @@ export default function RestaurantPage() {
         minimumOrder: r.minimumOrder,
         estimatedDeliveryTime: r.estimatedDeliveryTime,
         isOpen: r.isOpen,
+        todayHours: r.todayHours || null,
         distance: r.distance,
         address: r.address,
         phone: r.phone,
@@ -301,6 +307,35 @@ export default function RestaurantPage() {
         {/* Restaurant Header */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="relative h-64 bg-gray-200 dark:bg-gray-700">
+            {/* Header background image - use bannerImage first, fallback to image, then logo */}
+            {(restaurant.bannerImage && restaurant.bannerImage.trim() !== '') ? (
+              <img 
+                src={restaurant.bannerImage.startsWith('http') || restaurant.bannerImage.startsWith('/') ? restaurant.bannerImage : `/${restaurant.bannerImage}`}
+                alt={restaurant.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            ) : (restaurant.image && restaurant.image.trim() !== '') ? (
+              <img 
+                src={restaurant.image.startsWith('http') || restaurant.image.startsWith('/') ? restaurant.image : `/${restaurant.image}`}
+                alt={restaurant.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            ) : (restaurant.logo && restaurant.logo.trim() !== '') ? (
+              <img 
+                src={restaurant.logo.startsWith('http') || restaurant.logo.startsWith('/') ? restaurant.logo : `/${restaurant.logo}`}
+                alt={restaurant.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            ) : null}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute top-4 right-4">
               <button
@@ -322,21 +357,57 @@ export default function RestaurantPage() {
 
           <div className="p-6">
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between space-y-4 lg:space-y-0">
+              {/* Restaurant Logo */}
+              {restaurant.logo && restaurant.logo.trim() !== '' && (
+                <div className="flex-shrink-0 mb-4 lg:mb-0 lg:mr-6">
+                  <div className="w-24 h-24 lg:w-32 lg:h-32 bg-white dark:bg-gray-700 rounded-xl shadow-lg flex items-center justify-center overflow-hidden border-2 border-gray-200 dark:border-gray-600">
+                    <img
+                      src={restaurant.logo.startsWith('http') || restaurant.logo.startsWith('/') ? restaurant.logo : `/${restaurant.logo}`}
+                      alt={`${restaurant.name} logo`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
               <div className="flex-1">
-                <div className="flex items-center space-x-4 mb-4">
+                <div className="flex items-center flex-wrap gap-3 mb-4">
                   <div className="flex items-center space-x-2">
                     <Star className="h-5 w-5 text-yellow-500 fill-current" />
                     <span className="font-semibold text-gray-900 dark:text-white">{restaurant.rating}</span>
                     <span className="text-gray-500 dark:text-gray-400">({restaurant.reviewCount} reviews)</span>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    restaurant.isOpen 
-                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' 
-                      : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
-                  }`}>
-                    {restaurant.isOpen ? 'Open Now' : 'Closed'}
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      restaurant.isOpen 
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' 
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                    }`}>
+                      {restaurant.isOpen ? 'Open Now' : 'Closed'}
+                    </span>
+                    {restaurant.todayHours && (
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {restaurant.todayHours.open} - {restaurant.todayHours.close}
+                      </span>
+                    )}
+                  </div>
                 </div>
+
+                {/* Closed Warning Banner */}
+                {!restaurant.isOpen && (
+                  <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <p className="text-red-700 dark:text-red-300 text-sm font-medium">
+                      🚫 This restaurant is currently closed. You cannot place orders at this time.
+                    </p>
+                    {restaurant.todayHours && (
+                      <p className="text-red-600 dark:text-red-400 text-xs mt-1">
+                        Today's hours: {restaurant.todayHours.open} - {restaurant.todayHours.close}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <p className="text-gray-600 dark:text-gray-400 mb-4">{restaurant.description}</p>
 
@@ -487,6 +558,9 @@ export default function RestaurantPage() {
 
                       {!item.isAvailable && (
                         <p className="text-xs text-red-600 dark:text-red-400 mt-1">Currently unavailable</p>
+                      )}
+                      {item.isAvailable && !restaurant.isOpen && (
+                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">Restaurant closed</p>
                       )}
                     </div>
                   </div>

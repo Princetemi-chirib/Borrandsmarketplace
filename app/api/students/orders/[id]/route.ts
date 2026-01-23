@@ -38,7 +38,7 @@ export async function GET(
       where: { id: orderId },
       include: {
         restaurant: {
-          select: { id: true, name: true, image: true, address: true, phone: true }
+          select: { id: true, name: true, image: true, logo: true, address: true, phone: true }
         },
         student: {
           select: { id: true, name: true, phone: true }

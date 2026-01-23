@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         restaurant: {
-          select: { id: true, name: true, image: true, address: true, phone: true }
+          select: { id: true, name: true, image: true, logo: true, address: true, phone: true }
         }
       },
       orderBy: { createdAt: 'desc' },

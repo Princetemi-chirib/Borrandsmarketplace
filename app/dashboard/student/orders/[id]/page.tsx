@@ -49,6 +49,7 @@ interface Order {
   orderNumber: string;
   restaurantName: string;
   restaurantPhone: string;
+  restaurantLogo?: string;
   status: string;
   total: number;
   deliveryFee: number;
@@ -131,6 +132,7 @@ export default function OrderTracking() {
           orderNumber: o.orderNumber,
           restaurantName: o.restaurant?.name || 'Restaurant',
           restaurantPhone: o.restaurant?.phone || '',
+          restaurantLogo: o.restaurant?.logo || '',
           status: o.status?.toLowerCase() || 'pending',
           total: typeof o.total === 'number' ? o.total : parseFloat(o.total) || 0,
           deliveryFee: typeof o.deliveryFee === 'number' ? o.deliveryFee : parseFloat(o.deliveryFee) || 0,
@@ -278,9 +280,24 @@ export default function OrderTracking() {
         
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Order #{order.orderNumber}</h1>
-            <p className="text-gray-600 dark:text-gray-400">{order.restaurantName}</p>
+          <div className="flex items-center space-x-4">
+            {/* Restaurant Logo */}
+            {order.restaurantLogo && order.restaurantLogo.trim() !== '' && (
+              <div className="w-16 h-16 bg-white dark:bg-gray-700 rounded-xl shadow-sm flex items-center justify-center overflow-hidden border-2 border-gray-200 dark:border-gray-600">
+                <img
+                  src={order.restaurantLogo.startsWith('http') || order.restaurantLogo.startsWith('/') ? order.restaurantLogo : `/${order.restaurantLogo}`}
+                  alt={`${order.restaurantName} logo`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Order #{order.orderNumber}</h1>
+              <p className="text-gray-600 dark:text-gray-400">{order.restaurantName}</p>
+            </div>
           </div>
           <button
             onClick={refreshOrder}
@@ -498,7 +515,20 @@ export default function OrderTracking() {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Restaurant</h3>
               
               <div className="space-y-3">
-                <h4 className="font-medium text-gray-900 dark:text-white">{order.restaurantName}</h4>
+                {/* Restaurant Logo */}
+                {order.restaurantLogo && order.restaurantLogo.trim() !== '' && (
+                  <div className="w-16 h-16 bg-white dark:bg-gray-700 rounded-lg shadow-sm flex items-center justify-center overflow-hidden border border-gray-200 dark:border-gray-600 mx-auto mb-3">
+                    <img
+                      src={order.restaurantLogo.startsWith('http') || order.restaurantLogo.startsWith('/') ? order.restaurantLogo : `/${order.restaurantLogo}`}
+                      alt={`${order.restaurantName} logo`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+                <h4 className="font-medium text-gray-900 dark:text-white text-center">{order.restaurantName}</h4>
                 
                 <div className="space-y-2">
                   {order.restaurantPhone && (
