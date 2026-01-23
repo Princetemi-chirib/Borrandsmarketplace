@@ -23,7 +23,23 @@ export async function GET(request: NextRequest) {
     // Get orders with related data
     const orders = await prisma.order.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        paymentStatus: true,
+        subtotal: true,
+        total: true,
+        deliveryFee: true,
+        items: true,
+        deliveryAddress: true,
+        deliveryInstructions: true,
+        createdAt: true,
+        updatedAt: true,
+        estimatedDeliveryTime: true,
+        actualDeliveryTime: true,
+        rejectedAt: true,
+        rejectionReason: true,
         restaurant: {
           select: {
             id: true,
@@ -65,16 +81,18 @@ export async function GET(request: NextRequest) {
       rider: order.rider,
       status: order.status,
       paymentStatus: order.paymentStatus,
-      total: order.total,
       subtotal: order.subtotal,
+      total: order.total,
       deliveryFee: order.deliveryFee,
       deliveryAddress: order.deliveryAddress,
       deliveryInstructions: order.deliveryInstructions,
       items: typeof order.items === 'string' ? JSON.parse(order.items) : order.items,
       createdAt: order.createdAt.toISOString(),
       updatedAt: order.updatedAt.toISOString(),
-      rejectedAt: order.rejectedAt?.toISOString(),
-      rejectionReason: order.rejectionReason
+      estimatedDeliveryTime: order.estimatedDeliveryTime,
+      actualDeliveryTime: order.actualDeliveryTime?.toISOString() || null,
+      rejectedAt: order.rejectedAt?.toISOString() || null,
+      rejectionReason: order.rejectionReason || null
     }));
 
     return NextResponse.json({ 
@@ -89,6 +107,7 @@ export async function GET(request: NextRequest) {
     }, { status: 500 });
   }
 }
+
 
 
 

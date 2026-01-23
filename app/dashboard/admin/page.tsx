@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { 
   ShoppingBag, 
   Clock, 
@@ -212,8 +213,8 @@ export default function AdminDashboard() {
   if (isLoading) {
     return (
       <DashboardLayout userRole="admin" userName={user?.name || 'Admin'}>
-        <div className="flex items-center justify-center h-64">
-          <div className="spinner"></div>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <LoadingSpinner size="lg" text="Loading dashboard..." />
         </div>
       </DashboardLayout>
     );

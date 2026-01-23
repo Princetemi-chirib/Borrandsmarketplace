@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import SkeletonLoader from '@/components/ui/SkeletonLoader';
 import { 
   Package, 
   Clock, 
@@ -225,8 +227,9 @@ export default function StudentDashboard() {
   if (isLoading) {
     return (
       <DashboardLayout userRole="student" userName={user?.name || 'Student'}>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="space-y-4">
+          <SkeletonLoader type="card" count={2} />
+          <SkeletonLoader type="list" count={3} />
         </div>
       </DashboardLayout>
     );

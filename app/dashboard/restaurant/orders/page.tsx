@@ -21,6 +21,8 @@ import {
   Check,
   X
 } from 'lucide-react';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import SkeletonLoader from '@/components/ui/SkeletonLoader';
 
 export default function RestaurantOrders() {
   const [user, setUser] = useState<any>(null);
@@ -311,14 +313,35 @@ export default function RestaurantOrders() {
           </div>
         </motion.div>
 
+        {/* Loading State */}
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-6"
+          >
+            <SkeletonLoader type="card" count={3} />
+          </motion.div>
+        )}
+
         {/* Orders List */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-6"
-        >
-          {filteredOrders.map((order, index) => (
+        {!loading && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-6"
+          >
+            {filteredOrders.length === 0 ? (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+                <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Orders Found</h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {searchTerm ? 'No orders match your search criteria.' : 'No orders available for this status.'}
+                </p>
+              </div>
+            ) : (
+              filteredOrders.map((order, index) => (
             <motion.div
               key={order.id}
               initial={{ opacity: 0, y: 20 }}
@@ -439,23 +462,10 @@ export default function RestaurantOrders() {
                 </div>
               </div>
             </motion.div>
-          ))}
-
-          {filteredOrders.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-center py-12"
-            >
-              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Package className="h-8 w-8 text-gray-400 dark:text-gray-500" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No orders found</h3>
-              <p className="text-gray-600 dark:text-gray-400">No orders match your current filters</p>
-            </motion.div>
-          )}
-        </motion.div>
+              ))
+            )}
+          </motion.div>
+        )}
       </div>
     </DashboardLayout>
   );
