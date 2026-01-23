@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import SkeletonLoader from '@/components/ui/SkeletonLoader';
 import { 
   ShoppingBag, 
   Clock, 
@@ -300,8 +302,9 @@ export default function RestaurantDashboard() {
   if (isLoading) {
     return (
       <DashboardLayout userRole="restaurant" userName={user?.name || 'Restaurant'}>
-        <div className="flex items-center justify-center h-64">
-          <div className="spinner"></div>
+        <div className="space-y-4">
+          <SkeletonLoader type="card" count={2} />
+          <SkeletonLoader type="list" count={3} />
         </div>
       </DashboardLayout>
     );

@@ -1,32 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAppRequest } from '@/lib/auth-app';
-import { promises as fs } from 'fs';
-import path from 'path';
-import crypto from 'crypto';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(request: NextRequest) {
   try {
     const auth = verifyAppRequest(request);
     if (!auth || !auth.restaurantId) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 
+    // Check if Cloudinary is configured
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      return NextResponse.json({ message: 'Cloudinary not configured' }, { status: 500 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     if (!file) return NextResponse.json({ message: 'No file' }, { status: 400 });
 
+    // Validate file type
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    if (!allowedExts.includes(ext)) {
+      return NextResponse.json({ message: 'Invalid file type. Only images are allowed.' }, { status: 400 });
+    }
+
+    // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-    const safeExt = ['jpg','jpeg','png','webp'].includes(ext) ? ext : 'jpg';
-    const filename = `${Date.now()}_${crypto.randomBytes(6).toString('hex')}.${safeExt}`;
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    await fs.mkdir(uploadsDir, { recursive: true });
-    const filepath = path.join(uploadsDir, filename);
-    await fs.writeFile(filepath, buffer);
 
-    const url = `/uploads/${filename}`;
-    return NextResponse.json({ url });
+    // Convert buffer to base64 data URL for Cloudinary
+    const base64 = buffer.toString('base64');
+    const dataURI = `data:${file.type || 'image/jpeg'};base64,${base64}`;
+
+    // Upload to Cloudinary using promise-based API
+    const result = await cloudinary.uploader.upload(dataURI, {
+      folder: 'borrands/food', // Organize food images in a subfolder
+      resource_type: 'image', // Explicitly set to image
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+      transformation: [
+        { width: 800, height: 800, crop: 'limit', quality: 'auto' }, // Optimize image size
+      ],
+    });
+
+    // Return the secure URL from Cloudinary
+    return NextResponse.json({ url: result.secure_url });
   } catch (e: any) {
-    return NextResponse.json({ message: 'Upload failed' }, { status: 500 });
+    console.error('Upload error:', e);
+    return NextResponse.json({ message: e.message || 'Upload failed' }, { status: 500 });
   }
 }
 
