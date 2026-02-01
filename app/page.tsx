@@ -33,7 +33,6 @@ import {
   Gift,
   Calendar,
   MessageCircle,
-  Download,
   Play,
   ChevronRight,
   ChevronLeft,
@@ -333,17 +332,6 @@ export default function HomePage() {
                 ))}
               </div>
 
-              {/* Download badges */}
-              <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-                <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500">
-                  <Download className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Download app:</span>
-                </div>
-                <div className="flex space-x-2">
-                  <div className="bg-black text-white px-2 sm:px-3 py-1 rounded text-xs font-medium">App Store</div>
-                  <div className="bg-black text-white px-2 sm:px-3 py-1 rounded text-xs font-medium">Google Play</div>
-                </div>
-              </div>
             </motion.div>
 
             {/* Enhanced Hero Art */}
@@ -643,7 +631,7 @@ export default function HomePage() {
       </section>
 
       {/* Universities Section */}
-      <section className="py-16 bg-gradient-to-r from-gray-50 to-blue-50">
+      {/* <section className="py-16 bg-gradient-to-r from-gray-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Available at Leading Universities</h2>
@@ -675,7 +663,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Enhanced Testimonials */}
       <section id="testimonials" className="py-20 bg-white">
@@ -853,6 +841,7 @@ export default function HomePage() {
                   <li><Link href="#" className="hover:text-white transition-colors">Careers</Link></li>
                   <li><Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link></li>
                   <li><Link href="#" className="hover:text-white transition-colors">Terms of Service</Link></li>
+                  <li><Link href="#" className="hover:text-white transition-colors">Contact Us</Link></li>
               </ul>
               </div>
             </div>

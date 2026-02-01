@@ -17,14 +17,14 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://borrands-marketplace.vercel.app'),
+  metadataBase: new URL('https://orderup.borrands.com.ng/'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: 'Borrands Marketplace - Connect Students, Restaurants & Riders',
     description: 'A comprehensive marketplace platform connecting university students with local restaurants and delivery riders.',
-    url: 'https://borrands-marketplace.vercel.app',
+    url: 'https://orderup.borrands.com.ng/',
     siteName: 'Borrands Marketplace',
     images: [
       {

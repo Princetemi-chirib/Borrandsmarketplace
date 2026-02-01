@@ -52,7 +52,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ message: `Invalid status: ${body.status || 'missing'}` }, { status: 400 });
     }
 
-    // Get order with student info for email notification (single query)
+    // Get order with student and restaurant for email notification (single query)
     const order = await prisma.order.findFirst({
       where: { id: params.id, restaurantId: auth.restaurantId },
       include: {
@@ -66,9 +66,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         restaurant: {
           select: {
             id: true,
-            name: true,
-            logo: true,
-            image: true
+            name: true
           }
         }
       }
@@ -81,6 +79,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ message: `Invalid transition ${prevStatus} → ${nextStatus}` }, { status: 400 });
     }
 
+    // Restaurant cannot move to PREPARING unless a rider is assigned
+    if (nextStatus === 'PREPARING' && !order.riderId) {
+      return NextResponse.json(
+        { message: 'A rider must be assigned before the order can be marked as Preparing. Please ask admin to assign a rider.' },
+        { status: 400 }
+      );
+    }
+
     const updateData: any = { status: nextStatus };
     if (nextStatus === 'DELIVERED') updateData.actualDeliveryTime = new Date();
     
@@ -90,9 +96,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     });
 
     // Send email notification to student for status updates (PREPARING, READY, PICKED_UP)
-    if (order.student.email && ['PREPARING', 'READY', 'PICKED_UP'].includes(nextStatus)) {
+    const orderWithRelations = order as typeof order & {
+      student?: { email: string | null; name: string | null };
+      restaurant?: { name: string };
+    };
+    if (orderWithRelations.student?.email && ['PREPARING', 'READY', 'PICKED_UP'].includes(nextStatus)) {
       try {
-        let items;
+        let items: unknown;
         try {
           items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
         } catch (parseError) {
@@ -100,12 +110,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
           items = [];
         }
         const emailResult = await sendOrderNotificationEmail(
-          order.student.email,
-          order.student.name,
+          orderWithRelations.student.email,
+          orderWithRelations.student.name ?? 'Customer',
           order.orderNumber,
           nextStatus,
           {
-            restaurantName: order.restaurant.name,
+            restaurantName: orderWithRelations.restaurant?.name ?? '',
             total: order.total,
             deliveryAddress: order.deliveryAddress,
             items
@@ -114,7 +124,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         if (!emailResult.success) {
           console.error('Email sending failed:', emailResult.error);
         } else {
-          console.log(`✅ Status update email sent to ${order.student.email} for order ${order.orderNumber}`);
+          console.log(`✅ Status update email sent to ${orderWithRelations.student.email} for order ${order.orderNumber}`);
         }
       } catch (error) {
         console.error('Failed to send status update email to student:', error);

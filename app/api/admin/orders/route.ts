@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { getUserFromRequest } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const payload = getUserFromRequest(request);
@@ -44,7 +46,6 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            logo: true,
             image: true,
             address: true,
             phone: true

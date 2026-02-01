@@ -427,13 +427,13 @@ export default function FavoritesPage() {
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
-                className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50"
+                className="fixed right-0 top-0 h-full w-full max-w-md bg-white dark:bg-gray-800 shadow-xl z-50"
               >
-                <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold">Shopping Cart</h2>
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Shopping Cart</h2>
                   <button
                     onClick={() => setShowCart(false)}
-                    className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -443,26 +443,26 @@ export default function FavoritesPage() {
                   {cart.length > 0 ? (
                     <div className="space-y-4">
                       {cart.map((item) => (
-                        <div key={item.itemId} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="w-12 h-12 bg-gray-200 rounded"></div>
+                        <div key={item.itemId} className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                          <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded"></div>
                           <div className="flex-1">
-                            <p className="font-medium text-sm">{item.name}</p>
-                            <p className="text-gray-500 text-xs">{item.restaurantName}</p>
-                            <p className="text-sm font-medium">₦{item.price}</p>
+                            <p className="font-medium text-sm text-gray-900 dark:text-white">{item.name}</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-xs">{item.restaurantName}</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">₦{item.price}</p>
                           </div>
                           <div className="flex items-center space-x-2">
                             <button
                               onClick={() => updateCartQuantity(item.itemId, item.quantity - 1)}
-                              className="p-1 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+                              className="p-1 bg-gray-200 dark:bg-gray-600 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
                             >
-                              <Minus className="h-3 w-3" />
+                              <Minus className="h-3 w-3 text-gray-700 dark:text-white" />
                             </button>
-                            <span className="w-8 text-center text-sm">{item.quantity}</span>
+                            <span className="w-8 text-center text-sm font-medium text-gray-900 dark:text-white">{item.quantity}</span>
                             <button
                               onClick={() => updateCartQuantity(item.itemId, item.quantity + 1)}
-                              className="p-1 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+                              className="p-1 bg-gray-200 dark:bg-gray-600 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
                             >
-                              <Plus className="h-3 w-3" />
+                              <Plus className="h-3 w-3 text-gray-700 dark:text-white" />
                             </button>
                           </div>
                         </div>
@@ -470,17 +470,17 @@ export default function FavoritesPage() {
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">Your cart is empty</p>
+                      <ShoppingBag className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                      <p className="text-gray-500 dark:text-gray-400">Your cart is empty</p>
                     </div>
                   )}
                 </div>
 
                 {cart.length > 0 && (
-                  <div className="border-t border-gray-200 p-4">
+                  <div className="border-t border-gray-200 dark:border-gray-700 p-4">
                     <div className="flex items-center justify-between mb-4">
-                      <span className="font-semibold">Total:</span>
-                      <span className="font-semibold text-lg">₦{getCartTotal()}</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">Total:</span>
+                      <span className="font-semibold text-lg text-gray-900 dark:text-white">₦{getCartTotal()}</span>
                     </div>
                     <Link
                       href="/dashboard/student/checkout"

@@ -117,3 +117,6 @@ dev-data/
 .paystack-keys
 
 /generated/prisma
+
+# OneDrive placeholder / unreadable on this system
+NOTIFICATION_SYSTEM_OVERVIEW.md

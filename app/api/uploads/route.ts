@@ -2,22 +2,42 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAppRequest } from '@/lib/auth-app';
 import { v2 as cloudinary } from 'cloudinary';
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
 export async function POST(request: NextRequest) {
   try {
     const auth = verifyAppRequest(request);
     if (!auth || !auth.restaurantId) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 
-    // Check if Cloudinary is configured
-    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-      return NextResponse.json({ message: 'Cloudinary not configured' }, { status: 500 });
+    // Check if Cloudinary is configured with detailed error messages
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      const missing = [];
+      if (!cloudName) missing.push('CLOUDINARY_CLOUD_NAME');
+      if (!apiKey) missing.push('CLOUDINARY_API_KEY');
+      if (!apiSecret) missing.push('CLOUDINARY_API_SECRET');
+      
+      console.error('Cloudinary configuration missing:', missing.join(', '));
+      return NextResponse.json({ 
+        message: `Cloudinary not configured. Missing: ${missing.join(', ')}. Please check your environment variables.` 
+      }, { status: 500 });
     }
+
+    // Validate cloud name is not empty
+    if (cloudName.trim() === '') {
+      console.error('Cloudinary cloud name is empty');
+      return NextResponse.json({ 
+        message: 'Invalid Cloudinary cloud name. CLOUDINARY_CLOUD_NAME cannot be empty.' 
+      }, { status: 500 });
+    }
+
+    // Configure Cloudinary with validated credentials
+    cloudinary.config({
+      cloud_name: cloudName.trim(),
+      api_key: apiKey.trim(),
+      api_secret: apiSecret.trim(),
+    });
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -52,7 +72,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: result.secure_url });
   } catch (e: any) {
     console.error('Upload error:', e);
-    return NextResponse.json({ message: e.message || 'Upload failed' }, { status: 500 });
+    
+    // Provide more specific error messages
+    let errorMessage = 'Upload failed';
+    if (e.message) {
+      if (e.message.includes('Invalid cloud name') || e.message.includes('cloud name')) {
+        errorMessage = `Invalid Cloudinary cloud name. Please check your CLOUDINARY_CLOUD_NAME environment variable. Current value: ${process.env.CLOUDINARY_CLOUD_NAME ? 'Set (but invalid)' : 'Not set'}`;
+      } else if (e.message.includes('Invalid API key')) {
+        errorMessage = 'Invalid Cloudinary API key. Please check your CLOUDINARY_API_KEY environment variable.';
+      } else if (e.message.includes('Invalid API secret')) {
+        errorMessage = 'Invalid Cloudinary API secret. Please check your CLOUDINARY_API_SECRET environment variable.';
+      } else {
+        errorMessage = e.message;
+      }
+    }
+    
+    return NextResponse.json({ 
+      message: errorMessage,
+      error: e.message 
+    }, { status: 500 });
   }
 }
 

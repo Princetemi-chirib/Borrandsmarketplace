@@ -163,19 +163,19 @@ export default function OrderHistory() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'delivered':
-        return 'text-green-600 bg-green-100';
+        return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
       case 'cancelled':
-        return 'text-red-600 bg-red-100';
+        return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30';
       case 'picked_up':
-        return 'text-purple-600 bg-purple-100';
+        return 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30';
       case 'ready':
-        return 'text-orange-600 bg-orange-100';
+        return 'text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30';
       case 'preparing':
-        return 'text-yellow-600 bg-yellow-100';
+        return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
       case 'accepted':
-        return 'text-indigo-600 bg-indigo-100';
+        return 'text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30';
       default:
-        return 'text-gray-600 bg-gray-100';
+        return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
     }
   };
 
@@ -233,8 +233,8 @@ export default function OrderHistory() {
       <div className="p-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Order History</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Order History</h1>
+          <p className="text-gray-600 dark:text-gray-400">
             Track your past orders and view detailed information
           </p>
         </div>
@@ -245,15 +245,15 @@ export default function OrderHistory() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Orders</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalOrders}</p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Package className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </motion.div>
@@ -262,15 +262,15 @@ export default function OrderHistory() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Completed Orders</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.completedOrders}</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed Orders</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.completedOrders}</p>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
+                <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </motion.div>
@@ -279,15 +279,15 @@ export default function OrderHistory() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Spent</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalSpent)}</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Spent</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.totalSpent)}</p>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <TrendingUp className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
+                <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </motion.div>
@@ -296,15 +296,15 @@ export default function OrderHistory() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Average Order Value</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.averageOrderValue)}</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Average Order Value</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.averageOrderValue)}</p>
               </div>
-              <div className="p-3 bg-purple-100 rounded-full">
-                <Package className="w-6 h-6 text-purple-600" />
+              <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
+                <Package className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
           </motion.div>
@@ -313,15 +313,15 @@ export default function OrderHistory() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Average Rating</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.averageRating}</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Average Rating</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.averageRating}</p>
               </div>
-              <div className="p-3 bg-yellow-100 rounded-full">
-                <Star className="w-6 h-6 text-yellow-600" />
+              <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-full">
+                <Star className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
               </div>
             </div>
           </motion.div>
@@ -330,15 +330,15 @@ export default function OrderHistory() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Cancelled Orders</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.cancelledOrders}</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Cancelled Orders</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.cancelledOrders}</p>
               </div>
-              <div className="p-3 bg-red-100 rounded-full">
-                <Package className="w-6 h-6 text-red-600" />
+              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                <Package className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
             </div>
           </motion.div>
@@ -349,19 +349,19 @@ export default function OrderHistory() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6"
         >
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
                 <input
                   type="text"
                   placeholder="Search by restaurant or order number..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
             </div>
@@ -371,7 +371,7 @@ export default function OrderHistory() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
               >
                 <option value="all">All Statuses</option>
                 <option value="pending">Pending</option>
@@ -386,7 +386,7 @@ export default function OrderHistory() {
               <select
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
               >
                 <option value="all">All Time</option>
                 <option value="today">Today</option>
@@ -402,19 +402,19 @@ export default function OrderHistory() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.7 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h2 className="text-lg font-semibold text-gray-900">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Orders ({filteredOrders.length})
             </h2>
           </div>
 
           {filteredOrders.length === 0 ? (
             <div className="text-center py-12">
-              <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg mb-2">No orders found</p>
-              <p className="text-gray-400">
+              <Package className="w-16 h-16 text-gray-300 dark:text-gray-500 mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-gray-400 text-lg mb-2">No orders found</p>
+              <p className="text-gray-400 dark:text-gray-500">
                 {orders.length === 0 
                   ? "You haven't placed any orders yet." 
                   : "Try adjusting your search or filters."
@@ -422,23 +422,23 @@ export default function OrderHistory() {
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {filteredOrders.map((order, index) => (
                 <motion.div
                   key={order._id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="p-6 hover:bg-gray-50 transition-colors"
+                  className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gray-100 rounded-full">
-                        <Package className="w-6 h-6 text-gray-600" />
+                      <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">
+                        <Package className="w-6 h-6 text-gray-600 dark:text-gray-400" />
                       </div>
                       <div>
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-gray-900">
+                          <h3 className="font-semibold text-gray-900 dark:text-white">
                             {order.restaurantName}
                           </h3>
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
@@ -449,12 +449,12 @@ export default function OrderHistory() {
                           </span>
                         </div>
                         
-                        <div className="space-y-1 text-sm text-gray-600">
+                        <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                           <p>Order #{order.orderNumber}</p>
                           <p>
                             {order.items.length} item{order.items.length !== 1 ? 's' : ''} • {formatCurrency(order.total)}
                           </p>
-                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
                               {formatDate(order.createdAt)}
@@ -475,12 +475,12 @@ export default function OrderHistory() {
                                 <Star
                                   key={i}
                                   className={`w-4 h-4 ${
-                                    i < order.rating! ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                    i < order.rating! ? 'text-yellow-400 fill-current' : 'text-gray-300 dark:text-gray-500'
                                   }`}
                                 />
                               ))}
                             </div>
-                            <span className="text-sm text-gray-600">{order.rating}/5</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-400">{order.rating}/5</span>
                           </div>
                         )}
                       </div>
@@ -489,12 +489,12 @@ export default function OrderHistory() {
                     <div className="flex items-center gap-3">
                       <Link
                         href={`/dashboard/student/orders/${order._id}`}
-                        className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
+                        className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
                       >
                         <Eye className="w-4 h-4" />
                         View Details
                       </Link>
-                      <ArrowRight className="w-4 h-4 text-gray-400" />
+                      <ArrowRight className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                     </div>
                   </div>
                 </motion.div>

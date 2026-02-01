@@ -178,17 +178,17 @@ export default function StudentDashboard() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'delivered':
-        return 'text-green-600 bg-green-100';
+        return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
       case 'picked_up':
-        return 'text-purple-600 bg-purple-100';
+        return 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30';
       case 'ready':
-        return 'text-orange-600 bg-orange-100';
+        return 'text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30';
       case 'preparing':
-        return 'text-yellow-600 bg-yellow-100';
+        return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
       case 'accepted':
-        return 'text-indigo-600 bg-indigo-100';
+        return 'text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30';
       default:
-        return 'text-gray-600 bg-gray-100';
+        return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
     }
   };
 
@@ -274,8 +274,8 @@ export default function StudentDashboard() {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Orders</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalOrders}</p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Package className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </motion.div>
@@ -291,8 +291,8 @@ export default function StudentDashboard() {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Orders</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.activeOrders}</p>
               </div>
-              <div className="p-3 bg-orange-100 rounded-full">
-                <Clock className="w-6 h-6 text-orange-600" />
+              <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-full">
+                <Clock className="w-6 h-6 text-orange-600 dark:text-orange-400" />
               </div>
             </div>
           </motion.div>
@@ -308,8 +308,8 @@ export default function StudentDashboard() {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Spent</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">₦{stats.totalSpent.toLocaleString()}</p>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <TrendingUp className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
+                <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </motion.div>
@@ -325,8 +325,8 @@ export default function StudentDashboard() {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed Orders</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.completedOrders}</p>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
+                <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </motion.div>
@@ -342,8 +342,8 @@ export default function StudentDashboard() {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Favorite Restaurants</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.favoriteRestaurants}</p>
               </div>
-              <div className="p-3 bg-red-100 rounded-full">
-                <Star className="w-6 h-6 text-red-600" />
+              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                <Star className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
             </div>
           </motion.div>
@@ -359,8 +359,8 @@ export default function StudentDashboard() {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Average Rating</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.averageRating}</p>
               </div>
-              <div className="p-3 bg-yellow-100 rounded-full">
-                <Star className="w-6 h-6 text-yellow-600" />
+              <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-full">
+                <Star className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
               </div>
             </div>
           </motion.div>
@@ -371,7 +371,7 @@ export default function StudentDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Recent Orders</h2>

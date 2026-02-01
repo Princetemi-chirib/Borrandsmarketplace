@@ -294,7 +294,7 @@ export default function CheckoutPage() {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Delivery Address *
                   </label>
                   <textarea
@@ -311,7 +311,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <div>
-                  <label className="block text.sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Delivery Instructions
                   </label>
                   <textarea
@@ -324,7 +324,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Phone Number *
                   </label>
                   <input
@@ -332,7 +332,7 @@ export default function CheckoutPage() {
                     value={deliveryAddress.phone}
                     onChange={(e) => setDeliveryAddress(prev => ({ ...prev, phone: e.target.value }))}
                     placeholder="+234 801 234 5678"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
                     required
                   />
                 </div>
@@ -346,7 +346,7 @@ export default function CheckoutPage() {
               transition={{ delay: 0.1 }}
               className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700"
             >
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Payment Method</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Payment Method</h2>
               
               <div className="flex items-center p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700">
                 <CreditCard className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
@@ -361,7 +361,7 @@ export default function CheckoutPage() {
               transition={{ delay: 0.2 }}
               className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700"
             >
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Order Items</h2>
               
               <div className="space-y-4">
                 {Object.entries(cart.reduce((acc, item) => {
@@ -386,7 +386,7 @@ export default function CheckoutPage() {
                               <p className="text-gray-500 dark:text-gray-400">Qty: {item.quantity}</p>
                             </div>
                           </div>
-                          <span className="font-medium">₦{(item.price * item.quantity).toLocaleString()}</span>
+                          <span className="font-medium text-gray-900 dark:text-white">₦{(item.price * item.quantity).toLocaleString()}</span>
                         </div>
                       ))}
                     </div>
@@ -420,7 +420,7 @@ export default function CheckoutPage() {
                   <span className="font-medium dark:text-white">₦{getDeliveryFee().toLocaleString()}</span>
                 </div>
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
-                  <div className="flex justify-between text-lg font-semibold dark:text-white">
+                  <div className="flex justify-between text-lg font-semibold text-gray-900 dark:text-white">
                     <span>Total</span>
                     <span>₦{getTotal().toLocaleString()}</span>
                   </div>

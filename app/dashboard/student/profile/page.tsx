@@ -289,7 +289,7 @@ export default function Profile() {
             value={profile.firstName}
             onChange={(e) => setProfile({...profile, firstName: e.target.value})}
             disabled={!isEditing}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent disabled:bg-gray-50"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:opacity-70"
           />
         </div>
         <div>
@@ -299,7 +299,7 @@ export default function Profile() {
             value={profile.lastName}
             onChange={(e) => setProfile({...profile, lastName: e.target.value})}
             disabled={!isEditing}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent disabled:bg-gray-50"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:opacity-70"
           />
         </div>
         <div>
@@ -308,7 +308,7 @@ export default function Profile() {
             type="email"
             value={profile.email}
             disabled
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-300"
           />
         </div>
         <div>
@@ -318,7 +318,7 @@ export default function Profile() {
             value={profile.phone}
             onChange={(e) => setProfile({...profile, phone: e.target.value})}
             disabled={!isEditing}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent disabled:bg-gray-50"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:opacity-70"
           />
         </div>
         <div>
@@ -327,7 +327,7 @@ export default function Profile() {
             type="text"
             value={profile.studentId}
             disabled
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-300"
           />
         </div>
         <div>
@@ -337,7 +337,7 @@ export default function Profile() {
             value={profile.department}
             onChange={(e) => setProfile({...profile, department: e.target.value})}
             disabled={!isEditing}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent disabled:bg-gray-50"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:opacity-70"
           />
         </div>
         <div>
@@ -347,7 +347,7 @@ export default function Profile() {
             value={profile.level}
             onChange={(e) => setProfile({...profile, level: e.target.value})}
             disabled={!isEditing}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent disabled:bg-gray-50"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:opacity-70"
           />
         </div>
         <div className="md:col-span-2">
@@ -357,7 +357,7 @@ export default function Profile() {
             value={profile.address}
             onChange={(e) => setProfile({...profile, address: e.target.value})}
             disabled={!isEditing}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent disabled:bg-gray-50"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:opacity-70"
             placeholder="Enter your address"
           />
         </div>
@@ -393,7 +393,7 @@ export default function Profile() {
                   disabled={!isEditing}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary disabled:opacity-50"></div>
+                <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-gray-300 after:border-gray-300 dark:after:border-gray-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary disabled:opacity-50"></div>
               </label>
             </div>
           ))}
@@ -482,7 +482,7 @@ export default function Profile() {
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" className="sr-only peer" disabled />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary opacity-50"></div>
+            <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-gray-300 after:border-gray-300 dark:after:border-gray-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary opacity-50"></div>
           </label>
         </div>
       </div>
@@ -495,9 +495,9 @@ export default function Profile() {
         <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Payment Methods</h4>
         <div className="space-y-3">
           <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg text-center text-gray-500 dark:text-gray-400">
-            <CreditCard className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+            <CreditCard className="h-8 w-8 mx-auto mb-2 text-gray-400 dark:text-gray-500" />
             <p className="text-sm">No payment methods saved</p>
-            <p className="text-xs text-gray-400 mt-1">Payment methods are managed during checkout</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Payment methods are managed during checkout</p>
           </div>
         </div>
       </div>
@@ -506,7 +506,7 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="spinner mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
@@ -516,7 +516,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Back Arrow */}
       <div className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -557,7 +557,7 @@ export default function Profile() {
                   <button
                     onClick={handleCancel}
                     disabled={isSaving}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -578,8 +578,8 @@ export default function Profile() {
 
       {error && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
           </div>
         </div>
       )}
@@ -606,7 +606,7 @@ export default function Profile() {
                 ))}
               </nav>
               
-              <div className="mt-8 pt-6 border-t border-gray-200">
+              <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <button 
                   onClick={handleLogout}
                   className="w-full flex items-center space-x-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors"
