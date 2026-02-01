@@ -56,100 +56,76 @@ export default function ReviewsPage() {
   const [sortBy, setSortBy] = useState('recent');
   const [showAddReview, setShowAddReview] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
-
-  // Mock data
-  const mockReviews: Review[] = [
-    {
-      _id: '1',
-      restaurantId: 'rest1',
-      restaurantName: 'Pizza Palace',
-      restaurantImage: '/images/pizza-palace.jpg',
-      orderId: 'order1',
-      orderNumber: 'ORD-20241201-ABC123',
-      rating: 5,
-      review: 'Amazing pizza! The crust was perfectly crispy and the toppings were fresh. Delivery was fast and the food was still hot when it arrived. Highly recommend!',
-      photos: ['/images/review1.jpg', '/images/review2.jpg'],
-      helpful: 12,
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-      updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      isVerified: true
-    },
-    {
-      _id: '2',
-      restaurantId: 'rest2',
-      restaurantName: 'Burger House',
-      restaurantImage: '/images/burger-house.jpg',
-      orderId: 'order2',
-      orderNumber: 'ORD-20241130-DEF456',
-      rating: 4,
-      review: 'Good burgers, but the fries could be crispier. Service was friendly and delivery time was reasonable.',
-      photos: [],
-      helpful: 5,
-      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-      updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      isVerified: true
-    },
-    {
-      _id: '3',
-      restaurantId: 'rest3',
-      restaurantName: 'Sushi Express',
-      restaurantImage: '/images/sushi-express.jpg',
-      orderId: 'order3',
-      orderNumber: 'ORD-20241128-GHI789',
-      rating: 3,
-      review: 'Sushi was okay, but not as fresh as expected. The rice was a bit dry. Would try again but with different items.',
-      photos: ['/images/review3.jpg'],
-      helpful: 2,
-      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-      updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-      isVerified: true
-    }
-  ];
-
-  const mockRestaurants: Restaurant[] = [
-    {
-      _id: 'rest1',
-      name: 'Pizza Palace',
-      image: '/images/pizza-palace.jpg',
-      cuisine: 'Italian',
-      rating: 4.8,
-      reviewCount: 156
-    },
-    {
-      _id: 'rest2',
-      name: 'Burger House',
-      image: '/images/burger-house.jpg',
-      cuisine: 'American',
-      rating: 4.6,
-      reviewCount: 89
-    },
-    {
-      _id: 'rest3',
-      name: 'Sushi Express',
-      image: '/images/sushi-express.jpg',
-      cuisine: 'Japanese',
-      rating: 4.9,
-      reviewCount: 234
-    }
-  ];
+  const [restaurantsList, setRestaurantsList] = useState<Restaurant[]>([]);
 
   useEffect(() => {
-    // Get user from localStorage
     try {
       const userData = localStorage.getItem('user');
-      if (userData) {
-        setUser(JSON.parse(userData));
-      }
+      if (userData) setUser(JSON.parse(userData));
     } catch (error) {
       console.error('Error parsing user data:', error);
     }
+  }, []);
 
-    // Simulate API call
-    setTimeout(() => {
-      setReviews(mockReviews);
-      setFilteredReviews(mockReviews);
-      setIsLoading(false);
-    }, 1000);
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [ordersRes, restaurantsRes] = await Promise.all([
+          fetch('/api/students/orders?status=all&limit=200', { headers }),
+          fetch('/api/students/restaurants', { headers })
+        ]);
+
+        const ordersData = ordersRes.ok ? await ordersRes.json() : { orders: [] };
+        const orders: any[] = ordersData.orders || [];
+
+        const reviewsFromOrders: Review[] = orders
+          .filter((o: any) => o.rating != null && o.review != null && String(o.review).trim() !== '')
+          .map((o: any) => ({
+            _id: o.id || o._id,
+            restaurantId: o.restaurant?.id || o.restaurantId,
+            restaurantName: o.restaurant?.name || 'Restaurant',
+            restaurantImage: o.restaurant?.image || o.restaurant?.logo || '',
+            orderId: o.id || o._id,
+            orderNumber: o.orderNumber || `ORD-${o.id || o._id}`,
+            rating: Number(o.rating),
+            review: String(o.review),
+            photos: [],
+            helpful: 0,
+            createdAt: new Date(o.ratedAt || o.updatedAt || o.createdAt),
+            updatedAt: new Date(o.updatedAt || o.createdAt),
+            isVerified: true
+          }));
+
+        setReviews(reviewsFromOrders);
+        setFilteredReviews(reviewsFromOrders);
+
+        if (restaurantsRes.ok) {
+          const restJson = await restaurantsRes.json();
+          const restList = (restJson.restaurants || restJson.favorites || []).map((r: any) => ({
+            _id: r.id || r._id,
+            name: r.name || '',
+            image: r.image || r.logo || '',
+            cuisine: r.cuisine || '',
+            rating: r.rating ?? 0,
+            reviewCount: r.reviewCount ?? 0
+          }));
+          setRestaurantsList(restList);
+        }
+      } catch (err) {
+        console.error('Error fetching reviews data:', err);
+        setReviews([]);
+        setFilteredReviews([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -273,7 +249,7 @@ export default function ReviewsPage() {
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Average Rating</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {(reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)}
+                  {reviews.length > 0 ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1) : '0'}
                 </p>
               </div>
               <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center">
@@ -498,12 +474,12 @@ export default function ReviewsPage() {
                     <select
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
                       onChange={(e) => {
-                        const restaurant = mockRestaurants.find(r => r._id === e.target.value);
+                        const restaurant = restaurantsList.find(r => r._id === e.target.value);
                         setSelectedRestaurant(restaurant || null);
                       }}
                     >
                       <option value="">Choose a restaurant...</option>
-                      {mockRestaurants.map(restaurant => (
+                      {restaurantsList.map(restaurant => (
                         <option key={restaurant._id} value={restaurant._id}>
                           {restaurant.name}
                         </option>

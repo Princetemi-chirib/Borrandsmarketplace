@@ -48,13 +48,17 @@ export default function RestaurantAnalytics() {
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    // Simulate user data loading
     try {
-      // Mock user data instead of localStorage
-      const mockUser = { name: 'Tasty Bites Restaurant' };
-      setUser(mockUser);
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const parsed = JSON.parse(userData);
+        setUser(parsed);
+      } else {
+        setUser({ name: 'Restaurant' });
+      }
     } catch (err) {
       console.error('Error loading user data:', err);
+      setUser({ name: 'Restaurant' });
     }
   }, []);
 

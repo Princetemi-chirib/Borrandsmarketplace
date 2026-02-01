@@ -276,36 +276,17 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Notifications</h3>
                       </div>
                       <div className="max-h-96 overflow-y-auto">
-                        {notifications > 0 ? (
-                          <div className="p-4">
-                            <div className="space-y-3">
-                              <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
-                                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium text-gray-900 dark:text-white">Order Update</p>
-                                  <p className="text-xs text-gray-600 dark:text-gray-400">Your order #ORD-123 has been picked up</p>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">2 minutes ago</p>
-                                </div>
-                              </div>
-                              <div className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg">
-                                <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium text-gray-900 dark:text-white">Delivery Complete</p>
-                                  <p className="text-xs text-gray-600 dark:text-gray-400">Your order has been delivered successfully</p>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">1 hour ago</p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="p-8 text-center">
-                            <Bell className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                            <p className="text-gray-500 dark:text-gray-400">No notifications yet</p>
-                          </div>
-                        )}
+                        <div className="p-8 text-center">
+                          <Bell className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                          <p className="text-gray-500 dark:text-gray-400">
+                            {notifications > 0
+                              ? `You have ${notifications} unread notification(s). They will appear here when the list is available.`
+                              : 'No notifications yet'}
+                          </p>
+                        </div>
                       </div>
                       {notifications > 0 && (
-                        <div className="p-3 border-t border-gray-200">
+                        <div className="p-3 border-t border-gray-200 dark:border-gray-700">
                           <button className="w-full text-sm text-brand-primary hover:text-brand-accent font-medium">
                             Mark all as read
                           </button>
