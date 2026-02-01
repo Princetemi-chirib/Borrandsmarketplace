@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Borrands Marketplace - Connect Students, Restaurants & Riders',
-  description: 'A comprehensive marketplace platform connecting university students with local restaurants and delivery riders. Order food, track deliveries, and manage your business all in one place.',
+  description: 'Order meals on campus.',
   keywords: 'university marketplace, food delivery, student ordering, restaurant management, delivery tracking, campus food',
   authors: [{ name: 'Borrands Marketplace Team' }],
   creator: 'Borrands Marketplace',
@@ -17,14 +17,14 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://borrands-marketplace.vercel.app'),
+  metadataBase: new URL('https://orderup.borrands.com.ng/'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: 'Borrands Marketplace - Connect Students, Restaurants & Riders',
-    description: 'A comprehensive marketplace platform connecting university students with local restaurants and delivery riders.',
-    url: 'https://borrands-marketplace.vercel.app',
+    description: 'Order meals on campus.',
+    url: 'https://orderup.borrands.com.ng/',
     siteName: 'Borrands Marketplace',
     images: [
       {
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Borrands Marketplace - Connect Students, Restaurants & Riders',
-    description: 'A comprehensive marketplace platform connecting university students with local restaurants and delivery riders.',
+    description: 'Order meals on campus.',
     images: ['/images/brand-logo.jpeg'],
   },
   robots: {
@@ -67,10 +67,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="icon" href="/images/brand-logo.jpeg" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/images/brand-logo.jpeg" />
+        <link rel="icon" type="image/jpeg" sizes="32x32" href="/images/brand-logo.jpeg" />
+        <link rel="icon" type="image/jpeg" sizes="16x16" href="/images/brand-logo.jpeg" />
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="theme-color" content="#152d8f" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />

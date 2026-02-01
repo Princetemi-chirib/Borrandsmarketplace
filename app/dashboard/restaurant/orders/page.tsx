@@ -217,11 +217,11 @@ export default function RestaurantOrders() {
   };
 
   const updateOrderStatus = async (orderId:string, newStatus:string) => {
+    setError('');
     const token = localStorage.getItem('token');
     const headers: any = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
     
-    // Convert lowercase status back to uppercase for API
     const apiStatus = newStatus.toUpperCase();
     const res = await fetch(`/api/orders/${orderId}`, { 
       method:'PATCH', 
@@ -229,7 +229,12 @@ export default function RestaurantOrders() {
       credentials:'include', 
       body: JSON.stringify({ status: apiStatus }) 
     });
-    if (res.ok) await loadOrders();
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      await loadOrders();
+    } else {
+      setError(data.message || 'Failed to update order');
+    }
   };
 
   const userName = user?.name || 'Restaurant';
@@ -445,12 +450,22 @@ export default function RestaurantOrders() {
                       <span className="text-sm text-gray-700 dark:text-gray-300">Message Customer</span>
                     </button>
                   </div>
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-2 flex-wrap gap-2">
                     {nextActionFor(order.status) && (
-                      <button onClick={() => updateOrderStatus(order._id, nextActionFor(order.status)!.next)} className={`flex items-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors ${nextActionFor(order.status)!.color}`}>
-                        <Check className="h-4 w-4" />
-                        <span className="text-sm">{nextActionFor(order.status)!.label}</span>
-                      </button>
+                      order.status === 'accepted' && !order.riderId ? (
+                        <button disabled className="flex items-center space-x-2 px-4 py-2 text-white rounded-lg opacity-60 cursor-not-allowed bg-orange-600">
+                          <Check className="h-4 w-4" />
+                          <span className="text-sm">Start Preparing</span>
+                        </button>
+                      ) : nextActionFor(order.status) ? (
+                        <button onClick={() => updateOrderStatus(order._id, nextActionFor(order.status)!.next)} className={`flex items-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors ${nextActionFor(order.status)!.color}`}>
+                          <Check className="h-4 w-4" />
+                          <span className="text-sm">{nextActionFor(order.status)!.label}</span>
+                        </button>
+                      ) : null
+                    )}
+                    {order.status === 'accepted' && !order.riderId && (
+                      <span className="text-xs text-amber-600 dark:text-amber-400 self-center">Waiting for rider assignment</span>
                     )}
                     {order.status === 'pending' && (
                       <button className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">

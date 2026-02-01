@@ -679,28 +679,6 @@ export default function RestaurantPage() {
           </div>
         </div>
 
-        {/* Mobile Cart Button - Always visible on mobile */}
-        <div className="lg:hidden fixed bottom-6 right-6 z-50">
-          <Link
-            href="/dashboard/student/checkout"
-            className={`relative p-4 rounded-full shadow-lg transition-all ${
-              cart.length > 0 
-                ? 'bg-brand-primary text-white hover:bg-brand-accent scale-100' 
-                : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 scale-90 opacity-50'
-            }`}
-          >
-            <ShoppingBag className="h-6 w-6" />
-            {cart.length > 0 && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 h-6 w-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold"
-              >
-                {cart.length}
-              </motion.span>
-            )}
-          </Link>
-        </div>
       </div>
     </DashboardLayout>
   );

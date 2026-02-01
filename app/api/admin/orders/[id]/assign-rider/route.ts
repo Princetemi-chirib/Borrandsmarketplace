@@ -4,6 +4,8 @@ import { getUserFromRequest } from '@/lib/auth';
 import { sendRiderAssignmentEmail } from '@/lib/services/rider-notification';
 import { sendOrderNotificationEmail } from '@/lib/services/email';
 
+export const dynamic = 'force-dynamic';
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }

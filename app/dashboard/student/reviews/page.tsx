@@ -242,8 +242,8 @@ export default function ReviewsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">My Reviews</h1>
-            <p className="text-gray-600">Manage your restaurant reviews and ratings</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Reviews</h1>
+            <p className="text-gray-600 dark:text-gray-400">Manage your restaurant reviews and ratings</p>
           </div>
           <button
             onClick={() => setShowAddReview(true)}
@@ -256,73 +256,73 @@ export default function ReviewsPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Total Reviews</p>
-                <p className="text-2xl font-bold text-gray-900">{reviews.length}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total Reviews</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{reviews.length}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <MessageCircle className="h-6 w-6 text-blue-600" />
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                <MessageCircle className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Average Rating</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Average Rating</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {(reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <Star className="h-6 w-6 text-yellow-600 fill-current" />
+              <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center">
+                <Star className="h-6 w-6 text-yellow-600 dark:text-yellow-400 fill-current" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Helpful Votes</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Helpful Votes</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {reviews.reduce((sum, r) => sum + r.helpful, 0)}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <ThumbsUp className="h-6 w-6 text-green-600" />
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                <ThumbsUp className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Verified Reviews</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Verified Reviews</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {reviews.filter(r => r.isVerified).length}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <CheckCircle className="h-6 w-6 text-purple-600" />
+              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
                 <input
                   type="text"
                   placeholder="Search reviews..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
             </div>
@@ -331,7 +331,7 @@ export default function ReviewsPage() {
               <select
                 value={ratingFilter}
                 onChange={(e) => setRatingFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
               >
                 <option value="all">All Ratings</option>
                 <option value="5">5 Stars</option>
@@ -344,7 +344,7 @@ export default function ReviewsPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
               >
                 <option value="recent">Most Recent</option>
                 <option value="oldest">Oldest First</option>
@@ -363,18 +363,18 @@ export default function ReviewsPage() {
                 key={review._id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+                className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700"
               >
                 <div className="flex items-start space-x-4">
-                  <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0"></div>
+                  <div className="w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded-lg flex-shrink-0"></div>
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-2">
-                          <h3 className="font-semibold text-gray-900">{review.restaurantName}</h3>
+                          <h3 className="font-semibold text-gray-900 dark:text-white">{review.restaurantName}</h3>
                           {review.isVerified && (
-                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                            <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-xs rounded-full">
                               Verified
                             </span>
                           )}
@@ -383,19 +383,19 @@ export default function ReviewsPage() {
                         <div className="flex items-center space-x-4 mb-3">
                           <div className="flex items-center space-x-1">
                             {renderStars(review.rating)}
-                            <span className="text-sm text-gray-600 ml-1">
+                            <span className="text-sm text-gray-600 dark:text-gray-400 ml-1">
                               {review.rating} ({getRatingText(review.rating)})
                             </span>
                           </div>
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
                             Order #{review.orderNumber}
                           </span>
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
                             {new Date(review.createdAt).toLocaleDateString()}
                           </span>
                         </div>
 
-                        <p className="text-gray-700 mb-3">{review.review}</p>
+                        <p className="text-gray-700 dark:text-gray-300 mb-3">{review.review}</p>
 
                         {/* Review Photos */}
                         {review.photos.length > 0 && (
@@ -403,16 +403,16 @@ export default function ReviewsPage() {
                             {review.photos.map((photo, index) => (
                               <div
                                 key={index}
-                                className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center"
+                                className="w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center"
                               >
-                                <ImageIcon className="h-6 w-6 text-gray-400" />
+                                <ImageIcon className="h-6 w-6 text-gray-400 dark:text-gray-500" />
                               </div>
                             ))}
                           </div>
                         )}
 
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4 text-sm text-gray-500">
+                          <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                             <span className="flex items-center space-x-1">
                               <ThumbsUp className="h-4 w-4" />
                               <span>{review.helpful} helpful</span>
@@ -422,13 +422,13 @@ export default function ReviewsPage() {
                           <div className="flex items-center space-x-2">
                             <button
                               onClick={() => {/* Edit review */}}
-                              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                              className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                             >
                               <Edit className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => deleteReview(review._id)}
-                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -442,9 +442,9 @@ export default function ReviewsPage() {
             ))
           ) : (
             <div className="text-center py-12">
-              <MessageCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No reviews found</h3>
-              <p className="text-gray-500 mb-6">
+              <MessageCircle className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No reviews found</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6">
                 {searchTerm || ratingFilter !== 'all' 
                   ? 'Try adjusting your search or filters.'
                   : "You haven't written any reviews yet."
@@ -476,14 +476,14 @@ export default function ReviewsPage() {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">Write a Review</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Write a Review</h2>
                   <button
                     onClick={() => setShowAddReview(false)}
-                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -492,11 +492,11 @@ export default function ReviewsPage() {
                 <div className="space-y-6">
                   {/* Restaurant Selection */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Select Restaurant
                     </label>
                     <select
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
                       onChange={(e) => {
                         const restaurant = mockRestaurants.find(r => r._id === e.target.value);
                         setSelectedRestaurant(restaurant || null);
@@ -513,14 +513,14 @@ export default function ReviewsPage() {
 
                   {/* Rating */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Rating
                     </label>
                     <div className="flex items-center space-x-2">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
-                          className="text-2xl text-gray-300 hover:text-yellow-500 transition-colors"
+                          className="text-2xl text-gray-300 dark:text-gray-500 hover:text-yellow-500 transition-colors"
                         >
                           ★
                         </button>
@@ -530,24 +530,24 @@ export default function ReviewsPage() {
 
                   {/* Review Text */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Your Review
                     </label>
                     <textarea
                       rows={4}
                       placeholder="Share your experience with this restaurant..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent resize-none"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500 resize-none"
                     />
                   </div>
 
                   {/* Photo Upload */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Add Photos (Optional)
                     </label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <Camera className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">
+                    <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+                      <Camera className="h-8 w-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         Click to upload photos of your food
                       </p>
                     </div>
@@ -557,7 +557,7 @@ export default function ReviewsPage() {
                   <div className="flex justify-end space-x-3">
                     <button
                       onClick={() => setShowAddReview(false)}
-                      className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                      className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                     >
                       Cancel
                     </button>

@@ -13,13 +13,14 @@ export async function GET(request: NextRequest) {
 
     await dbConnect();
 
-    // Get all orders for this restaurant
+    // Get all orders for this restaurant (use subtotal for revenue — excludes service & delivery)
     const allOrders = await prisma.order.findMany({
       where: { restaurantId: auth.restaurantId },
       select: {
         id: true,
         status: true,
         total: true,
+        subtotal: true,
         createdAt: true,
         rating: true
       }
@@ -43,10 +44,10 @@ export async function GET(request: NextRequest) {
     const completedOrders = allOrders.filter(o => o.status === 'DELIVERED').length;
     const totalRevenue = allOrders
       .filter(o => o.status === 'DELIVERED')
-      .reduce((sum, order) => sum + order.total, 0);
+      .reduce((sum, order) => sum + (order.subtotal ?? 0), 0);
     const todayRevenue = todayOrders
       .filter(o => o.status === 'DELIVERED')
-      .reduce((sum, order) => sum + order.total, 0);
+      .reduce((sum, order) => sum + (order.subtotal ?? 0), 0);
 
     // Calculate average rating
     const ratedOrders = allOrders.filter(o => o.rating && o.rating > 0);
