@@ -247,7 +247,7 @@ export default function RestaurantDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-brand-primary to-brand-accent rounded-xl p-4 sm:p-5"
+          className="bg-gradient-to-r from-primary-500 to-accent-500 rounded-xl p-4 sm:p-5"
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
             <div className="flex-1">
