@@ -367,7 +367,7 @@ export default function RestaurantOrders() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-gray-900 dark:text-white">{fmt(order.total)}</div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">{fmt(order.subtotal ?? order.total)}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Est. delivery: {order.estimatedDeliveryTime} min</div>
                   </div>
                 </div>

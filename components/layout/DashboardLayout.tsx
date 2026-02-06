@@ -24,9 +24,22 @@ import {
   HelpCircle,
   Heart,
   Star,
-  Clock
+  Clock,
+  ShoppingCart,
+  Plus,
+  Minus
 } from 'lucide-react';
 import Logo from '../Logo';
+
+interface LayoutCartItem {
+  restaurantId: string;
+  restaurantName: string;
+  itemId: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+}
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -74,15 +87,72 @@ const navigationItems = {
   ],
 };
 
+const CART_STORAGE_KEY = 'cart';
+
+function readCartFromStorage(): LayoutCartItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export default function DashboardLayout({ children, userRole, userName }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifications, setNotifications] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [cart, setCart] = useState<LayoutCartItem[]>([]);
+  const [showCartPanel, setShowCartPanel] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
   const navigation = navigationItems[userRole as keyof typeof navigationItems] || [];
+  const isStudent = userRole === 'student';
+
+  // Sync cart from localStorage (mount, pathname change, storage event, custom event)
+  useEffect(() => {
+    setCart(readCartFromStorage());
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!isStudent) return;
+    const handleStorage = () => setCart(readCartFromStorage());
+    const handleCartUpdated = () => setCart(readCartFromStorage());
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('cart-updated', handleCartUpdated);
+    setCart(readCartFromStorage());
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('cart-updated', handleCartUpdated);
+    };
+  }, [isStudent]);
+
+  const updateCartQuantity = (itemId: string, quantity: number) => {
+    setCart((prev) => {
+      let next;
+      if (quantity <= 0) {
+        next = prev.filter((item) => item.itemId !== itemId);
+      } else {
+        next = prev.map((item) =>
+          item.itemId === itemId ? { ...item, quantity } : item
+        );
+      }
+      try {
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const getCartTotal = () =>
+    cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const getCartCount = () =>
+    cart.reduce((count, item) => count + item.quantity, 0);
 
   useEffect(() => {
     // Fetch notifications count based on user role
@@ -122,13 +192,16 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
     setSidebarOpen(false);
   }, [pathname]);
 
-  // Close dropdowns when clicking outside
+  // Close dropdowns and cart panel when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
       if (!target.closest('.notification-dropdown') && !target.closest('.user-menu-dropdown')) {
         setShowNotifications(false);
         setShowUserMenu(false);
+      }
+      if (!target.closest('.cart-panel') && !target.closest('.cart-trigger')) {
+        setShowCartPanel(false);
       }
     };
 
@@ -249,6 +322,25 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
             </div>
 
             <div className="flex items-center space-x-2 sm:space-x-3">
+              {/* Cart (student only) */}
+              {isStudent && (
+                <div className="relative cart-trigger">
+                  <button
+                    type="button"
+                    onClick={() => setShowCartPanel(true)}
+                    className="relative p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                    aria-label="Open cart"
+                  >
+                    <ShoppingCart className="h-5 w-5" />
+                    {getCartCount() > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[1.25rem] h-5 px-1.5 bg-brand-primary text-white text-xs font-semibold rounded-full flex items-center justify-center">
+                        {getCartCount() > 99 ? '99+' : getCartCount()}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              )}
+
               {/* Notifications */}
               <div className="relative notification-dropdown">
                 <button 
@@ -374,6 +466,145 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
             {children}
           </div>
         </main>
+
+        {/* Cart slide-out (student only) */}
+        {isStudent && (
+          <AnimatePresence>
+            {showCartPanel && (
+              <div className="cart-panel fixed inset-0 z-50 flex justify-end">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                  onClick={() => setShowCartPanel(false)}
+                />
+                <motion.div
+                  initial={{ x: '100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: '100%' }}
+                  transition={{ type: 'tween', duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+                  className="relative w-full max-w-md bg-white dark:bg-gray-800 shadow-2xl flex flex-col h-full"
+                >
+                  <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-brand-primary/10 dark:bg-brand-primary/20">
+                        <ShoppingCart className="h-5 w-5 text-brand-primary" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Your cart</h2>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {getCartCount()} {getCartCount() === 1 ? 'item' : 'items'}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowCartPanel(false)}
+                      className="p-2.5 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      aria-label="Close cart"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5">
+                    {cart.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-16 text-center">
+                        <div className="w-20 h-20 rounded-2xl bg-gray-100 dark:bg-gray-700/50 flex items-center justify-center mb-4">
+                          <ShoppingBag className="h-10 w-10 text-gray-400 dark:text-gray-500" />
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-400 font-medium">Your cart is empty</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Add items from Restaurants or Favorites</p>
+                        <Link
+                          href="/dashboard/student/restaurants"
+                          onClick={() => setShowCartPanel(false)}
+                          className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary text-white text-sm font-medium hover:opacity-90 transition-opacity"
+                        >
+                          Browse restaurants
+                        </Link>
+                      </div>
+                    ) : (
+                      <ul className="space-y-3">
+                        {cart.map((item) => (
+                          <motion.li
+                            key={item.itemId}
+                            layout
+                            className="flex gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/40 border border-gray-100 dark:border-gray-600/50"
+                          >
+                            <div className="w-14 h-14 rounded-lg bg-gray-200 dark:bg-gray-600 flex-shrink-0 overflow-hidden">
+                              {item.image ? (
+                                <img src={item.image} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Package className="h-6 w-6 text-gray-400 dark:text-gray-500" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900 dark:text-white truncate text-sm">{item.name}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{item.restaurantName}</p>
+                              <p className="text-sm font-semibold text-brand-primary mt-0.5">₦{(item.price * item.quantity).toLocaleString()}</p>
+                            </div>
+                            <div className="flex flex-col items-end justify-between">
+                              <div className="flex items-center gap-1.5 rounded-lg bg-white dark:bg-gray-600/50 border border-gray-200 dark:border-gray-600 p-1">
+                                <button
+                                  type="button"
+                                  onClick={() => updateCartQuantity(item.itemId, item.quantity - 1)}
+                                  className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors"
+                                  aria-label="Decrease quantity"
+                                >
+                                  <Minus className="h-3.5 w-3.5 text-gray-600 dark:text-gray-300" />
+                                </button>
+                                <span className="w-6 text-center text-sm font-medium text-gray-900 dark:text-white tabular-nums">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => updateCartQuantity(item.itemId, item.quantity + 1)}
+                                  className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors"
+                                  aria-label="Increase quantity"
+                                >
+                                  <Plus className="h-3.5 w-3.5 text-gray-600 dark:text-gray-300" />
+                                </button>
+                              </div>
+                              {item.quantity <= 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => updateCartQuantity(item.itemId, 0)}
+                                  className="text-xs text-red-600 dark:text-red-400 hover:underline mt-1"
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </div>
+                          </motion.li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  {cart.length > 0 && (
+                    <div className="border-t border-gray-200 dark:border-gray-700 p-4 sm:p-5 bg-gray-50/50 dark:bg-gray-800/50">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Subtotal</span>
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">₦{getCartTotal().toLocaleString()}</span>
+                      </div>
+                      <Link
+                        href="/dashboard/student/checkout"
+                        onClick={() => setShowCartPanel(false)}
+                        className="block w-full py-3.5 px-4 rounded-xl bg-brand-primary text-white text-center font-semibold hover:opacity-95 transition-opacity focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                      >
+                        Proceed to checkout
+                      </Link>
+                    </div>
+                  )}
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+        )}
       </div>
     </div>
   );

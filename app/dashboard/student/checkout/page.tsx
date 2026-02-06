@@ -22,7 +22,7 @@ interface CartItem {
   name: string;
   price: number;
   quantity: number;
-  image: string;
+  image?: string;
 }
 
 interface DeliveryAddress {
@@ -380,7 +380,18 @@ export default function CheckoutPage() {
                       {restaurantData.items.map((item: CartItem) => (
                         <div key={item.itemId} className="flex items-center justify-between text-sm">
                           <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                            <div className="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700">
+                              {item.image && (
+                                <img
+                                  src={item.image}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                              )}
+                            </div>
                             <div>
                               <p className="font-medium dark:text-white">{item.name}</p>
                               <p className="text-gray-500 dark:text-gray-400">Qty: {item.quantity}</p>
