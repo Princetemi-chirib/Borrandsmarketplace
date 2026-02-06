@@ -129,8 +129,9 @@ export default function RestaurantsPage() {
   }, [searchTerm, selectedCuisine, sortBy, priceRange]);
 
   useEffect(() => {
-    // Save cart to localStorage
+    // Save cart to localStorage and notify layout to sync header cart
     localStorage.setItem('cart', JSON.stringify(cart));
+    window.dispatchEvent(new CustomEvent('cart-updated'));
   }, [cart]);
 
   const toggleFavorite = async (restaurantId: string) => {

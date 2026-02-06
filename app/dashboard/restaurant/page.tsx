@@ -46,6 +46,7 @@ interface Order {
   _id: string;
   studentName: string;
   status: string;
+  subtotal?: number;
   total: number;
   createdAt: string;
   estimatedDeliveryTime: string;
@@ -449,7 +450,7 @@ export default function RestaurantDashboard() {
                           </div>
                           <div className="text-left sm:text-right">
                             <p className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
-                              ₦{order.total.toLocaleString()}
+                              ₦{(order.subtotal ?? order.total).toLocaleString()}
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{order.paymentStatus}</p>
                           </div>

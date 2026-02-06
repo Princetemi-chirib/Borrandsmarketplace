@@ -38,7 +38,8 @@ export async function PATCH(
           select: {
             id: true,
             name: true,
-            email: true
+            email: true,
+            phone: true
           }
         },
         rider: {
@@ -120,6 +121,7 @@ export async function PATCH(
           order.orderNumber,
           order.deliveryAddress,
           order.student.name,
+          order.student.phone,
           order.restaurant.name
         );
         if (emailResult.success) {

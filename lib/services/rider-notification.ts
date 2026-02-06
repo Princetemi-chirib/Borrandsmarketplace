@@ -9,6 +9,7 @@ export async function sendRiderAssignmentEmail(
   orderNumber: string,
   deliveryAddress: string,
   studentName: string,
+  studentPhone: string | null,
   restaurantName: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
@@ -57,6 +58,7 @@ export async function sendRiderAssignmentEmail(
                 <p><strong>Restaurant:</strong> ${restaurantName}</p>
                 <p><strong>Delivery Address:</strong> ${deliveryAddress}</p>
                 <p><strong>Customer:</strong> ${studentName}</p>
+                ${studentPhone ? `<p><strong>Customer Phone:</strong> ${studentPhone}</p>` : ''}
               </div>
               <p>Please proceed to the restaurant to pick up the order and deliver it to the customer.</p>
               <p>Best regards,<br><strong>The Borrands Team</strong></p>
@@ -77,6 +79,7 @@ Order Number: #${orderNumber}
 Restaurant: ${restaurantName}
 Delivery Address: ${deliveryAddress}
 Customer: ${studentName}
+${studentPhone ? `Customer Phone: ${studentPhone}` : ''}
 
 Please proceed to the restaurant to pick up the order and deliver it to the customer.
 

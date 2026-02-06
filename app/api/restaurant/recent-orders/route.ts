@@ -33,13 +33,14 @@ export async function GET(request: NextRequest) {
       take: limit
     });
 
-    // Transform orders
+    // Transform orders (expose subtotal for vendor — food only; total includes delivery + service charge)
     const transformedOrders = orders.map(order => ({
       _id: order.id,
       id: order.id,
       orderNumber: order.orderNumber,
       studentName: order.student?.name || 'Unknown',
       status: order.status?.toLowerCase() || 'pending',
+      subtotal: order.subtotal,
       total: order.total,
       createdAt: order.createdAt.toISOString(),
       estimatedDeliveryTime: order.estimatedDeliveryTime,
