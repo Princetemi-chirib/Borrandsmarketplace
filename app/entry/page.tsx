@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { GraduationCap, Store } from 'lucide-react';
+import { LogIn, Store, GraduationCap } from 'lucide-react';
 import Logo from '@/components/Logo';
 
 export default function EntryPage() {
@@ -22,7 +22,7 @@ export default function EntryPage() {
           className="w-full max-w-sm space-y-6"
         >
           <p className="text-center text-gray-600 dark:text-gray-400 text-sm">
-            Sign in to continue
+            Sign in or create an account
           </p>
 
           <div className="space-y-3">
@@ -30,21 +30,24 @@ export default function EntryPage() {
               href="/auth/login"
               className="flex items-center justify-center gap-3 w-full py-3.5 px-4 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
             >
-              <GraduationCap className="h-5 w-5" />
-              Student Login
+              <LogIn className="h-5 w-5" />
+              Login
             </Link>
             <Link
-              href="/auth/login"
+              href="/auth/register"
+              className="flex items-center justify-center gap-3 w-full py-3.5 px-4 rounded-xl border-2 border-primary-500 text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-900/20 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+            >
+              <GraduationCap className="h-5 w-5" />
+              Student Sign up
+            </Link>
+            <Link
+              href="/auth/register-restaurant"
               className="flex items-center justify-center gap-3 w-full py-3.5 px-4 rounded-xl bg-accent-500 hover:bg-accent-600 text-white font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
             >
               <Store className="h-5 w-5" />
-              Restaurant Login
+              Restaurant Signup
             </Link>
           </div>
-
-          <p className="text-center text-xs text-gray-500 dark:text-gray-500">
-            Same login page — your account type is detected automatically.
-          </p>
         </motion.div>
       </main>
 
