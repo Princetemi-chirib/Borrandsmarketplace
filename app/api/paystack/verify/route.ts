@@ -124,8 +124,8 @@ export async function GET(request: NextRequest) {
               return null;
             }
 
-            const SERVICE_CHARGE = 150;
-            const DELIVERY_FEE = 350; // Use fixed delivery fee to match /api/orders
+            const SERVICE_CHARGE = 200;
+            const DELIVERY_FEE = 300;
             const total = subtotal + SERVICE_CHARGE + DELIVERY_FEE;
             const estimatedDeliveryTime = restaurant?.estimatedDeliveryTime || 30;
             

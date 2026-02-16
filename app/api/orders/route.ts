@@ -110,8 +110,8 @@ export async function POST(request: NextRequest) {
     }
 
     const subtotal = normalizedItems.reduce((sum: number, it: any) => sum + it.total, 0);
-    const SERVICE_CHARGE = 150;
-    const DELIVERY_FEE = 500;
+    const SERVICE_CHARGE = 200;
+    const DELIVERY_FEE = 300;
     const total = subtotal + SERVICE_CHARGE + DELIVERY_FEE;
 
     const orderNumber = `OD-${Date.now()}-${Math.floor(Math.random()*1000)}`;
