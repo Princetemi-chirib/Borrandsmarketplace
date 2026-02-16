@@ -35,6 +35,7 @@ interface RestaurantFormData {
   
   // Owner Information
   ownerName: string;
+  ownerEmail: string;
   ownerPhone: string;
   ownerPassword: string;
   confirmPassword: string;
@@ -75,6 +76,7 @@ export default function RestaurantRegistration() {
     estimatedDeliveryTime: 30,
     university: '',
     ownerName: '',
+    ownerEmail: '',
     ownerPhone: '',
     ownerPassword: '',
     confirmPassword: ''
@@ -100,8 +102,13 @@ export default function RestaurantRegistration() {
         }
         break;
       case 3:
-        if (!formData.ownerName || !formData.ownerPhone || !formData.ownerPassword) {
+        if (!formData.ownerName || !formData.ownerEmail || !formData.ownerPhone || !formData.ownerPassword) {
           setError('Please fill in all required fields');
+          return false;
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.ownerEmail)) {
+          setError('Please enter a valid email address');
           return false;
         }
         if (formData.ownerPassword !== formData.confirmPassword) {
@@ -502,7 +509,18 @@ export default function RestaurantRegistration() {
                     />
                   </div>
 
-
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.ownerEmail}
+                      onChange={(e) => handleInputChange('ownerEmail', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                      placeholder="owner@restaurant.com"
+                    />
+                  </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
