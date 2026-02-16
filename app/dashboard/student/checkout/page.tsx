@@ -109,8 +109,8 @@ export default function CheckoutPage() {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
-  const getServiceCharge = () => 150; // Fixed service charge
-  const getDeliveryFee = () => 500; // Fixed delivery fee
+  const getServiceCharge = () => 200; // Fixed service charge
+  const getDeliveryFee = () => 300; // Fixed delivery fee
 
   const getTotal = () => {
     return getCartTotal() + getServiceCharge() + getDeliveryFee();
