@@ -133,6 +133,14 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (!university || String(university).trim() === '') {
+      return NextResponse.json(
+        { error: 'University is required' },
+        { status: 400 }
+      );
+    }
+    const ownerPasswordStr = typeof ownerPassword === 'string' ? ownerPassword : String(ownerPassword);
+    const ownerEmailNormalized = String(ownerEmail).trim().toLowerCase();
     
     // Check if restaurant with same name already exists
     const existingRestaurant = await prisma.restaurant.findFirst({
@@ -150,7 +158,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Check if owner email already exists and is verified
-    const existingUserByEmail = await prisma.user.findFirst({ where: { email: ownerEmail } });
+    const existingUserByEmail = await prisma.user.findFirst({ where: { email: ownerEmailNormalized } });
     if (existingUserByEmail && existingUserByEmail.emailVerified) {
       return NextResponse.json(
         { error: 'User with this email address already exists and is verified' },
@@ -181,12 +189,12 @@ export async function POST(request: NextRequest) {
     
     if (existingUser && (!existingUser.emailVerified || !existingUser.phoneVerified)) {
       // Update existing unverified user
-      const hashedPassword = await bcrypt.hash(ownerPassword, 12);
+      const hashedPassword = await bcrypt.hash(ownerPasswordStr, 12);
       const updatedUser = await prisma.user.update({
         where: { id: existingUser.id },
         data: {
           name: ownerName,
-          email: ownerEmail,
+          email: ownerEmailNormalized,
           phone: ownerPhone,
           password: hashedPassword,
           role: 'RESTAURANT',
@@ -236,7 +244,7 @@ export async function POST(request: NextRequest) {
             deliveryFee: deliveryFee || 0,
             minimumOrder: minimumOrder || 0,
             estimatedDeliveryTime: estimatedDeliveryTime || 30,
-            university: university || '',
+            university: String(university).trim(),
             location: coordinates ? JSON.stringify({ type: 'Point', coordinates }) : JSON.stringify({ type: 'Point', coordinates: [0, 0] }),
             status: 'PENDING',
             isOpen: false,
@@ -271,7 +279,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Hash password
-    const hashedPassword = await bcrypt.hash(ownerPassword, 12);
+    const hashedPassword = await bcrypt.hash(ownerPasswordStr, 12);
     
     console.log('Creating owner user with data:', {
       name: ownerName,
@@ -288,11 +296,11 @@ export async function POST(request: NextRequest) {
       owner = await prisma.user.create({
         data: {
           name: ownerName,
-          email: ownerEmail,
+          email: ownerEmailNormalized,
           phone: ownerPhone,
           password: hashedPassword,
           role: 'RESTAURANT',
-          university: university || '',
+          university: String(university).trim(),
           isActive: true,
           isVerified: false,
           emailVerified: false,
@@ -337,7 +345,7 @@ export async function POST(request: NextRequest) {
           deliveryFee: deliveryFee || 0,
           minimumOrder: minimumOrder || 0,
           estimatedDeliveryTime: estimatedDeliveryTime || 30,
-          university: university || '',
+          university: String(university).trim(),
           location: coordinates ? JSON.stringify({ type: 'Point', coordinates }) : JSON.stringify({ type: 'Point', coordinates: [0, 0] }),
           status: 'PENDING',
           isOpen: false,
@@ -371,28 +379,54 @@ export async function POST(request: NextRequest) {
     
   } catch (error: any) {
     console.error('Error creating restaurant:', error);
-    
-    // Log more detailed error information
+
     if (error instanceof Error) {
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
     }
-    
-    // Check for validation errors
-    if (error.name === 'ValidationError') {
-      const validationErrors = Object.keys(error.errors).map((key: string) => 
-        `${key}: ${error.errors[key].message}`
-      ).join(', ');
-      
+
+    // Prisma unique constraint (e.g. duplicate email/phone)
+    if (error?.code === 'P2002') {
+      const target = Array.isArray(error?.meta?.target) ? error.meta.target.join(', ') : error?.meta?.target ?? 'field';
+      return NextResponse.json(
+        { error: `A record with this ${target} already exists. Please use a different email or phone.` },
+        { status: 400 }
+      );
+    }
+
+    // Prisma foreign key / required relation
+    if (error?.code === 'P2003') {
+      return NextResponse.json(
+        { error: 'Invalid reference. Please check your details and try again.' },
+        { status: 400 }
+      );
+    }
+
+    // Prisma required field / invalid data
+    if (error?.code === 'P2011' || error?.code === 'P2012') {
+      return NextResponse.json(
+        { error: error?.message ?? 'Invalid or missing required data.' },
+        { status: 400 }
+      );
+    }
+
+    // Mongoose/other validation
+    if (error?.name === 'ValidationError' && error?.errors) {
+      const validationErrors = Object.keys(error.errors)
+        .map((key: string) => `${key}: ${error.errors[key].message}`)
+        .join(', ');
       return NextResponse.json(
         { error: `Validation failed: ${validationErrors}` },
         { status: 400 }
       );
     }
-    
-    return NextResponse.json(
-      { error: 'Failed to create restaurant' },
-      { status: 500 }
-    );
+
+    // In development, surface the real message for debugging
+    const isDev = process.env.NODE_ENV === 'development';
+    const message = isDev && error?.message
+      ? `Failed to create restaurant: ${error.message}`
+      : 'Failed to create restaurant';
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

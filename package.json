@@ -15,7 +15,10 @@
     "migrate:rollback": "tsx scripts/migrate.ts rollback",
     "migrate:data": "tsx scripts/migrate-data.ts",
     "db:health": "curl http://localhost:3000/api/health/db",
-    "clear:restaurants": "tsx scripts/clear-restaurants.ts"
+    "clear:restaurants": "tsx scripts/clear-restaurants.ts",
+    "clear:restaurant-users": "tsx scripts/clear-restaurant-users.ts",
+    "count:restaurants": "tsx scripts/count-restaurants.ts",
+    "count:users": "tsx scripts/count-users.ts"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.0",
