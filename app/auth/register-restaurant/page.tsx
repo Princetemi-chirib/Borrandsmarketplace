@@ -156,13 +156,12 @@ export default function RestaurantRegistration() {
       console.log('📡 Restaurant API response:', data);
 
       if (response.ok) {
-        setSuccess('Restaurant application submitted! Please verify your phone number to complete registration.');
+        setSuccess('Restaurant application submitted! Please verify your email to complete registration.');
         setShowVerification(true);
         
         console.log('⏰ Auto-sending OTP in 1 second...');
-        // Auto-send OTP after successful restaurant creation
         setTimeout(() => {
-          console.log('📱 Calling handleSendOTP...');
+          console.log('📧 Calling handleSendOTP...');
           handleSendOTP();
         }, 1000);
       } else {
@@ -178,31 +177,30 @@ export default function RestaurantRegistration() {
 
   const handleSendOTP = async () => {
     try {
-      console.log('📱 handleSendOTP called with phone:', formData.ownerPhone);
+      console.log('📧 handleSendOTP called with email:', formData.ownerEmail);
       setOtpSending(true);
       setError('');
       
-      const response = await fetch('/api/auth/whatsapp-verify', {
+      const response = await fetch('/api/auth/restaurant-email-verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          phone: formData.ownerPhone
+          email: formData.ownerEmail
         }),
       });
 
       const data = await response.json();
-      console.log('📡 WhatsApp OTP API response:', data);
+      console.log('📡 Email OTP API response:', data);
 
       if (response.ok) {
-        // For development: if OTP is returned in response, auto-fill it
         if (data.otp) {
           console.log('🔑 Development OTP received:', data.otp);
           setOtp(data.otp);
-          setSuccess('OTP sent successfully! (Development mode - OTP auto-filled)');
+          setSuccess('OTP sent! (Development mode - OTP auto-filled)');
         } else {
-          setSuccess('OTP sent successfully! Check your WhatsApp for the verification code.');
+          setSuccess('OTP sent to ' + formData.ownerEmail + '. Check your email for the verification code.');
         }
         setOtpSent(true);
         setError('');
@@ -227,20 +225,20 @@ export default function RestaurantRegistration() {
     }
 
     console.log('🔍 Starting OTP verification...');
-    console.log('📱 Phone being verified:', formData.ownerPhone);
+    console.log('📧 Email being verified:', formData.ownerEmail);
     console.log('🔑 OTP being verified:', otp);
     
     setVerificationLoading(true);
     setError('');
 
     try {
-      const response = await fetch('/api/auth/whatsapp-verify', {
+      const response = await fetch('/api/auth/restaurant-email-verify', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          phone: formData.ownerPhone,
+          email: formData.ownerEmail,
           otp: otp
         }),
       });
@@ -249,7 +247,7 @@ export default function RestaurantRegistration() {
       console.log('📡 Verification API response:', data);
 
       if (response.ok) {
-        setSuccess('Phone number verified successfully! Your restaurant application is now complete.');
+        setSuccess('Email verified successfully! Your restaurant application is now complete.');
         setTimeout(() => {
           router.push('/auth/login');
         }, 3000);
@@ -273,49 +271,45 @@ export default function RestaurantRegistration() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-4xl">
         {/* Header */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4">
-            <ArrowLeft className="w-4 h-4" />
+        <div className="text-center mb-4 sm:mb-8">
+          <Link href="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-3 sm:mb-4 text-sm sm:text-base">
+            <ArrowLeft className="w-4 h-4 flex-shrink-0" />
             Back to Home
           </Link>
           <Logo />
-          <h1 className="text-3xl font-bold text-gray-900 mt-4">Restaurant Registration</h1>
-          <p className="text-gray-600 mt-2">Join our platform and start serving delicious food to students</p>
+          <h1 className="text-xl sm:text-3xl font-bold text-gray-900 mt-3 sm:mt-4">Restaurant Registration</h1>
+          <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">Join our platform and start serving delicious food to students</p>
         </div>
 
-        {/* Progress Steps */}
-        <div className="max-w-4xl mx-auto mb-8">
-          <div className="flex items-center justify-between">
+        {/* Progress Steps - mobile friendly */}
+        <div className="mb-4 sm:mb-8">
+            <div className="flex items-center justify-between gap-1 sm:gap-0">
             {steps.map((step, index) => (
-              <div key={step.number} className="flex items-center">
-                                 <div className={`flex items-center justify-center w-12 h-12 rounded-full border-2 ${
+              <div key={step.number} className="flex items-center flex-1 sm:flex-initial justify-center sm:justify-start">
+                                 <div className={`flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 flex-shrink-0 ${
                    currentStep >= step.number 
                      ? 'border-red-500 bg-red-500 text-white' 
                      : 'border-gray-300 text-gray-400'
                  }`}>
                   {currentStep > step.number ? (
-                    <CheckCircle className="w-6 h-6" />
+                    <CheckCircle className="w-4 h-4 sm:w-6 sm:h-6" />
                   ) : (
-                    <step.icon className="w-6 h-6" />
+                    <step.icon className="w-4 h-4 sm:w-6 sm:h-6" />
                   )}
                 </div>
                 {index < steps.length - 1 && (
-                                     <div className={`w-24 h-1 mx-4 ${
-                     currentStep > step.number ? 'bg-red-500' : 'bg-gray-300'
-                   }`} />
+                  <div className={`flex-1 h-1 mx-1 sm:mx-2 sm:w-24 ${currentStep > step.number ? 'bg-red-500' : 'bg-gray-300'}`} />
                 )}
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-4">
+          <div className="flex justify-between mt-2 sm:mt-4 gap-1">
             {steps.map((step) => (
                                <span
                    key={step.number}
-                   className={`text-sm font-medium ${
-                     currentStep >= step.number ? 'text-red-600' : 'text-gray-400'
-                   }`}
+                   className={`text-xs sm:text-sm font-medium truncate max-w-[28%] sm:max-w-none ${currentStep >= step.number ? 'text-red-600' : 'text-gray-400'}`}
                  >
                 {step.title}
               </span>
@@ -324,20 +318,20 @@ export default function RestaurantRegistration() {
         </div>
 
         {/* Form */}
-        <div className="max-w-4xl mx-auto">
+        <div>
           <motion.div
             key={currentStep}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-white rounded-2xl shadow-xl p-8"
+            className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-8"
           >
             {/* Step 1: Restaurant Details */}
             {currentStep === 1 && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
-                                     <Building2 className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold text-gray-900">Restaurant Information</h2>
+                                     <Building2 className="w-12 h-12 sm:w-16 sm:h-16 text-red-500 mx-auto mb-4" />
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Restaurant Information</h2>
                   <p className="text-gray-600">Tell us about your restaurant</p>
                 </div>
 
@@ -404,8 +398,8 @@ export default function RestaurantRegistration() {
             {currentStep === 2 && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
-                  <ChefHat className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold text-gray-900">Business Details</h2>
+                  <ChefHat className="w-12 h-12 sm:w-16 sm:h-16 text-red-500 mx-auto mb-4" />
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Business Details</h2>
                   <p className="text-gray-600">Configure your delivery settings</p>
                 </div>
 
@@ -490,8 +484,8 @@ export default function RestaurantRegistration() {
             {currentStep === 3 && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
-                  <User className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold text-gray-900">Owner Account</h2>
+                  <User className="w-12 h-12 sm:w-16 sm:h-16 text-red-500 mx-auto mb-4" />
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Owner Account</h2>
                   <p className="text-gray-600">Create your login credentials</p>
                 </div>
 
@@ -613,95 +607,96 @@ export default function RestaurantRegistration() {
               </div>
             )}
 
-            {/* Phone Verification Section */}
+            {/* Email Verification Section */}
             {showVerification && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 sm:p-6">
                 <div className="text-center mb-4">
-                  <h3 className="text-lg font-semibold text-blue-900 mb-2">Verify Your Phone Number</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-blue-900 mb-2">Verify Your Email</h3>
                   <p className="text-blue-700 text-sm">
                     {otpSent 
-                      ? 'We\'ve sent a verification code to your WhatsApp. Please enter it below to complete your registration.'
-                      : 'Sending verification code to your WhatsApp... Please wait.'
+                      ? `We've sent a 6-digit code to ${formData.ownerEmail}. Enter it below to complete registration.`
+                      : 'Sending verification code to your email... Please wait.'
                     }
                   </p>
-                  {/* Development note */}
-                  <p className="text-xs text-blue-600 mt-2 italic">
-                    💡 Development mode: OTP will be auto-filled for testing purposes
-                  </p>
+                  {process.env.NODE_ENV === 'development' && (
+                    <p className="text-xs text-blue-600 mt-2 italic">
+                      💡 Development: OTP may be auto-filled if email is not configured
+                    </p>
+                  )}
                 </div>
                 
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <input
                       type="text"
+                      inputMode="numeric"
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       placeholder="Enter 6-digit OTP"
-                      className="flex-1 px-4 py-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono text-gray-900 placeholder-gray-400"
+                      className="flex-1 min-w-0 px-4 py-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono text-gray-900 placeholder-gray-400"
                       maxLength={6}
                       disabled={!otpSent}
                     />
                     <button
                       onClick={handleSendOTP}
                       disabled={otpSending || !otpSent}
-                      className="px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
                     >
                       {otpSending ? 'Sending...' : 'Resend OTP'}
                     </button>
                   </div>
                   
-                  <div className="flex gap-3">
+                  <div className="flex flex-col-reverse sm:flex-row gap-3">
+                    <button
+                      onClick={() => setShowVerification(false)}
+                      className="w-full sm:w-auto px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
                     <button
                       onClick={handleVerifyOTP}
                       disabled={verificationLoading || !otp || !otpSent}
-                      className="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="w-full sm:flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {verificationLoading ? 'Verifying...' : 'Verify & Complete'}
-                    </button>
-                    
-                    <button
-                      onClick={() => setShowVerification(false)}
-                      className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      Cancel
                     </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8">
+            {/* Navigation Buttons - stack on mobile for easier tap */}
+            <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 mt-6 sm:mt-8">
               <button
                 onClick={prevStep}
                 disabled={currentStep === 1}
-                className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full sm:w-auto px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </button>
 
               {currentStep < 3 ? (
-                                 <button
-                   onClick={nextStep}
-                   className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                 >
-                   Next Step
-                 </button>
+                <button
+                  onClick={nextStep}
+                  className="w-full sm:w-auto px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  Next Step
+                </button>
               ) : (
-                                 <button
-                   onClick={handleSubmit}
-                   disabled={isLoading}
-                   className="px-8 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                 >
-                   {isLoading ? 'Creating Restaurant...' : 'Create Restaurant'}
-                 </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="w-full sm:w-auto px-8 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isLoading ? 'Creating Restaurant...' : 'Create Restaurant'}
+                </button>
               )}
             </div>
           </motion.div>
 
           {/* Footer */}
-          <div className="text-center mt-8">
-            <p className="text-gray-600">
+          <div className="text-center mt-6 sm:mt-8 px-2">
+            <p className="text-gray-600 text-sm sm:text-base">
               Already have an account?{' '}
                              <Link href="/auth/login" className="text-red-600 hover:text-red-700 font-medium">
                  Sign in here
