@@ -86,6 +86,14 @@ export default function AdminOrders() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedRiderId, setSelectedRiderId] = useState<string>('');
   const [assignLoading, setAssignLoading] = useState(false);
+  const [bulkDate, setBulkDate] = useState('');
+  const [bulkRestaurantId, setBulkRestaurantId] = useState<string>('');
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+
+  const uniqueRestaurants = Array.from(
+    new Map(orders.map((o) => [o.restaurant.id, o.restaurant])).values()
+  ).sort((a, b) => a.name.localeCompare(b.name));
 
   useEffect(() => {
     fetchRiders();
@@ -197,6 +205,43 @@ export default function AdminOrders() {
     }
   };
 
+  const handleBulkMarkDelivered = async () => {
+    if (!bulkDate && !bulkRestaurantId) {
+      toast.error('Select a date and/or restaurant');
+      return;
+    }
+    setBulkSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const body: { date?: string; restaurantId?: string } = {};
+      if (bulkDate) body.date = bulkDate;
+      if (bulkRestaurantId) body.restaurantId = bulkRestaurantId;
+      const response = await fetch('/api/admin/orders/bulk-mark-delivered', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        toast.success(data.message || `Marked ${data.count} order(s) as delivered`);
+        setShowBulkModal(false);
+        setBulkDate('');
+        setBulkRestaurantId('');
+        fetchOrders();
+      } else {
+        toast.error(data.message || 'Failed to update orders');
+      }
+    } catch (error) {
+      console.error('Bulk mark delivered error:', error);
+      toast.error('Error updating orders');
+    } finally {
+      setBulkSubmitting(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
       case 'ACCEPTED':
@@ -284,6 +329,58 @@ export default function AdminOrders() {
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Bulk mark as delivered */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+            <CheckCircle className="w-4 h-4" />
+            Bulk mark as delivered
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            Mark all matching orders (not yet delivered or cancelled) as delivered. Use date and/or restaurant.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Date (optional)</label>
+              <input
+                type="date"
+                value={bulkDate}
+                onChange={(e) => setBulkDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 text-sm"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Restaurant (optional)</label>
+              <select
+                value={bulkRestaurantId}
+                onChange={(e) => setBulkRestaurantId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 text-sm"
+              >
+                <option value="">All restaurants</option>
+                {uniqueRestaurants.map((r) => (
+                  <option key={r.id} value={r.id}>{r.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!bulkDate && !bulkRestaurantId) {
+                    toast.error('Select a date and/or restaurant');
+                    return;
+                  }
+                  setShowBulkModal(true);
+                }}
+                disabled={!bulkDate && !bulkRestaurantId}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium flex items-center gap-2"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Mark as delivered
               </button>
             </div>
           </div>
@@ -467,6 +564,56 @@ export default function AdminOrders() {
                     {assignLoading ? 'Assigning...' : 'Assign Rider'}
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Bulk mark as delivered confirmation modal */}
+        {showBulkModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Confirm bulk action</h2>
+                <button
+                  onClick={() => {
+                    setShowBulkModal(false);
+                  }}
+                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Mark all orders as <strong>DELIVERED</strong> and <strong>PAID</strong> that match:
+              </p>
+              <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-400 mb-4">
+                {bulkDate && <li>Date: {new Date(bulkDate).toLocaleDateString('en-NG', { dateStyle: 'medium' })}</li>}
+                {bulkRestaurantId && (
+                  <li>Restaurant: {uniqueRestaurants.find((r) => r.id === bulkRestaurantId)?.name || bulkRestaurantId}</li>
+                )}
+              </ul>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mb-4">
+                Only orders that are not already delivered or cancelled will be updated.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowBulkModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBulkMarkDelivered}
+                  disabled={bulkSubmitting}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {bulkSubmitting ? 'Updating...' : 'Confirm'}
+                </button>
               </div>
             </motion.div>
           </div>
