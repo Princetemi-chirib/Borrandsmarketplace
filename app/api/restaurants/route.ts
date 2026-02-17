@@ -123,7 +123,11 @@ export async function POST(request: NextRequest) {
       university,
       coordinates,
       openingTime,
-      closingTime
+      closingTime,
+      payoutBankCode,
+      payoutBankName,
+      payoutAccountNumber,
+      payoutAccountName
     } = body;
     
     // Validation
@@ -354,7 +358,11 @@ export async function POST(request: NextRequest) {
           operatingHours: JSON.stringify(defaultOperatingHours),
           features: JSON.stringify([]),
           paymentMethods: JSON.stringify([]),
-          stats: JSON.stringify({})
+          stats: JSON.stringify({}),
+          payoutBankCode: payoutBankCode?.trim() || null,
+          payoutBankName: payoutBankName?.trim() || null,
+          payoutAccountNumber: payoutAccountNumber?.trim() || null,
+          payoutAccountName: payoutAccountName?.trim() || null
         }
       });
       console.log('Restaurant saved successfully');

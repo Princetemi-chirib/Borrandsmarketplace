@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -32,6 +32,12 @@ interface RestaurantFormData {
   minimumOrder: number;
   estimatedDeliveryTime: number;
   university: string;
+  
+  // Payout account (optional)
+  payoutBankCode: string;
+  payoutBankName: string;
+  payoutAccountNumber: string;
+  payoutAccountName: string;
   
   // Owner Information
   ownerName: string;
@@ -65,6 +71,9 @@ export default function RestaurantRegistration() {
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [otpSending, setOtpSending] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+  const [banks, setBanks] = useState<Array<{ name: string; code: string }>>([]);
+  const [payoutResolving, setPayoutResolving] = useState(false);
+  const [payoutResolveError, setPayoutResolveError] = useState('');
 
   const [formData, setFormData] = useState<RestaurantFormData>({
     name: '',
@@ -75,6 +84,10 @@ export default function RestaurantRegistration() {
     minimumOrder: 0,
     estimatedDeliveryTime: 30,
     university: '',
+    payoutBankCode: '',
+    payoutBankName: '',
+    payoutAccountNumber: '',
+    payoutAccountName: '',
     ownerName: '',
     ownerEmail: '',
     ownerPhone: '',
@@ -85,6 +98,42 @@ export default function RestaurantRegistration() {
   const handleInputChange = (field: keyof RestaurantFormData, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setError('');
+    if (field === 'payoutAccountNumber' || field === 'payoutBankCode') setPayoutResolveError('');
+  };
+
+  // Load Nigerian banks for payout dropdown when Step 2 is active
+  useEffect(() => {
+    if (currentStep !== 2 || banks.length > 0) return;
+    fetch('/api/paystack/banks')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.banks)) setBanks(data.banks);
+      })
+      .catch(() => {});
+  }, [currentStep, banks.length]);
+
+  const handleVerifyPayoutAccount = async () => {
+    const code = formData.payoutBankCode?.trim();
+    const num = formData.payoutAccountNumber?.trim();
+    if (!code || !num) {
+      setPayoutResolveError('Select bank and enter account number');
+      return;
+    }
+    setPayoutResolveError('');
+    setPayoutResolving(true);
+    try {
+      const res = await fetch(`/api/paystack/resolve-account?account_number=${encodeURIComponent(num)}&bank_code=${encodeURIComponent(code)}`);
+      const data = await res.json();
+      if (data.success && data.account_name) {
+        setFormData((prev) => ({ ...prev, payoutAccountName: data.account_name }));
+      } else {
+        setPayoutResolveError(data.error || 'Could not verify account');
+      }
+    } catch {
+      setPayoutResolveError('Verification failed');
+    } finally {
+      setPayoutResolving(false);
+    }
   };
 
   const validateStep = (step: number): boolean => {
@@ -474,6 +523,61 @@ export default function RestaurantRegistration() {
                         min="15"
                         max="120"
                       />
+                    </div>
+                  </div>
+
+                  {/* Payout account (optional) - for manual payouts by admin */}
+                  <div className="md:col-span-2 mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Payout account (optional)</p>
+                    <p className="text-xs text-gray-500 mb-3">Used for manual payouts. Select bank and account number; we will verify the account name.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Bank</label>
+                        <select
+                          value={formData.payoutBankCode}
+                          onChange={(e) => {
+                            const opt = banks.find((b) => b.code === e.target.value);
+                            setFormData((prev) => ({
+                              ...prev,
+                              payoutBankCode: e.target.value,
+                              payoutBankName: opt?.name ?? ''
+                            }));
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-900 text-sm"
+                        >
+                          <option value="">Select bank</option>
+                          {banks.map((b) => (
+                            <option key={b.code} value={b.code}>{b.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Account number</label>
+                        <input
+                          type="text"
+                          value={formData.payoutAccountNumber}
+                          onChange={(e) => handleInputChange('payoutAccountNumber', e.target.value)}
+                          placeholder="10 digits"
+                          maxLength={10}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-900 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleVerifyPayoutAccount}
+                        disabled={payoutResolving || !formData.payoutBankCode || !formData.payoutAccountNumber}
+                        className="px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {payoutResolving ? 'Verifying…' : 'Verify account'}
+                      </button>
+                      {formData.payoutAccountName && (
+                        <span className="text-sm text-green-700">Account name: {formData.payoutAccountName}</span>
+                      )}
+                      {payoutResolveError && (
+                        <span className="text-sm text-red-600">{payoutResolveError}</span>
+                      )}
                     </div>
                   </div>
                 </div>

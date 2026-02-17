@@ -8,7 +8,8 @@ export async function POST(request: NextRequest) {
     await dbConnect();
     
     const body = await request.json();
-    const { email } = body;
+    const rawEmail = body?.email;
+    const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : '';
 
     console.log('📧 OTP sending request received for email:', email);
 
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user exists
+    // Check if user exists (match by normalized email as stored by registration)
     console.log('🔍 Looking for user with email:', email);
     const user = await prisma.user.findFirst({
       where: { email },
@@ -133,9 +134,11 @@ export async function PUT(request: NextRequest) {
     await dbConnect();
     
     const body = await request.json();
-    const { email, otp } = body;
+    const rawEmail = body?.email;
+    const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : '';
+    const otp = body?.otp?.trim?.() ?? body?.otp;
 
-    console.log('🔍 Verification request received:', { email, otp });
+    console.log('🔍 Verification request received:', { email, otp: otp ? '***' : '' });
 
     if (!email || !otp) {
       return NextResponse.json(
@@ -144,7 +147,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Find user
+    // Find user (normalized email)
     console.log('🔍 Looking for user with email:', email);
     const user = await prisma.user.findFirst({
       where: { email },

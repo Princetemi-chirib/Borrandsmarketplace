@@ -416,6 +416,18 @@ export async function sendOrderRejectionEmailToStudent(
 }
 
 /**
+ * Get admin email addresses for order notifications (new order + assign rider).
+ * Set ADMIN_ORDER_EMAILS in .env (comma-separated) to override.
+ */
+export function getAdminOrderNotificationEmails(): string[] {
+  const env = process.env.ADMIN_ORDER_EMAILS || '';
+  if (env.trim()) {
+    return env.split(',').map((e) => e.trim()).filter(Boolean);
+  }
+  return ['Miebaijoan15@gmail.com', 'Borrands1@gmail.com'];
+}
+
+/**
  * Send new order notification to admin when order is created
  */
 export async function sendNewOrderNotificationToAdmin(
@@ -438,7 +450,11 @@ export async function sendNewOrderNotificationToAdmin(
       return { success: false, error: errorMsg };
     }
 
-    const adminEmails = ['Miebaijoan15@gmail.com', 'Borrands1@gmail.com'];
+    const adminEmails = getAdminOrderNotificationEmails();
+    if (adminEmails.length === 0) {
+      console.warn('No admin emails configured for order notifications (ADMIN_ORDER_EMAILS).');
+      return { success: true };
+    }
     const items = typeof orderDetails.items === 'string' ? JSON.parse(orderDetails.items) : orderDetails.items;
     const itemsList = Array.isArray(items) ? items.map((item: any) => 
       `${item.name} x${item.quantity} - ₦${(item.price * item.quantity)?.toLocaleString() || item.total?.toLocaleString() || '0'}`
@@ -525,7 +541,8 @@ The Borrands Team`
 }
 
 /**
- * Send order acceptance notification to admin and Miebaijoan15@gmail.com
+ * Send order acceptance notification to admin (assign rider required).
+ * Recipients: ADMIN_ORDER_EMAILS env or default Miebaijoan15@gmail.com, Borrands1@gmail.com
  */
 export async function sendOrderAcceptanceNotificationToAdmin(
   orderNumber: string,
@@ -547,7 +564,11 @@ export async function sendOrderAcceptanceNotificationToAdmin(
       return { success: false, error: errorMsg };
     }
 
-    const adminEmails = ['Miebaijoan15@gmail.com', 'Borrands1@gmail.com'];
+    const adminEmails = getAdminOrderNotificationEmails();
+    if (adminEmails.length === 0) {
+      console.warn('No admin emails configured for order notifications (ADMIN_ORDER_EMAILS).');
+      return { success: true };
+    }
     const items = typeof orderDetails.items === 'string' ? JSON.parse(orderDetails.items) : orderDetails.items;
     const itemsList = Array.isArray(items) ? items.map((item: any) => 
       `${item.name} x${item.quantity} - ₦${item.total?.toLocaleString() || item.price?.toLocaleString()}`

@@ -29,12 +29,13 @@ export async function GET(request: NextRequest) {
         restaurantId: auth.restaurantId,
         createdAt: { gte: since }
       },
-      select: { total: true, paymentStatus: true, status: true, studentId: true }
+      select: { total: true, subtotal: true, paymentStatus: true, status: true, studentId: true }
     });
 
+    // Food revenue only (exclude delivery & service charge)
     const totalRevenue = orders
       .filter(o => o.paymentStatus === 'PAID')
-      .reduce((sum, o) => sum + o.total, 0);
+      .reduce((sum, o) => sum + (o.subtotal ?? o.total ?? 0), 0);
     
     const totalOrders = orders.length;
     const deliveredOrders = orders.filter(o => o.status === 'DELIVERED').length;
