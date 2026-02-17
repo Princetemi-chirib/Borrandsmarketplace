@@ -52,6 +52,9 @@ export default function AdminPayoutsPage() {
   const [markingPaid, setMarkingPaid] = useState<{ restaurantId: string; date: string } | null>(null);
   const [markAmount, setMarkAmount] = useState('');
   const [markSubmitting, setMarkSubmitting] = useState(false);
+  const [markAllDate, setMarkAllDate] = useState('');
+  const [markAllSubmitting, setMarkAllSubmitting] = useState(false);
+  const [showMarkAllModal, setShowMarkAllModal] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -152,6 +155,36 @@ export default function AdminPayoutsPage() {
     }
   };
 
+  const submitMarkAllForDate = async () => {
+    if (!markAllDate) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    setMarkAllSubmitting(true);
+    try {
+      const res = await fetch('/api/admin/payouts/mark-all-for-date', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ date: markAllDate }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setShowMarkAllModal(false);
+        setMarkAllDate('');
+        fetchPayouts();
+        alert(data.message || `Marked as paid for ${data.count || 0} restaurant(s).`);
+      } else {
+        alert(data.message || 'Failed to record payouts');
+      }
+    } catch (e) {
+      alert('Network error. Please try again.');
+    } finally {
+      setMarkAllSubmitting(false);
+    }
+  };
+
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('en-NG', { year: 'numeric', month: 'short', day: 'numeric' });
   const formatDateTime = (s: string) =>
@@ -187,7 +220,7 @@ export default function AdminPayoutsPage() {
               View daily food revenue and mark payouts as paid after manual transfer
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <label className="text-sm text-gray-600 dark:text-gray-400">Period:</label>
             <select
               value={days}
@@ -199,6 +232,14 @@ export default function AdminPayoutsPage() {
               <option value={180}>Last 180 days</option>
               <option value={365}>Last 365 days</option>
             </select>
+            <button
+              type="button"
+              onClick={() => setShowMarkAllModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
+            >
+              <CheckCircle className="h-4 w-4" />
+              Mark as paid for all (day)
+            </button>
             <button
               type="button"
               onClick={fetchPayouts}
@@ -435,6 +476,59 @@ export default function AdminPayoutsPage() {
                   className="flex-1 px-4 py-2.5 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {markSubmitting ? 'Recording...' : 'Record payout'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Mark as paid for all (day) modal */}
+        {showMarkAllModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Mark as paid for all (day)
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => { setShowMarkAllModal(false); setMarkAllDate(''); }}
+                  className="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                Record payouts for every restaurant that has unpaid revenue on the selected date. One payout per restaurant will be created with that day&apos;s food revenue amount.
+              </p>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Date
+              </label>
+              <input
+                type="date"
+                value={markAllDate}
+                onChange={(e) => setMarkAllDate(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+              />
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => { setShowMarkAllModal(false); setMarkAllDate(''); }}
+                  className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={submitMarkAllForDate}
+                  disabled={markAllSubmitting || !markAllDate}
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {markAllSubmitting ? 'Recording...' : 'Mark all for this day'}
                 </button>
               </div>
             </motion.div>
