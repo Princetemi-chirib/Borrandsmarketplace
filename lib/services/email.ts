@@ -424,7 +424,7 @@ export function getAdminOrderNotificationEmails(): string[] {
   if (env.trim()) {
     return env.split(',').map((e) => e.trim()).filter(Boolean);
   }
-  return ['Miebaijoan15@gmail.com', 'Borrands1@gmail.com'];
+  return ['Miebaijoan15@gmail.com', 'Borrands1@gmail.com', 'Hassanakiye@gmail.com'];
 }
 
 /**
@@ -542,7 +542,7 @@ The Borrands Team`
 
 /**
  * Send order acceptance notification to admin (assign rider required).
- * Recipients: ADMIN_ORDER_EMAILS env or default Miebaijoan15@gmail.com, Borrands1@gmail.com
+ * Recipients: ADMIN_ORDER_EMAILS env or default Miebaijoan15@gmail.com, Borrands1@gmail.com, Hassanakiye@gmail.com
  */
 export async function sendOrderAcceptanceNotificationToAdmin(
   orderNumber: string,
