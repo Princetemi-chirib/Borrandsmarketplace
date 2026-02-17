@@ -196,6 +196,14 @@ export default function LoginPage() {
                   {errors.password.message}
                 </p>
               )}
+              <div className="mt-2 text-right">
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-sm text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
+                >
+                  Forgot password?
+                </Link>
+              </div>
             </div>
 
             {/* Remember Me */}
