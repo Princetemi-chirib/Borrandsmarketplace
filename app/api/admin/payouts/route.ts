@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
       const paidDates = paidDatesByRestaurant.get(r.id) || new Set<string>();
       const unpaidDays: Array<{ date: string; amount: number }> = [];
       if (dayRevenue) {
-        for (const [date, amount] of dayRevenue.entries()) {
+        for (const [date, amount] of Array.from(dayRevenue.entries())) {
           if (!paidDates.has(date) && amount > 0) {
             unpaidDays.push({ date, amount });
           }
