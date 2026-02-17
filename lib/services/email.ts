@@ -424,7 +424,7 @@ export function getAdminOrderNotificationEmails(): string[] {
   if (env.trim()) {
     return env.split(',').map((e) => e.trim()).filter(Boolean);
   }
-  return ['Miebaijoan15@gmail.com', 'Borrands1@gmail.com'];
+  return ['Miebaijoan15@gmail.com', 'Borrands1@gmail.com', 'Hassanakiye@gmail.com'];
 }
 
 /**
@@ -542,7 +542,7 @@ The Borrands Team`
 
 /**
  * Send order acceptance notification to admin (assign rider required).
- * Recipients: ADMIN_ORDER_EMAILS env or default Miebaijoan15@gmail.com, Borrands1@gmail.com
+ * Recipients: ADMIN_ORDER_EMAILS env or default Miebaijoan15@gmail.com, Borrands1@gmail.com, Hassanakiye@gmail.com
  */
 export async function sendOrderAcceptanceNotificationToAdmin(
   orderNumber: string,
@@ -854,8 +854,91 @@ The Borrands Team`
   }
 }
 
+/**
+ * Send password reset email with link
+ */
+export async function sendPasswordResetEmail(
+  email: string,
+  name: string,
+  resetLink: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!isEmailConfigured()) {
+      const errorMsg = 'Email service is not configured. Please set MAIL_HOST, MAIL_USERNAME, and MAIL_PASSWORD environment variables.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const transporter = getTransporter();
+    if (!transporter) {
+      const errorMsg = 'Email credentials are missing. Please configure MAIL_PASSWORD or SMTP_PASS environment variable.';
+      console.error('❌', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    const mailOptions = {
+      from: `"${process.env.MAIL_FROM_NAME || 'Borrands'}" <${process.env.MAIL_FROM_ADDRESS || 'noreply@borrands.com.ng'}>`,
+      to: email,
+      subject: 'Reset Your Password - Borrands Marketplace',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Reset Your Password</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white; }
+            .content { padding: 40px 30px; }
+            .button { display: inline-block; background: #667eea; color: white !important; padding: 14px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 600; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
+            .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px; }
+            .link-fallback { word-break: break-all; font-size: 12px; color: #666; margin-top: 15px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🔐 Reset Your Password</h1>
+            </div>
+            <div class="content">
+              <h2>Hi ${name}!</h2>
+              <p>You requested a password reset for your <strong>Borrands Marketplace</strong> account.</p>
+              <p>Click the button below to set a new password. This link will expire in 1 hour.</p>
+              <p style="text-align: center;">
+                <a href="${resetLink}" class="button">Reset Password</a>
+              </p>
+              <p class="link-fallback">If the button doesn't work, copy and paste this link into your browser:<br>${resetLink}</p>
+              <div class="warning">
+                <strong>⚠️ Security:</strong> If you didn't request this, you can safely ignore this email. Your password will not be changed.
+              </div>
+              <p>Best regards,<br><strong>The Borrands Team</strong></p>
+            </div>
+            <div class="footer">
+              <p>© ${new Date().getFullYear()} Borrands Marketplace. All rights reserved.</p>
+              <p>📧 support@borrands.com.ng | 🌐 www.borrands.com.ng</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `Hi ${name},\n\nYou requested a password reset. Visit this link to set a new password (expires in 1 hour):\n${resetLink}\n\nIf you didn't request this, ignore this email.\n\nBest regards,\nThe Borrands Team`,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Password reset email sent to ${email}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Password reset email error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export default {
   sendVerificationEmail,
+  sendPasswordResetEmail,
   sendOrderNotificationEmail,
   sendNewOrderEmailToRestaurant,
   sendOrderRejectionEmailToStudent,
