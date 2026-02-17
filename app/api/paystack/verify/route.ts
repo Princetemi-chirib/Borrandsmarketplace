@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PaystackService from '@/lib/paystack';
 import { dbConnect, prisma } from '@/lib/db-prisma';
-import { sendNewOrderEmailToRestaurant, sendOrderPlacedEmailToStudent } from '@/lib/services/email';
+import { sendNewOrderEmailToRestaurant, sendOrderPlacedEmailToStudent, sendNewOrderNotificationToAdmin } from '@/lib/services/email';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -180,6 +180,29 @@ export async function GET(request: NextRequest) {
           
           console.log(`✅ Created ${createdOrders.length} order(s) for payment ${reference}`);
 
+          // Notify admin of each new order (admin will get "assign rider" email when restaurant accepts)
+          for (const item of createdOrdersWithData) {
+            const o = item.createdOrder;
+            const orderData = item.orderData;
+            try {
+              await sendNewOrderNotificationToAdmin(
+                o.orderNumber,
+                item.restaurantName,
+                student?.name || 'Student',
+                {
+                  items: orderData.items,
+                  deliveryAddress: deliveryAddress?.address || metadata.deliveryAddress?.address || '',
+                  deliveryInstructions: deliveryAddress?.instructions || metadata.deliveryAddress?.instructions || '',
+                  total: o.total,
+                  subtotal: o.subtotal,
+                  deliveryFee: o.deliveryFee
+                }
+              );
+            } catch (adminEmailError) {
+              console.error('Failed to send new order notification to admin:', adminEmailError);
+            }
+          }
+
           // Send order placed confirmation email to student (one email for all orders)
           if (student?.email && createdOrders.length > 0) {
             try {
@@ -206,9 +229,6 @@ export async function GET(request: NextRequest) {
               // Don't fail the request if email fails
             }
           }
-
-          // Note: Admin notification is sent when restaurant ACCEPTS the order (not on creation)
-          // This ensures the admin is only notified when there's an order ready for rider assignment
 
           return NextResponse.json({
             success: true,

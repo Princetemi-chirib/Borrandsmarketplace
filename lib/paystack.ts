@@ -242,6 +242,68 @@ export class PaystackService {
     // Convert from kobo to naira
     return amount / 100;
   }
+
+  /**
+   * List Nigerian banks (for payout account dropdown).
+   * Uses Paystack GET /bank?country=nigeria
+   */
+  async listBanks(): Promise<{ success: boolean; data?: Array<{ name: string; code: string }>; error?: string }> {
+    try {
+      const paystackApi = getPaystackApi();
+      const response = await paystackApi.get<{ status: boolean; data: Array<{ name: string; code: string }> }>(
+        '/bank?country=nigeria'
+      );
+      if (!response.data.status || !Array.isArray(response.data.data)) {
+        return { success: false, error: 'Failed to fetch banks' };
+      }
+      const banks = response.data.data.map((b) => ({ name: b.name, code: b.code }));
+      return { success: true, data: banks };
+    } catch (error: any) {
+      if (error.message?.includes('credentials not properly configured')) {
+        return { success: false, error: 'Paystack is not configured.' };
+      }
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Failed to list banks',
+      };
+    }
+  }
+
+  /**
+   * Resolve Nigerian bank account number to get account name.
+   * Uses Paystack GET /bank/resolve?account_number=xxx&bank_code=yyy
+   */
+  async resolveBankAccount(account_number: string, bank_code: string): Promise<{
+    success: boolean;
+    data?: { account_number: string; account_name: string };
+    error?: string;
+  }> {
+    try {
+      const paystackApi = getPaystackApi();
+      const response = await paystackApi.get<{
+        status: boolean;
+        data: { account_number: string; account_name: string; bank_id: number };
+      }>('/bank/resolve', {
+        params: { account_number: account_number.trim(), bank_code: bank_code.trim() },
+      });
+      if (!response.data.status || !response.data.data) {
+        return { success: false, error: 'Could not resolve account' };
+      }
+      return {
+        success: true,
+        data: {
+          account_number: response.data.data.account_number,
+          account_name: response.data.data.account_name,
+        },
+      };
+    } catch (error: any) {
+      if (error.message?.includes('credentials not properly configured')) {
+        return { success: false, error: 'Paystack is not configured.' };
+      }
+      const msg = error.response?.data?.message || error.message || 'Account resolution failed';
+      return { success: false, error: msg };
+    }
+  }
 }
 
 export default PaystackService.getInstance();

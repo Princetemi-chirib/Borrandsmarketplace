@@ -82,6 +82,7 @@ const navigationItems = {
     { name: 'Restaurants', href: '/dashboard/admin/restaurants', icon: Store },
     { name: 'Riders', href: '/dashboard/admin/riders', icon: Truck },
     { name: 'Orders', href: '/dashboard/admin/orders', icon: ShoppingBag },
+    { name: 'Payouts', href: '/dashboard/admin/payouts', icon: CreditCard },
     { name: 'Analytics', href: '/dashboard/admin/analytics', icon: BarChart3 },
     { name: 'Settings', href: '/dashboard/admin/settings', icon: Settings },
   ],
@@ -273,7 +274,7 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
                   <Icon className={`mr-3 h-5 w-5 flex-shrink-0 ${
                     isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'
                   }`} />
-                  <span className="truncate">{item.name}</span>
+                  <span className={`truncate ${isActive ? 'text-white' : ''}`}>{item.name}</span>
                 </Link>
               );
             })}

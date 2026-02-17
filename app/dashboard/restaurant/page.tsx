@@ -280,9 +280,9 @@ export default function RestaurantDashboard() {
             className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-3 sm:p-4 text-white hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl min-h-[80px] sm:min-h-[100px] flex items-center justify-center"
           >
             <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
-              <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6" />
+              <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               <div>
-                <h3 className="font-semibold text-xs sm:text-sm">Manage Orders</h3>
+                <h3 className="font-semibold text-xs sm:text-sm text-white">Manage Orders</h3>
                 <p className="text-xs text-white/80 hidden sm:block">View & update orders</p>
               </div>
             </div>
@@ -293,9 +293,9 @@ export default function RestaurantDashboard() {
             className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-3 sm:p-4 text-white hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl min-h-[80px] sm:min-h-[100px] flex items-center justify-center"
           >
             <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
-              <Store className="h-5 w-5 sm:h-6 sm:w-6" />
+              <Store className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               <div>
-                <h3 className="font-semibold text-xs sm:text-sm">Menu Management</h3>
+                <h3 className="font-semibold text-xs sm:text-sm text-white">Menu Management</h3>
                 <p className="text-xs text-white/80 hidden sm:block">Update your menu</p>
               </div>
             </div>
@@ -306,9 +306,9 @@ export default function RestaurantDashboard() {
             className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-3 sm:p-4 text-white hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl min-h-[80px] sm:min-h-[100px] flex items-center justify-center"
           >
             <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
-              <Package className="h-5 w-5 sm:h-6 sm:w-6" />
+              <Package className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               <div>
-                <h3 className="font-semibold text-xs sm:text-sm">Inventory</h3>
+                <h3 className="font-semibold text-xs sm:text-sm text-white">Inventory</h3>
                 <p className="text-xs text-white/80 hidden sm:block">Manage stock levels</p>
               </div>
             </div>
@@ -319,9 +319,9 @@ export default function RestaurantDashboard() {
             className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-3 sm:p-4 text-white hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl min-h-[80px] sm:min-h-[100px] flex items-center justify-center"
           >
             <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
-              <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6" />
+              <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               <div>
-                <h3 className="font-semibold text-xs sm:text-sm">Analytics</h3>
+                <h3 className="font-semibold text-xs sm:text-sm text-white">Analytics</h3>
                 <p className="text-xs text-white/80 hidden sm:block">View insights</p>
               </div>
             </div>

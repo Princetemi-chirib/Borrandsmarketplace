@@ -356,7 +356,7 @@ export default function MenuManagementPage() {
 	};
 
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-gray-50 dark:bg-gray-900">
 			<div className="max-w-4xl mx-auto px-4 py-4 sm:py-6">
 				{/* Tabs */}
 				<div className="mb-4 border-b border-gray-200 dark:border-gray-700">
@@ -370,7 +370,7 @@ export default function MenuManagementPage() {
 					<button onClick={() => router.back()} className="p-2 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
 						<ArrowLeft className="h-5 w-5 text-gray-700 dark:text-gray-300" />
 					</button>
-					<h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">Menu Management</h1>
+					<h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Menu Management</h1>
 					<div className="ml-auto">
 						<Link href="/dashboard/restaurant" className="text-sm text-brand-primary hover:text-brand-accent">Dashboard</Link>
 					</div>

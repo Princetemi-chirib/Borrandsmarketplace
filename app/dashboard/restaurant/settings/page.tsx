@@ -57,6 +57,10 @@ interface RestaurantSettings {
     type: string;
     coordinates: number[];
   };
+  payoutBankCode?: string;
+  payoutBankName?: string;
+  payoutAccountNumber?: string;
+  payoutAccountName?: string;
 }
 
 const cuisineOptions = [
@@ -89,6 +93,9 @@ export default function RestaurantSettings() {
   const [newCuisine, setNewCuisine] = useState('');
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
+  const [banks, setBanks] = useState<Array<{ name: string; code: string }>>([]);
+  const [payoutResolving, setPayoutResolving] = useState(false);
+  const [payoutResolveError, setPayoutResolveError] = useState('');
 
   // Form states
   const [formData, setFormData] = useState<RestaurantSettings | null>(null);
@@ -107,6 +114,16 @@ export default function RestaurantSettings() {
     // Fetch restaurant data
     fetchRestaurantData();
   }, []);
+
+  useEffect(() => {
+    if (activeTab !== 'features' || banks.length > 0) return;
+    fetch('/api/paystack/banks')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.banks)) setBanks(data.banks);
+      })
+      .catch(() => {});
+  }, [activeTab, banks.length]);
 
   const fetchRestaurantData = async () => {
     try {
@@ -214,6 +231,10 @@ export default function RestaurantSettings() {
           logo: formData?.logo,
           image: formData?.image,
           bannerImage: formData?.bannerImage,
+          payoutBankCode: formData?.payoutBankCode,
+          payoutBankName: formData?.payoutBankName,
+          payoutAccountNumber: formData?.payoutAccountNumber,
+          payoutAccountName: formData?.payoutAccountName,
         }),
       });
 
@@ -814,6 +835,84 @@ export default function RestaurantSettings() {
                         </span>
                       </label>
                     ))}
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-gray-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Payout account
+                  </label>
+                  <p className="text-xs text-gray-500 mb-3">Used for manual payouts. Select bank and account number, then verify to confirm account name.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Bank</label>
+                      <select
+                        value={formData.payoutBankCode || ''}
+                        onChange={(e) => {
+                          const opt = banks.find((b) => b.code === e.target.value);
+                          setFormData((prev) => prev ? {
+                            ...prev,
+                            payoutBankCode: e.target.value,
+                            payoutBankName: opt?.name ?? ''
+                          } : null);
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary text-gray-900 text-sm"
+                      >
+                        <option value="">Select bank</option>
+                        {banks.map((b) => (
+                          <option key={b.code} value={b.code}>{b.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Account number</label>
+                      <input
+                        type="text"
+                        value={formData.payoutAccountNumber || ''}
+                        onChange={(e) => handleInputChange('payoutAccountNumber', e.target.value)}
+                        placeholder="10 digits"
+                        maxLength={10}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary text-gray-900 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const code = formData?.payoutBankCode?.trim();
+                        const num = formData?.payoutAccountNumber?.trim();
+                        if (!code || !num) {
+                          setPayoutResolveError('Select bank and enter account number');
+                          return;
+                        }
+                        setPayoutResolveError('');
+                        setPayoutResolving(true);
+                        try {
+                          const res = await fetch(`/api/paystack/resolve-account?account_number=${encodeURIComponent(num)}&bank_code=${encodeURIComponent(code)}`);
+                          const data = await res.json();
+                          if (data.success && data.account_name && formData) {
+                            setFormData((prev) => prev ? { ...prev, payoutAccountName: data.account_name } : null);
+                          } else {
+                            setPayoutResolveError(data.error || 'Could not verify account');
+                          }
+                        } catch {
+                          setPayoutResolveError('Verification failed');
+                        } finally {
+                          setPayoutResolving(false);
+                        }
+                      }}
+                      disabled={payoutResolving || !formData?.payoutBankCode || !formData?.payoutAccountNumber}
+                      className="px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {payoutResolving ? 'Verifying…' : 'Verify account'}
+                    </button>
+                    {formData?.payoutAccountName && (
+                      <span className="text-sm text-green-700">Account name: {formData.payoutAccountName}</span>
+                    )}
+                    {payoutResolveError && (
+                      <span className="text-sm text-red-600">{payoutResolveError}</span>
+                    )}
                   </div>
                 </div>
               </motion.div>

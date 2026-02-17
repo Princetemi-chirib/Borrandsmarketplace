@@ -19,14 +19,15 @@ export async function GET(request: NextRequest) {
         createdAt: { gte: since },
         paymentStatus: 'PAID'
       },
-      select: { createdAt: true, total: true }
+      select: { createdAt: true, subtotal: true, total: true }
     });
 
-    // Group by date
+    // Group by date — food revenue only (exclude delivery & service charge)
     const dailyMap = new Map<string, number>();
     orders.forEach(order => {
       const date = order.createdAt.toISOString().split('T')[0];
-      dailyMap.set(date, (dailyMap.get(date) || 0) + order.total);
+      const revenue = order.subtotal ?? order.total ?? 0;
+      dailyMap.set(date, (dailyMap.get(date) || 0) + revenue);
     });
 
     const dailyRevenue = Array.from(dailyMap.entries())

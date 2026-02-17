@@ -298,6 +298,19 @@ export default function AdminDashboard() {
           </Link>
 
           <Link
+            href="/dashboard/admin/payouts"
+            className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg p-3 sm:p-4 text-white hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl min-h-[80px] sm:min-h-[100px] flex items-center justify-center"
+          >
+            <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
+              <CreditCard className="h-5 w-5 sm:h-6 sm:w-6" />
+              <div>
+                <h3 className="font-semibold text-xs sm:text-sm">Payouts</h3>
+                <p className="text-xs text-white/80">Restaurant payouts</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link
             href="/dashboard/admin/analytics"
             className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-3 sm:p-4 text-white hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl min-h-[80px] sm:min-h-[100px] flex items-center justify-center"
           >

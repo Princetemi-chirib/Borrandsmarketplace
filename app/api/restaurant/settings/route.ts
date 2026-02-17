@@ -33,6 +33,10 @@ export async function GET(request: NextRequest) {
         paymentMethods: true,
         operatingHours: true,
         location: true,
+        payoutBankCode: true,
+        payoutBankName: true,
+        payoutAccountNumber: true,
+        payoutAccountName: true,
         user: {
           select: {
             email: true,
@@ -103,7 +107,11 @@ export async function GET(request: NextRequest) {
           return ['cash'];
         })(),
         operatingHours: operatingHoursObj,
-        location: restaurant.location || { type: 'Point', coordinates: [0, 0] }
+        location: restaurant.location || { type: 'Point', coordinates: [0, 0] },
+        payoutBankCode: restaurant.payoutBankCode || '',
+        payoutBankName: restaurant.payoutBankName || '',
+        payoutAccountNumber: restaurant.payoutAccountNumber || '',
+        payoutAccountName: restaurant.payoutAccountName || ''
       }
     });
   } catch (error: any) {
@@ -172,6 +180,11 @@ export async function PATCH(request: NextRequest) {
     if (body.operatingHours !== undefined) {
       updateData.operatingHours = JSON.stringify(body.operatingHours);
     }
+
+    if (body.payoutBankCode !== undefined) updateData.payoutBankCode = body.payoutBankCode?.trim() || null;
+    if (body.payoutBankName !== undefined) updateData.payoutBankName = body.payoutBankName?.trim() || null;
+    if (body.payoutAccountNumber !== undefined) updateData.payoutAccountNumber = body.payoutAccountNumber?.trim() || null;
+    if (body.payoutAccountName !== undefined) updateData.payoutAccountName = body.payoutAccountName?.trim() || null;
 
     // Handle empty logo string - convert to null if empty
     if (updateData.logo === '') {
@@ -246,7 +259,11 @@ export async function PATCH(request: NextRequest) {
           return ['cash'];
         })(),
         operatingHours: operatingHoursObj,
-        location: updatedRestaurant.location || { type: 'Point', coordinates: [0, 0] }
+        location: updatedRestaurant.location || { type: 'Point', coordinates: [0, 0] },
+        payoutBankCode: updatedRestaurant.payoutBankCode || '',
+        payoutBankName: updatedRestaurant.payoutBankName || '',
+        payoutAccountNumber: updatedRestaurant.payoutAccountNumber || '',
+        payoutAccountName: updatedRestaurant.payoutAccountName || ''
       }
     });
   } catch (error: any) {

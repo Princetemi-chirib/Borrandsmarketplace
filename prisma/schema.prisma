@@ -77,6 +77,10 @@ model Restaurant {
   features              String          @db.LongText
   paymentMethods        String          @db.LongText
   stats                 String          @db.LongText
+  payoutBankCode        String?
+  payoutBankName        String?
+  payoutAccountNumber   String?
+  payoutAccountName     String?
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
   categories            Category[]
@@ -88,8 +92,23 @@ model Restaurant {
   user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   stockAlerts           StockAlert[]
   users_userfavorites   User[]          @relation("userfavorites")
+  payouts              RestaurantPayout[]
 
   @@map("restaurants")
+}
+
+model RestaurantPayout {
+  id           String     @id @default(cuid())
+  restaurantId String
+  payoutDate   DateTime   // date (day) this payout is for
+  amount       Float
+  paidAt       DateTime   @default(now())
+  paidBy       String?    // admin userId
+  createdAt    DateTime   @default(now())
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, payoutDate])
+  @@map("restaurant_payouts")
 }
 
 model Rider {
