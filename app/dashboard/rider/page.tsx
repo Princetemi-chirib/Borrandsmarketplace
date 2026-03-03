@@ -329,10 +329,10 @@ export default function RiderDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-brand-primary to-brand-accent rounded-xl p-4 sm:p-5 text-white"
+          className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-4 sm:p-5 text-white shadow-md"
         >
-          <h1 className="text-lg sm:text-xl font-bold mb-1">Rider Dashboard</h1>
-          <p className="text-white/90 text-sm">See available orders, accept, then mark as delivered.</p>
+          <h1 className="text-lg sm:text-xl font-bold mb-1 text-white">Rider Dashboard</h1>
+          <p className="text-sm text-white/95">See available orders, accept, then mark as delivered.</p>
         </motion.div>
 
         {/* Online toggle */}
