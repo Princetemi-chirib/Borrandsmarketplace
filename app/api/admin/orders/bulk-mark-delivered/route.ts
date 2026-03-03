@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { OrderStatus, PaymentStatus } from '@prisma/client';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { getUserFromRequest } from '@/lib/auth';
 
@@ -28,10 +29,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const where: { status?: { notIn: string[] }; restaurantId?: string; createdAt?: { gte: Date; lte: Date } } = {
-      status: { notIn: ['CANCELLED', 'DELIVERED'] }
-    };
-
     if (restaurantId && typeof restaurantId === 'string') {
       const restaurant = await prisma.restaurant.findUnique({
         where: { id: restaurantId },
@@ -43,9 +40,9 @@ export async function POST(request: NextRequest) {
           { status: 404 }
         );
       }
-      where.restaurantId = restaurantId;
     }
 
+    let createdAtRange: { gte: Date; lte: Date } | undefined;
     if (dateStr && typeof dateStr === 'string') {
       const dayStart = new Date(dateStr);
       if (isNaN(dayStart.getTime())) {
@@ -57,15 +54,21 @@ export async function POST(request: NextRequest) {
       dayStart.setHours(0, 0, 0, 0);
       const dayEnd = new Date(dayStart);
       dayEnd.setHours(23, 59, 59, 999);
-      where.createdAt = { gte: dayStart, lte: dayEnd };
+      createdAtRange = { gte: dayStart, lte: dayEnd };
     }
+
+    const where = {
+      status: { notIn: [OrderStatus.CANCELLED, OrderStatus.DELIVERED] },
+      ...(restaurantId && typeof restaurantId === 'string' ? { restaurantId } : {}),
+      ...(createdAtRange ? { createdAt: createdAtRange } : {})
+    };
 
     const now = new Date();
     const result = await prisma.order.updateMany({
       where,
       data: {
-        status: 'DELIVERED',
-        paymentStatus: 'PAID',
+        status: OrderStatus.DELIVERED,
+        paymentStatus: PaymentStatus.PAID,
         actualDeliveryTime: now
       }
     });

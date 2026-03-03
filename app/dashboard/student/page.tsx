@@ -261,6 +261,59 @@ export default function StudentDashboard() {
           </div>
         )}
 
+        {/* Quick Actions - Explore, Favorites, Support first */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+        >
+          <Link 
+            href="/dashboard/student/restaurants"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-full">
+                <MapPin className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Explore Restaurants</h3>
+                <p className="text-blue-100">Discover new places to eat</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link 
+            href="/dashboard/student/favorites"
+            className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-full">
+                <Star className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">My Favorites</h3>
+                <p className="text-red-100">View your saved restaurants</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link 
+            href="/dashboard/student/support"
+            className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-full">
+                <MessageCircle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Get Support</h3>
+                <p className="text-green-100">Need help? Contact us</p>
+              </div>
+            </div>
+          </Link>
+        </motion.div>
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <motion.div
@@ -428,59 +481,6 @@ export default function StudentDashboard() {
               ))}
             </div>
           )}
-        </motion.div>
-
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.7 }}
-          className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6"
-        >
-          <Link 
-            href="/dashboard/student/restaurants"
-            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-white bg-opacity-20 rounded-full">
-                <MapPin className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">Explore Restaurants</h3>
-                <p className="text-blue-100">Discover new places to eat</p>
-              </div>
-            </div>
-          </Link>
-
-          <Link 
-            href="/dashboard/student/favorites"
-            className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-white bg-opacity-20 rounded-full">
-                <Star className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">My Favorites</h3>
-                <p className="text-red-100">View your saved restaurants</p>
-              </div>
-            </div>
-          </Link>
-
-          <Link 
-            href="/dashboard/student/support"
-            className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-white bg-opacity-20 rounded-full">
-                <MessageCircle className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">Get Support</h3>
-                <p className="text-green-100">Need help? Contact us</p>
-              </div>
-            </div>
-          </Link>
         </motion.div>
       </div>
     </DashboardLayout>
