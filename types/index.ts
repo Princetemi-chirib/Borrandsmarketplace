@@ -99,10 +99,7 @@ export interface OrderItem {
 export type OrderStatus = 
   | 'pending'
   | 'confirmed'
-  | 'preparing'
-  | 'ready'
   | 'picked_up'
-  | 'in_transit'
   | 'delivered'
   | 'cancelled';
 

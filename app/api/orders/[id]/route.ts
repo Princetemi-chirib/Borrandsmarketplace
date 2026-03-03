@@ -4,15 +4,13 @@ import { verifyAppRequest } from '@/lib/auth-app';
 import emitter from '@/lib/services/events';
 import { sendOrderNotificationEmail } from '@/lib/services/email';
 
-const ALLOWED_STATUSES = ['PENDING','ACCEPTED','PREPARING','READY','PICKED_UP','DELIVERED','CANCELLED'] as const;
+const ALLOWED_STATUSES = ['PENDING','CONFIRMED','PICKED_UP','DELIVERED','CANCELLED'] as const;
 type OrderStatus = typeof ALLOWED_STATUSES[number];
 
 function isValidTransition(prev: OrderStatus, next: OrderStatus): boolean {
   const flow: Record<OrderStatus, OrderStatus[]> = {
-    PENDING: ['ACCEPTED','CANCELLED'],
-    ACCEPTED: ['PREPARING','CANCELLED'],
-    PREPARING: ['READY','CANCELLED'],
-    READY: ['PICKED_UP','CANCELLED'],
+    PENDING: ['CONFIRMED','CANCELLED'],
+    CONFIRMED: ['CANCELLED'],
     PICKED_UP: ['DELIVERED'],
     DELIVERED: [],
     CANCELLED: [],
@@ -79,14 +77,6 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ message: `Invalid transition ${prevStatus} → ${nextStatus}` }, { status: 400 });
     }
 
-    // Restaurant cannot move to PREPARING unless a rider is assigned
-    if (nextStatus === 'PREPARING' && !order.riderId) {
-      return NextResponse.json(
-        { message: 'A rider must be assigned before the order can be marked as Preparing. Please ask admin to assign a rider.' },
-        { status: 400 }
-      );
-    }
-
     const updateData: any = { status: nextStatus };
     if (nextStatus === 'DELIVERED') updateData.actualDeliveryTime = new Date();
     
@@ -95,12 +85,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       data: updateData
     });
 
-    // Send email notification to student for status updates (PREPARING, READY, PICKED_UP)
+    // Send email notification to student for status updates (CONFIRMED, PICKED_UP)
     const orderWithRelations = order as typeof order & {
       student?: { email: string | null; name: string | null };
       restaurant?: { name: string };
     };
-    if (orderWithRelations.student?.email && ['PREPARING', 'READY', 'PICKED_UP'].includes(nextStatus)) {
+    if (orderWithRelations.student?.email && ['CONFIRMED', 'PICKED_UP'].includes(nextStatus)) {
       try {
         let items: unknown;
         try {

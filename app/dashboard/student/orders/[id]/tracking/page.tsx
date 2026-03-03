@@ -67,42 +67,10 @@ interface Order {
 }
 
 const orderStatuses: OrderStatus[] = [
-  {
-    status: 'pending',
-    timestamp: new Date(),
-    description: 'Order placed and waiting for restaurant confirmation',
-    icon: Package
-  },
-  {
-    status: 'accepted',
-    timestamp: new Date(),
-    description: 'Restaurant has accepted your order',
-    icon: CheckCircle
-  },
-  {
-    status: 'preparing',
-    timestamp: new Date(),
-    description: 'Your food is being prepared',
-    icon: Utensils
-  },
-  {
-    status: 'ready',
-    timestamp: new Date(),
-    description: 'Your order is ready for pickup',
-    icon: Package
-  },
-  {
-    status: 'picked_up',
-    timestamp: new Date(),
-    description: 'Rider has picked up your order',
-    icon: Truck
-  },
-  {
-    status: 'delivered',
-    timestamp: new Date(),
-    description: 'Order delivered successfully',
-    icon: CheckCircle
-  }
+  { status: 'pending', timestamp: new Date(), description: 'Order placed and waiting for restaurant confirmation', icon: Package },
+  { status: 'confirmed', timestamp: new Date(), description: 'Restaurant has confirmed your order', icon: CheckCircle },
+  { status: 'picked_up', timestamp: new Date(), description: 'Rider has picked up your order', icon: Truck },
+  { status: 'delivered', timestamp: new Date(), description: 'Order delivered by the rider', icon: CheckCircle }
 ];
 
 export default function OrderTrackingPage() {
@@ -156,7 +124,7 @@ export default function OrderTrackingPage() {
         },
       };
       setOrder(mapped);
-      setCurrentStatus(orderStatuses.findIndex(s => s.status === mapped.status));
+      setCurrentStatus(orderStatuses.findIndex(s => s.status === (mapped.status || '').toLowerCase()));
       setEta(mapped.estimatedDeliveryTime || 0);
     } catch (e) {
       console.error(e);
@@ -190,9 +158,7 @@ export default function OrderTrackingPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'text-yellow-600 bg-yellow-100';
-      case 'accepted': return 'text-blue-600 bg-blue-100';
-      case 'preparing': return 'text-orange-600 bg-orange-100';
-      case 'ready': return 'text-purple-600 bg-purple-100';
+      case 'confirmed': return 'text-blue-600 bg-blue-100';
       case 'picked_up': return 'text-indigo-600 bg-indigo-100';
       case 'delivered': return 'text-green-600 bg-green-100';
       default: return 'text-gray-600 bg-gray-100';
@@ -202,9 +168,7 @@ export default function OrderTrackingPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending': return Package;
-      case 'accepted': return CheckCircle;
-      case 'preparing': return Utensils;
-      case 'ready': return Package;
+      case 'confirmed': return CheckCircle;
       case 'picked_up': return Truck;
       case 'delivered': return CheckCircle;
       default: return Package;

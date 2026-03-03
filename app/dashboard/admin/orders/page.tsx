@@ -81,7 +81,7 @@ export default function AdminOrders() {
   const [riders, setRiders] = useState<Rider[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('accepted'); // Default to ACCEPTED for rider assignment
+  const [statusFilter, setStatusFilter] = useState('confirmed'); // Default to CONFIRMED for rider assignment
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedRiderId, setSelectedRiderId] = useState<string>('');
@@ -244,12 +244,8 @@ export default function AdminOrders() {
 
   const getStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
-      case 'ACCEPTED':
+      case 'CONFIRMED':
         return 'text-blue-600 bg-blue-100';
-      case 'PREPARING':
-        return 'text-purple-600 bg-purple-100';
-      case 'READY':
-        return 'text-orange-600 bg-orange-100';
       case 'PICKED_UP':
         return 'text-yellow-600 bg-yellow-100';
       case 'DELIVERED':
@@ -317,9 +313,7 @@ export default function AdminOrders() {
               >
                 <option value="all">All Orders</option>
                 <option value="pending">Pending</option>
-                <option value="accepted">Accepted (Need Rider)</option>
-                <option value="preparing">Preparing</option>
-                <option value="ready">Ready</option>
+                <option value="confirmed">Confirmed (Need Rider)</option>
                 <option value="picked_up">Picked Up</option>
                 <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
@@ -469,7 +463,7 @@ export default function AdminOrders() {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      {(order.status.toUpperCase() === 'PENDING' || order.status.toUpperCase() === 'ACCEPTED') && (!order.rider || !order.rider.id) && (
+                      {(order.status.toUpperCase() === 'PENDING' || order.status.toUpperCase() === 'CONFIRMED') && (!order.rider || !order.rider.id) && (
                         <button
                           onClick={() => {
                             setSelectedOrder(order);

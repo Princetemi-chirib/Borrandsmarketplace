@@ -110,9 +110,11 @@ export default function FavoritesPage() {
   useEffect(() => {
     // Filter and sort favorites
     let filtered = favorites.filter(restaurant => {
+      const cuisineStr = Array.isArray(restaurant.cuisine) ? restaurant.cuisine.join(' ') : String(restaurant.cuisine || '');
       const matchesSearch = restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           restaurant.cuisine.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCuisine = selectedCuisine === 'all' || restaurant.cuisine === selectedCuisine;
+                           cuisineStr.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCuisine = selectedCuisine === 'all' ||
+        (Array.isArray(restaurant.cuisine) ? restaurant.cuisine.includes(selectedCuisine) : restaurant.cuisine === selectedCuisine);
       return matchesSearch && matchesCuisine;
     });
 
@@ -199,7 +201,7 @@ export default function FavoritesPage() {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
-  const cuisines = ['all', ...Array.from(new Set(favorites.map(r => r.cuisine)))];
+  const cuisines = ['all', ...Array.from(new Set(favorites.flatMap(r => (Array.isArray(r.cuisine) ? r.cuisine : [r.cuisine]).filter(Boolean))))];
 
   if (isLoading) {
     return (
@@ -312,7 +314,7 @@ export default function FavoritesPage() {
                   </div>
                   <div className="absolute bottom-3 left-3 right-3">
                     <h3 className="text-lg font-semibold text-white">{restaurant.name}</h3>
-                    <p className="text-white/90 text-sm">{restaurant.cuisine}</p>
+                    <p className="text-white/90 text-sm">{Array.isArray(restaurant.cuisine) ? restaurant.cuisine.join(', ') : restaurant.cuisine}</p>
                   </div>
                 </div>
 

@@ -168,12 +168,10 @@ export default function OrderHistory() {
         return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30';
       case 'picked_up':
         return 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30';
-      case 'ready':
-        return 'text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30';
-      case 'preparing':
+      case 'confirmed':
+        return 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30';
+      case 'pending':
         return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
-      case 'accepted':
-        return 'text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30';
       default:
         return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
     }
@@ -187,12 +185,10 @@ export default function OrderHistory() {
         return <Package className="w-4 h-4" />;
       case 'picked_up':
         return <Package className="w-4 h-4" />;
-      case 'ready':
-        return <Package className="w-4 h-4" />;
-      case 'preparing':
-        return <Clock className="w-4 h-4" />;
-      case 'accepted':
+      case 'confirmed':
         return <CheckCircle className="w-4 h-4" />;
+      case 'pending':
+        return <Clock className="w-4 h-4" />;
       default:
         return <Clock className="w-4 h-4" />;
     }
@@ -375,9 +371,7 @@ export default function OrderHistory() {
               >
                 <option value="all">All Statuses</option>
                 <option value="pending">Pending</option>
-                <option value="accepted">Accepted</option>
-                <option value="preparing">Preparing</option>
-                <option value="ready">Ready</option>
+                <option value="confirmed">Confirmed</option>
                 <option value="picked_up">Picked Up</option>
                 <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>

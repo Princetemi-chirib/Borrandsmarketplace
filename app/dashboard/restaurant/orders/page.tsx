@@ -32,7 +32,7 @@ export default function RestaurantOrders() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const statuses = ['All', 'Pending', 'Confirmed', 'Preparing', 'Ready', 'Delivered', 'Cancelled'];
+  const statuses = ['All', 'Pending', 'Confirmed', 'Picked Up', 'Delivered', 'Cancelled'];
   
   useEffect(() => {
     try {
@@ -42,7 +42,7 @@ export default function RestaurantOrders() {
   }, []);
 
   const normalizeUiToApiStatus = (ui:string) => {
-    const map:any = { Confirmed: 'accepted' };
+    const map: Record<string, string> = { 'Picked Up': 'picked_up' };
     return (map[ui] || ui).toLowerCase();
   };
 
@@ -146,13 +146,11 @@ export default function RestaurantOrders() {
   const fmt = (n:number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(n);
 
   const getNormalizedStatus = (status: string): string => {
-    // Map UI status labels to API status values
     const statusMap: Record<string, string> = {
       'All': 'all',
       'Pending': 'pending',
-      'Confirmed': 'accepted',
-      'Preparing': 'preparing',
-      'Ready': 'ready',
+      'Confirmed': 'confirmed',
+      'Picked Up': 'picked_up',
       'Delivered': 'delivered',
       'Cancelled': 'cancelled'
     };
@@ -171,14 +169,12 @@ export default function RestaurantOrders() {
     switch (status) {
       case 'pending':
         return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300';
-      case 'accepted':
-        return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
-      case 'preparing':
-        return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300';
-      case 'ready':
-        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
+      case 'confirmed':
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
+      case 'picked_up':
+        return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300';
       case 'delivered':
-        return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
       case 'cancelled':
         return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
       default:
@@ -190,12 +186,10 @@ export default function RestaurantOrders() {
     switch (status) {
       case 'pending':
         return <Clock className="h-4 w-4" />;
-      case 'accepted':
+      case 'confirmed':
         return <CheckCircle className="h-4 w-4" />;
-      case 'preparing':
-        return <Package className="h-4 w-4" />;
-      case 'ready':
-        return <CheckCircle className="h-4 w-4" />;
+      case 'picked_up':
+        return <Truck className="h-4 w-4" />;
       case 'delivered':
         return <Truck className="h-4 w-4" />;
       case 'cancelled':
@@ -207,11 +201,7 @@ export default function RestaurantOrders() {
 
   const nextActionFor = (status: string) => {
     switch (status) {
-      case 'pending': return { label: 'Confirm Order', color: 'bg-blue-600 hover:bg-blue-700', next: 'accepted' };
-      case 'accepted': return { label: 'Start Preparing', color: 'bg-orange-600 hover:bg-orange-700', next: 'preparing' };
-      case 'preparing': return { label: 'Mark Ready', color: 'bg-green-600 hover:bg-green-700', next: 'ready' };
-      case 'ready': return { label: 'Mark Picked Up', color: 'bg-purple-600 hover:bg-purple-700', next: 'picked_up' };
-      // Removed 'Mark Delivered' - only students can mark orders as delivered
+      case 'pending': return { label: 'Confirm Order', color: 'bg-blue-600 hover:bg-blue-700', next: 'confirmed' };
       default: return null;
     }
   };
@@ -452,19 +442,12 @@ export default function RestaurantOrders() {
                   </div>
                   <div className="flex space-x-2 flex-wrap gap-2">
                     {nextActionFor(order.status) && (
-                      order.status === 'accepted' && !order.riderId ? (
-                        <button disabled className="flex items-center space-x-2 px-4 py-2 text-white rounded-lg opacity-60 cursor-not-allowed bg-orange-600">
-                          <Check className="h-4 w-4" />
-                          <span className="text-sm">Start Preparing</span>
-                        </button>
-                      ) : nextActionFor(order.status) ? (
-                        <button onClick={() => updateOrderStatus(order._id, nextActionFor(order.status)!.next)} className={`flex items-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors ${nextActionFor(order.status)!.color}`}>
-                          <Check className="h-4 w-4" />
-                          <span className="text-sm">{nextActionFor(order.status)!.label}</span>
-                        </button>
-                      ) : null
+                      <button onClick={() => updateOrderStatus(order._id, nextActionFor(order.status)!.next)} className={`flex items-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors ${nextActionFor(order.status)!.color}`}>
+                        <Check className="h-4 w-4" />
+                        <span className="text-sm">{nextActionFor(order.status)!.label}</span>
+                      </button>
                     )}
-                    {order.status === 'accepted' && !order.riderId && (
+                    {order.status === 'confirmed' && !order.riderId && (
                       <span className="text-xs text-amber-600 dark:text-amber-400 self-center">Waiting for rider assignment</span>
                     )}
                     {order.status === 'pending' && (

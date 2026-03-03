@@ -149,7 +149,7 @@ export default function MyDeliveries() {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'ready':
+      case 'confirmed':
         return 'bg-blue-100 text-blue-800';
       case 'picked_up':
         return 'bg-yellow-100 text-yellow-800';
@@ -162,8 +162,8 @@ export default function MyDeliveries() {
 
   const getStatusLabel = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'ready':
-        return 'Ready for Pickup';
+      case 'confirmed':
+        return 'Confirmed – Go pick up';
       case 'picked_up':
         return 'On the Way';
       case 'delivered':

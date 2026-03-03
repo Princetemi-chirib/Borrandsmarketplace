@@ -109,7 +109,7 @@ export default function RestaurantPage() {
         bannerImage: r.bannerImage || '',
         rating: r.rating,
         reviewCount: r.reviewCount,
-        cuisine: r.cuisine,
+        cuisine: Array.isArray(r.cuisine) ? r.cuisine.join(', ') : (typeof r.cuisine === 'string' ? r.cuisine : String(r.cuisine || '')),
         deliveryFee: r.deliveryFee,
         minimumOrder: r.minimumOrder,
         estimatedDeliveryTime: r.estimatedDeliveryTime,
@@ -352,7 +352,7 @@ export default function RestaurantPage() {
             </div>
             <div className="absolute bottom-6 left-6 right-6">
               <h1 className="text-3xl font-bold text-white mb-2">{restaurant.name}</h1>
-              <p className="text-white/90 text-lg">{restaurant.cuisine}</p>
+              <p className="text-white/90 text-lg">{Array.isArray(restaurant.cuisine) ? restaurant.cuisine.join(', ') : restaurant.cuisine}</p>
             </div>
           </div>
 

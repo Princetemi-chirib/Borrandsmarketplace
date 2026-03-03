@@ -55,11 +55,11 @@ export async function PATCH(
       return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
     }
 
-    // Check if order is in a valid state for rider assignment (PENDING or ACCEPTED)
-    if (order.status !== 'PENDING' && order.status !== 'ACCEPTED') {
+    // Check if order is in a valid state for rider assignment (PENDING or CONFIRMED)
+    if (order.status !== 'PENDING' && order.status !== 'CONFIRMED') {
       return NextResponse.json({ 
         success: false, 
-        message: `Order must be PENDING or ACCEPTED before assigning a rider. Current status: ${order.status}` 
+        message: `Order must be PENDING or CONFIRMED before assigning a rider. Current status: ${order.status}` 
       }, { status: 400 });
     }
 
@@ -89,17 +89,11 @@ export async function PATCH(
       return NextResponse.json({ success: false, message: 'Rider not found or inactive' }, { status: 404 });
     }
 
-    // Determine new status based on current order status
-    // If PENDING: keep as PENDING (awaiting restaurant acceptance)
-    // If ACCEPTED: move to PREPARING (ready to prepare)
-    const newStatus = order.status === 'ACCEPTED' ? 'PREPARING' : 'PENDING';
-
-    // Assign rider to order
+    // Assign rider; keep current status (PENDING or CONFIRMED)
     const updatedOrder = await prisma.order.update({
       where: { id: params.id },
       data: {
-        riderId: riderId,
-        status: newStatus
+        riderId: riderId
       },
       include: {
         rider: {
@@ -148,17 +142,13 @@ export async function PATCH(
           items = [];
         }
         
-        // Determine status message for student email
-        const emailStatus = newStatus === 'PREPARING' ? 'PREPARING' : 'PENDING';
-        const statusMessage = newStatus === 'PREPARING' 
-          ? 'Your order is being prepared. A rider has been assigned to deliver your order.'
-          : 'A rider has been assigned to your order. We are waiting for the restaurant to confirm your order.';
+        const statusMessage = 'A rider has been assigned to your order and will pick it up soon.';
         
         await sendOrderNotificationEmail(
           order.student.email,
           order.student.name,
           order.orderNumber,
-          emailStatus,
+          'CONFIRMED',
           {
             restaurantName: order.restaurant.name,
             total: order.total,

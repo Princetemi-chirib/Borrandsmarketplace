@@ -285,7 +285,7 @@ export default function RiderDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'assigned':
+      case 'confirmed':
         return 'text-blue-600 bg-blue-100 border-blue-200';
       case 'picked_up':
         return 'text-orange-600 bg-orange-100 border-orange-200';
@@ -300,7 +300,7 @@ export default function RiderDashboard() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'assigned':
+      case 'confirmed':
         return <Package className="h-4 w-4" />;
       case 'picked_up':
         return <Truck className="h-4 w-4" />;
@@ -598,19 +598,14 @@ export default function RiderDashboard() {
                         </div>
 
                         <div className="mt-3 flex space-x-2">
-                          {delivery.status === 'assigned' && (
-                            <>
-                              <button className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-colors">
-                                Accept
-                              </button>
-                              <button className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors">
-                                Decline
-                              </button>
-                            </>
+                          {delivery.status === 'confirmed' && (
+                            <button onClick={() => handleUpdateDeliveryStatus(delivery._id, 'PICKED_UP')} className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-colors">
+                              Mark Picked Up
+                            </button>
                           )}
                           {delivery.status === 'picked_up' && (
-                            <button className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors">
-                              Start Delivery
+                            <button onClick={() => handleUpdateDeliveryStatus(delivery._id, 'DELIVERED')} className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors">
+                              Mark Delivered
                             </button>
                           )}
                           <button className="px-3 py-1 bg-gray-600 text-white text-xs rounded-lg hover:bg-gray-700 transition-colors">

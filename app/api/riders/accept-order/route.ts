@@ -71,10 +71,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // Check if order is available (READY status and no rider assigned)
-    if (order.status !== 'READY') {
+    // Check if order is available (CONFIRMED and no rider assigned)
+    if (order.status !== 'CONFIRMED') {
       return NextResponse.json({ 
-        error: 'Order is not ready for pickup' 
+        error: 'Order is not available for pickup yet' 
       }, { status: 400 });
     }
 
@@ -84,12 +84,11 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Assign order to rider
+    // Assign order to rider (status stays CONFIRMED until rider marks PICKED_UP)
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: {
         riderId: rider.id
-        // Status remains READY until rider picks it up
       }
     });
 
