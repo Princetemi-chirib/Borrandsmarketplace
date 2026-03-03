@@ -45,11 +45,10 @@ export async function PATCH(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Validate status
-    const validStatuses = ['PICKED_UP', 'DELIVERED'];
-    if (!validStatuses.includes(status)) {
+    // Rider can only mark as DELIVERED (no separate "picked up" step)
+    if (status !== 'DELIVERED') {
       return NextResponse.json({ 
-        error: 'Invalid status. Must be PICKED_UP or DELIVERED' 
+        error: 'Invalid status. Use DELIVERED to complete the delivery.' 
       }, { status: 400 });
     }
 
@@ -76,20 +75,15 @@ export async function PATCH(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Validate transition: CONFIRMED -> PICKED_UP, PICKED_UP -> DELIVERED
+    // Allow DELIVERED when order is CONFIRMED (rider accepted) or PICKED_UP
     const currentStatus = order.status as string;
-    if (status === 'PICKED_UP' && currentStatus !== 'CONFIRMED') {
+    if (currentStatus !== 'CONFIRMED' && currentStatus !== 'PICKED_UP') {
       return NextResponse.json({ 
-        error: 'Order must be confirmed before marking as picked up' 
-      }, { status: 400 });
-    }
-    if (status === 'DELIVERED' && currentStatus !== 'PICKED_UP') {
-      return NextResponse.json({ 
-        error: 'Order must be picked up before marking as delivered' 
+        error: currentStatus === 'DELIVERED' ? 'Order is already marked as delivered.' : 'Order cannot be marked as delivered in its current state.' 
       }, { status: 400 });
     }
 
-    const updateData: any = { status };
+    const updateData: any = { status: 'DELIVERED' };
     
     // If marking as delivered, update actualDeliveryTime and rider stats
     if (status === 'DELIVERED') {

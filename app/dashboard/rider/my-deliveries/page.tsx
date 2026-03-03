@@ -104,7 +104,7 @@ export default function MyDeliveries() {
     }
   };
 
-  const handleUpdateStatus = async (orderId: string, status: 'PICKED_UP' | 'DELIVERED') => {
+  const handleUpdateStatus = async (orderId: string, status: 'DELIVERED') => {
     try {
       setUpdatingStatus(orderId);
       const token = localStorage.getItem('token');
@@ -129,7 +129,7 @@ export default function MyDeliveries() {
       }
 
       if (data.success) {
-        toast.success(`Order marked as ${status === 'PICKED_UP' ? 'picked up' : 'delivered'}!`);
+        toast.success('Order marked as delivered!');
         // Refresh deliveries
         fetchActiveDeliveries();
         // If delivered, redirect to history after a moment
@@ -163,9 +163,8 @@ export default function MyDeliveries() {
   const getStatusLabel = (status: string) => {
     switch (status.toLowerCase()) {
       case 'confirmed':
-        return 'Confirmed – Go pick up';
       case 'picked_up':
-        return 'On the Way';
+        return 'In progress – Mark as delivered when done';
       case 'delivered':
         return 'Delivered';
       default:
@@ -347,26 +346,7 @@ export default function MyDeliveries() {
 
                 {/* Status Actions */}
                 <div className="flex flex-col sm:flex-row gap-3">
-                  {delivery.status.toLowerCase() === 'ready' && (
-                    <button
-                      onClick={() => handleUpdateStatus(delivery._id, 'PICKED_UP')}
-                      disabled={updatingStatus === delivery._id}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                    >
-                      {updatingStatus === delivery._id ? (
-                        <>
-                          <RefreshCw className="h-4 w-4 animate-spin" />
-                          Updating...
-                        </>
-                      ) : (
-                        <>
-                          <PlayCircle className="h-4 w-4" />
-                          Mark as Picked Up
-                        </>
-                      )}
-                    </button>
-                  )}
-                  {delivery.status.toLowerCase() === 'picked_up' && (
+                  {(delivery.status.toLowerCase() === 'confirmed' || delivery.status.toLowerCase() === 'picked_up') && (
                     <button
                       onClick={() => handleUpdateStatus(delivery._id, 'DELIVERED')}
                       disabled={updatingStatus === delivery._id}

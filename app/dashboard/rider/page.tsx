@@ -88,7 +88,6 @@ export default function RiderDashboard() {
     weeklyEarnings: 0
   });
   const [activeDeliveries, setActiveDeliveries] = useState<Delivery[]>([]);
-  const [recentDeliveries, setRecentDeliveries] = useState<Delivery[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(false);
   const [error, setError] = useState<string>('');
@@ -153,11 +152,10 @@ export default function RiderDashboard() {
         'Authorization': `Bearer ${token}`
       };
 
-      // Fetch stats, active deliveries, and recent deliveries in parallel
-      const [statsResponse, activeResponse, historyResponse] = await Promise.all([
+      // Fetch stats (for counts) and active deliveries only
+      const [statsResponse, activeResponse] = await Promise.all([
         fetch('/api/riders/stats', { headers }),
-        fetch('/api/riders/active-deliveries', { headers }),
-        fetch('/api/riders/delivery-history?limit=10', { headers })
+        fetch('/api/riders/active-deliveries', { headers })
       ]);
 
       if (statsResponse.ok) {
@@ -165,26 +163,12 @@ export default function RiderDashboard() {
         if (statsData.success && statsData.stats) {
           setStats(statsData.stats);
         }
-      } else {
-        console.error('Failed to fetch stats:', statsResponse.status);
       }
-
       if (activeResponse.ok) {
         const activeData = await activeResponse.json();
         if (activeData.success && activeData.deliveries) {
           setActiveDeliveries(activeData.deliveries);
         }
-      } else {
-        console.error('Failed to fetch active deliveries:', activeResponse.status);
-      }
-
-      if (historyResponse.ok) {
-        const historyData = await historyResponse.json();
-        if (historyData.success && historyData.deliveries) {
-          setRecentDeliveries(historyData.deliveries);
-        }
-      } else {
-        console.error('Failed to fetch delivery history:', historyResponse.status);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -341,180 +325,95 @@ export default function RiderDashboard() {
           </div>
         )}
 
-        {/* Enhanced Header - Mobile Optimized */}
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-gradient-to-r from-brand-primary to-brand-accent rounded-xl p-4 sm:p-5 text-white"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            <div className="flex-1">
-              <h1 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">Rider Dashboard</h1>
-              <p className="text-white/90 text-sm">Manage your deliveries and track your earnings</p>
-            </div>
-            <div className="flex items-center justify-between sm:justify-end space-x-4 sm:space-x-6">
-              <div className="text-center">
-                <div className="text-lg sm:text-xl font-bold">{stats.activeDeliveries}</div>
-                <div className="text-xs sm:text-sm text-white/80">Active Deliveries</div>
-              </div>
-              <div className="hidden sm:block w-px h-10 bg-white/20"></div>
-              <div className="text-center">
-                <div className="text-lg sm:text-xl font-bold">₦{(stats.todayEarnings / 1000).toFixed(0)}k</div>
-                <div className="text-xs sm:text-sm text-white/80">Today's Earnings</div>
-              </div>
-            </div>
-          </div>
+          <h1 className="text-lg sm:text-xl font-bold mb-1">Rider Dashboard</h1>
+          <p className="text-white/90 text-sm">See available orders, accept, then mark as delivered.</p>
         </motion.div>
 
-        {/* Online Status Toggle - Mobile Optimized */}
+        {/* Online toggle */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.05 }}
           className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-200"
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
             <div className="flex items-center space-x-3">
-              <div className={`w-3 h-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <div className="flex-1 min-w-0">
+              <div className={`w-3 h-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`} />
+              <div>
                 <h3 className="font-semibold text-gray-900 text-sm sm:text-base">
-                  {isOnline ? 'Online - Available for Deliveries' : 'Offline - Not Available'}
+                  {isOnline ? 'Online – You can accept deliveries' : 'Offline'}
                 </h3>
-                <p className="text-xs sm:text-sm text-gray-500">
-                  {isOnline ? 'You will receive delivery requests' : 'You will not receive new requests'}
+                <p className="text-xs text-gray-500">
+                  {isOnline ? 'New orders will appear in Available Deliveries' : 'Go online to see new orders'}
                 </p>
               </div>
             </div>
             <button
               onClick={handleToggleOnline}
-              className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
-                isOnline 
-                  ? 'bg-red-600 text-white hover:bg-red-700' 
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
+              className={`px-4 py-2 rounded-lg font-medium text-sm ${isOnline ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-green-600 text-white hover:bg-green-700'}`}
             >
               {isOnline ? 'Go Offline' : 'Go Online'}
             </button>
           </div>
         </motion.div>
 
-        {/* Quick Actions - Mobile Optimized */}
+        {/* Three main actions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-2 gap-2 sm:gap-3"
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4"
         >
           <Link
             href="/dashboard/rider/deliveries"
-            className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-3 sm:p-4 text-white hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl min-h-[80px] sm:min-h-[100px] flex items-center justify-center"
+            className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all flex items-center gap-4"
           >
-            <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
-              <Truck className="h-5 w-5 sm:h-6 sm:w-6" />
-              <div>
-                <h3 className="font-semibold text-xs sm:text-sm">Available Deliveries</h3>
-                <p className="text-xs text-white/80 hidden sm:block">View new requests</p>
-              </div>
+            <div className="p-3 bg-blue-100 rounded-xl">
+              <Truck className="h-8 w-8 text-blue-600" />
             </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">Available Deliveries</h3>
+              <p className="text-sm text-gray-500 mt-0.5">Orders confirmed by restaurant. Accept one here.</p>
+            </div>
+            <ArrowRight className="h-5 w-5 text-gray-400 ml-auto flex-shrink-0" />
           </Link>
 
-          <Link
-            href="/dashboard/rider/my-deliveries"
-            className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-3 sm:p-4 text-white hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl min-h-[80px] sm:min-h-[100px] flex items-center justify-center"
-          >
-            <div className="flex flex-col items-center text-center space-y-1 sm:space-y-2">
-              <Package className="h-5 w-5 sm:h-6 sm:w-6" />
-              <div>
-                <h3 className="font-semibold text-xs sm:text-sm">My Deliveries</h3>
-                <p className="text-xs text-white/80">{stats.activeDeliveries} active</p>
-              </div>
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 flex items-center gap-4">
+            <div className="p-3 bg-green-100 rounded-xl">
+              <Package className="h-8 w-8 text-green-600" />
             </div>
-          </Link>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-gray-900">Current delivery</h3>
+              <p className="text-sm text-gray-500 mt-0.5">
+                {activeDeliveries.length > 0
+                  ? `${activeDeliveries.length} order(s) – Mark as delivered when done.`
+                  : 'No active delivery. Accept one from Available Deliveries.'}
+              </p>
+            </div>
+          </div>
 
           <Link
-            href="/dashboard/rider/earnings"
-            className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 text-white hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+            href="/dashboard/rider/history"
+            className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:border-green-300 hover:shadow-md transition-all flex items-center gap-4"
           >
-            <div className="flex flex-col items-center text-center space-y-2">
-              <DollarSign className="h-6 w-6" />
-              <div>
-                <h3 className="font-semibold text-sm">Earnings</h3>
-                <p className="text-xs text-white/80">Track your income</p>
-              </div>
+            <div className="p-3 bg-green-100 rounded-xl">
+              <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
-          </Link>
-
-          <Link
-            href="/dashboard/rider/location"
-            className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-4 text-white hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
-          >
-            <div className="flex flex-col items-center text-center space-y-2">
-              <MapPin className="h-6 w-6" />
-              <div>
-                <h3 className="font-semibold text-sm">Location</h3>
-                <p className="text-xs text-white/80">Update location</p>
-              </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">Successful Deliveries</h3>
+              <p className="text-sm text-gray-500 mt-0.5">Full list of deliveries you completed.</p>
             </div>
+            <ArrowRight className="h-5 w-5 text-gray-400 ml-auto flex-shrink-0" />
           </Link>
         </motion.div>
 
-        {/* Stats Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4"
-        >
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Truck className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalDeliveries}</p>
-                <p className="text-xs text-gray-500">Total Deliveries</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">₦{(stats.totalEarnings / 1000).toFixed(0)}k</p>
-                <p className="text-xs text-gray-500">Total Earnings</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Star className="h-5 w-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{stats.averageRating}</p>
-                <p className="text-xs text-gray-500">Avg Rating</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Navigation className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalDistance}km</p>
-                <p className="text-xs text-gray-500">Total Distance</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Active Deliveries */}
+        {/* Active Deliveries – only show when rider has accepted orders */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -597,15 +496,13 @@ export default function RiderDashboard() {
                           </div>
                         </div>
 
-                        <div className="mt-3 flex space-x-2">
-                          {delivery.status === 'confirmed' && (
-                            <button onClick={() => handleUpdateDeliveryStatus(delivery._id, 'PICKED_UP')} className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-colors">
-                              Mark Picked Up
-                            </button>
-                          )}
-                          {delivery.status === 'picked_up' && (
-                            <button onClick={() => handleUpdateDeliveryStatus(delivery._id, 'DELIVERED')} className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors">
-                              Mark Delivered
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {(delivery.status === 'confirmed' || delivery.status === 'picked_up') && (
+                            <button
+                              onClick={() => handleUpdateDeliveryStatus(delivery._id, 'DELIVERED')}
+                              className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+                            >
+                              Mark as Delivered
                             </button>
                           )}
                           <button className="px-3 py-1 bg-gray-600 text-white text-xs rounded-lg hover:bg-gray-700 transition-colors">
@@ -638,123 +535,6 @@ export default function RiderDashboard() {
                 </Link>
               </div>
             )}
-          </div>
-        </motion.div>
-
-        {/* Recent Deliveries */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-        >
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Recent Deliveries</h2>
-              <Link 
-                href="/dashboard/rider/history"
-                className="text-brand-primary hover:text-brand-accent text-sm font-medium flex items-center"
-              >
-                View History
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Link>
-            </div>
-          </div>
-          
-          <div className="divide-y divide-gray-200">
-            {recentDeliveries.map((delivery, index) => (
-              <motion.div
-                key={delivery._id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="p-6 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 flex-1">
-                    <div className={`p-3 rounded-lg border ${getStatusColor(delivery.status)}`}>
-                      {getStatusIcon(delivery.status)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Order #{delivery.orderId.slice(-6)}
-                        </h3>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(delivery.status)}`}>
-                          {getStatusText(delivery.status)}
-                        </span>
-                      </div>
-                      
-                      <div className="space-y-1 mb-3">
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Restaurant:</span> {delivery.restaurantName}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Customer:</span> {delivery.studentName}
-                        </p>
-                        {delivery.items.map((item, itemIndex) => (
-                          <p key={itemIndex} className="text-sm text-gray-600">
-                            {item.quantity}x {item.name}
-                          </p>
-                        ))}
-                      </div>
-
-                      <div className="flex items-center justify-between text-sm text-gray-500">
-                        <div className="flex items-center space-x-4">
-                          <span className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-1" />
-                            {new Date(delivery.createdAt).toLocaleDateString()}
-                          </span>
-                          <span className="flex items-center">
-                            <MapPin className="h-4 w-4 mr-1" />
-                            {delivery.distance}km
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-gray-900">
-                            ₦{delivery.earnings.toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Earnings Summary */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
-        >
-          <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold mb-2">💰 Today's Earnings</h3>
-                <p className="text-green-100 mb-3">₦{stats.todayEarnings.toLocaleString()}</p>
-                <button className="bg-white text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors">
-                  View Details
-                </button>
-              </div>
-              <DollarSign className="h-12 w-12 text-green-200" />
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold mb-2">📈 Weekly Performance</h3>
-                <p className="text-blue-100 mb-3">₦{stats.weeklyEarnings.toLocaleString()} this week</p>
-                <button className="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors">
-                  View Analytics
-                </button>
-              </div>
-              <TrendingUp className="h-12 w-12 text-blue-200" />
-            </div>
           </div>
         </motion.div>
       </div>

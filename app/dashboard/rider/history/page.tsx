@@ -43,7 +43,7 @@ export default function DeliveryHistory() {
   const [deliveries, setDeliveries] = useState<DeliveryHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('delivered');
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -138,9 +138,9 @@ export default function DeliveryHistory() {
           <div className="flex items-center gap-4">
             <BackArrow href="/dashboard/rider" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Delivery History</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Successful Deliveries</h1>
               <p className="text-sm text-gray-600 mt-1">
-                {deliveries.length} {deliveries.length === 1 ? 'delivery' : 'deliveries'} completed
+                Full list of deliveries you have completed
               </p>
             </div>
           </div>
