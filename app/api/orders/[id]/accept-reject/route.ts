@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
 import { sendOrderRejectionEmailToStudent, sendOrderAcceptanceNotificationToAdmin, sendOrderAcceptanceEmailToStudent } from '@/lib/services/email';
-import { sendRiderCancellationEmail } from '@/lib/services/rider-notification';
+import { sendRiderCancellationEmail, sendNewOrderAvailableToRider } from '@/lib/services/rider-notification';
 
 export async function PATCH(
   request: NextRequest,
@@ -38,6 +38,7 @@ export async function PATCH(
           select: {
             id: true,
             name: true,
+            university: true,
             logo: true,
             image: true
           }
@@ -175,6 +176,46 @@ export async function PATCH(
           console.error('Failed to send acceptance email to student:', error);
           // Don't fail the request if email fails
         }
+      }
+
+      // Email all riders at the same university: new order available for delivery
+      try {
+        const riders = await prisma.rider.findMany({
+          where: {
+            isActive: true,
+            user: {
+              university: order.restaurant.university
+            }
+          },
+          include: {
+            user: {
+              select: { email: true, name: true }
+            }
+          }
+        });
+        for (const r of riders) {
+          const email = r.user?.email || r.email;
+          if (email) {
+            try {
+              await sendNewOrderAvailableToRider(
+                email,
+                r.name,
+                order.orderNumber,
+                order.restaurant.name,
+                order.deliveryAddress,
+                order.deliveryFee
+              );
+            } catch (err) {
+              console.error(`Failed to send new-order email to rider ${r.id}:`, err);
+            }
+          }
+        }
+        if (riders.length > 0) {
+          console.log(`✅ New order available emailed to ${riders.length} rider(s) for order #${order.orderNumber}`);
+        }
+      } catch (error) {
+        console.error('Failed to email riders about new order:', error);
+        // Don't fail the request if rider emails fail
       }
 
       return NextResponse.json({ 

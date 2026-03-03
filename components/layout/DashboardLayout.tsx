@@ -27,7 +27,8 @@ import {
   Clock,
   ShoppingCart,
   Plus,
-  Minus
+  Minus,
+  CheckCircle
 } from 'lucide-react';
 import Logo from '../Logo';
 
@@ -70,9 +71,7 @@ const navigationItems = {
   rider: [
     { name: 'Dashboard', href: '/dashboard/rider', icon: Home },
     { name: 'Available Deliveries', href: '/dashboard/rider/deliveries', icon: Truck },
-    { name: 'My Deliveries', href: '/dashboard/rider/my-deliveries', icon: Package },
-    { name: 'Earnings', href: '/dashboard/rider/earnings', icon: CreditCard },
-    { name: 'Location', href: '/dashboard/rider/location', icon: MapPin },
+    { name: 'Successful Deliveries', href: '/dashboard/rider/history', icon: CheckCircle },
     { name: 'Profile', href: '/dashboard/rider/profile', icon: User },
     { name: 'Support', href: '/dashboard/rider/support', icon: HelpCircle },
   ],
