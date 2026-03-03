@@ -95,7 +95,7 @@ export default function StudentDashboard() {
           // Compute stats from real data
           const totalOrders = normalizedOrders.length;
           const activeOrders = normalizedOrders.filter((order: Order) => 
-            ['pending', 'accepted', 'preparing', 'ready', 'picked_up'].includes(order.status)
+            ['pending', 'confirmed', 'picked_up'].includes(order.status)
           ).length;
           const completedOrders = normalizedOrders.filter((order: Order) => 
             order.status === 'delivered'
@@ -181,12 +181,10 @@ export default function StudentDashboard() {
         return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
       case 'picked_up':
         return 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30';
-      case 'ready':
-        return 'text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30';
-      case 'preparing':
+      case 'confirmed':
+        return 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30';
+      case 'pending':
         return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
-      case 'accepted':
-        return 'text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30';
       default:
         return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
     }
@@ -198,12 +196,10 @@ export default function StudentDashboard() {
         return <CheckCircle className="w-4 h-4" />;
       case 'picked_up':
         return <Package className="w-4 h-4" />;
-      case 'ready':
-        return <Package className="w-4 h-4" />;
-      case 'preparing':
-        return <Clock className="w-4 h-4" />;
-      case 'accepted':
+      case 'confirmed':
         return <CheckCircle className="w-4 h-4" />;
+      case 'pending':
+        return <Clock className="w-4 h-4" />;
       default:
         return <Clock className="w-4 h-4" />;
     }

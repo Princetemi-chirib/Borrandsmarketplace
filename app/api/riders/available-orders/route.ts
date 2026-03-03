@@ -38,12 +38,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Rider profile not found' }, { status: 404 });
     }
 
-    // Get orders that are READY for pickup and not yet assigned to a rider
-    // Only show orders from the same university
+    // Get orders that are CONFIRMED (restaurant confirmed) and not yet assigned to a rider
     const availableOrders = await prisma.order.findMany({
       where: {
-        status: 'READY',
-        riderId: null, // Not yet assigned
+        status: 'CONFIRMED',
+        riderId: null,
         restaurant: {
           university: user.university // Same university
         }

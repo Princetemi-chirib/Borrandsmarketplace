@@ -76,7 +76,19 @@ export async function PATCH(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Update order status
+    // Validate transition: CONFIRMED -> PICKED_UP, PICKED_UP -> DELIVERED
+    const currentStatus = order.status as string;
+    if (status === 'PICKED_UP' && currentStatus !== 'CONFIRMED') {
+      return NextResponse.json({ 
+        error: 'Order must be confirmed before marking as picked up' 
+      }, { status: 400 });
+    }
+    if (status === 'DELIVERED' && currentStatus !== 'PICKED_UP') {
+      return NextResponse.json({ 
+        error: 'Order must be picked up before marking as delivered' 
+      }, { status: 400 });
+    }
+
     const updateData: any = { status };
     
     // If marking as delivered, update actualDeliveryTime and rider stats

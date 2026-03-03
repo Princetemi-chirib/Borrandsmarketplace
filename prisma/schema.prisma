@@ -341,9 +341,7 @@ enum VehicleType {
 
 enum OrderStatus {
   PENDING
-  ACCEPTED
-  PREPARING
-  READY
+  CONFIRMED
   PICKED_UP
   DELIVERED
   CANCELLED

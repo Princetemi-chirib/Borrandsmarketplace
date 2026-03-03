@@ -180,11 +180,8 @@ export async function sendOrderNotificationEmail(
     }
     const statusEmoji: { [key: string]: string } = {
       'PENDING': '⏳',
-      'ACCEPTED': '✅',
-      'PREPARING': '👨‍🍳',
-      'READY': '📦',
+      'CONFIRMED': '✅',
       'PICKED_UP': '🚚',
-      'IN_TRANSIT': '🛵',
       'DELIVERED': '🎉',
       'CANCELLED': '❌',
     };

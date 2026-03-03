@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       where: {
         riderId: rider.id,
         status: {
-          in: ['READY', 'PICKED_UP'] // Active statuses
+          in: ['CONFIRMED', 'PICKED_UP']
         }
       },
       include: {

@@ -64,11 +64,8 @@ export async function sendOrderStatusNotification(params: {
 }): Promise<void> {
   const statusEmoji: { [key: string]: string } = {
     'PENDING': '⏳',
-    'ACCEPTED': '✅',
-    'PREPARING': '👨‍🍳',
-    'READY': '📦',
+    'CONFIRMED': '✅',
     'PICKED_UP': '🚚',
-    'IN_TRANSIT': '🛵',
     'DELIVERED': '🎉',
     'CANCELLED': '❌',
   };
@@ -133,7 +130,7 @@ export async function sendRiderAssignmentNotification(params: {
     whatsappMessage,
     orderDetails: {
       orderNumber: params.orderNumber,
-      status: 'READY',
+      status: 'CONFIRMED',
       restaurantName: params.pickupAddress,
       total: params.earnings,
     },

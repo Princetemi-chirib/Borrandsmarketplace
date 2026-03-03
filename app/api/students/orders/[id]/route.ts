@@ -114,7 +114,7 @@ export async function PATCH(
     // Handle different actions
     switch (action) {
       case 'cancel':
-        if (order.status === 'PENDING' || order.status === 'ACCEPTED') {
+        if (order.status === 'PENDING' || order.status === 'CONFIRMED') {
           await prisma.order.update({
             where: { id: orderId },
             data: {
@@ -128,21 +128,8 @@ export async function PATCH(
         }
 
       case 'complete':
-        // Student marks order as received/completed
-        if (order.status === 'PICKED_UP') {
-          await prisma.order.update({
-            where: { id: orderId },
-            data: {
-              status: 'DELIVERED',
-              actualDeliveryTime: new Date()
-            }
-          });
-          return NextResponse.json({ message: 'Order marked as received successfully' });
-        } else if (order.status === 'DELIVERED') {
-          return NextResponse.json({ error: 'Order has already been marked as delivered' }, { status: 400 });
-        } else {
-          return NextResponse.json({ error: 'Order can only be marked as received if it has been picked up' }, { status: 400 });
-        }
+        // Delivered is marked by the rider only; student cannot mark as complete
+        return NextResponse.json({ error: 'Delivery completion is marked by the rider only' }, { status: 400 });
 
       case 'rate':
         if (order.status === 'DELIVERED' && !order.rating) {

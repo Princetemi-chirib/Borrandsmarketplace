@@ -212,7 +212,7 @@ export default function RestaurantsPage() {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
-  const cuisines = ['all', ...Array.from(new Set(restaurants.map(r => r.cuisine)))];
+  const cuisines = ['all', ...Array.from(new Set(restaurants.flatMap(r => (Array.isArray(r.cuisine) ? r.cuisine : [r.cuisine]).filter(Boolean))))];
 
   if (isLoading) {
     return (
@@ -427,7 +427,7 @@ export default function RestaurantsPage() {
                   </div>
                   <div className="absolute bottom-3 left-3 right-3">
                     <h3 className="text-lg font-semibold text-white">{restaurant.name}</h3>
-                    <p className="text-white/90 text-sm">{restaurant.cuisine}</p>
+                    <p className="text-white/90 text-sm">{Array.isArray(restaurant.cuisine) ? restaurant.cuisine.join(', ') : restaurant.cuisine}</p>
                   </div>
                 </div>
 

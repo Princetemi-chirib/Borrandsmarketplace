@@ -117,15 +117,11 @@ export async function PATCH(
         order: updatedOrder 
       });
     } else {
-      // Accept order - update status based on whether rider is already assigned
-      // If rider is assigned: move directly to PREPARING
-      // If no rider: move to ACCEPTED
-      const newStatus = order.riderId ? 'PREPARING' : 'ACCEPTED';
-      
+      // Accept order -> CONFIRMED (restaurant confirmed)
       const updatedOrder = await prisma.order.update({
         where: { id: params.id },
         data: {
-          status: newStatus
+          status: 'CONFIRMED'
         }
       });
 

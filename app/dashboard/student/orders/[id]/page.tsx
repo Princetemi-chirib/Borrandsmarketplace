@@ -78,18 +78,16 @@ export default function OrderTracking() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const statusFlow = ['pending','accepted','preparing','ready','picked_up','delivered'] as const;
+  const statusFlow = ['pending','confirmed','picked_up','delivered'] as const;
 
   const deriveTracking = (status: string): TrackingStep[] => {
     const normalizedStatus = (status || 'pending').toLowerCase();
     const currentIndex = statusFlow.indexOf(normalizedStatus as any);
     const defs: Array<{ id: string; title: string; description: string; icon: any }> = [
-      { id: '1', title: 'Order Placed', description: 'Your order has been received', icon: Package },
-      { id: '2', title: 'Restaurant Confirmed', description: 'Restaurant has confirmed your order', icon: CheckCircle },
-      { id: '3', title: 'Preparing', description: 'Your food is being prepared', icon: Clock },
-      { id: '4', title: 'Ready for Pickup', description: 'Order is ready for pickup', icon: Package },
-      { id: '5', title: 'Rider Picked Up', description: 'Rider has collected your order', icon: Truck },
-      { id: '6', title: 'Delivered', description: 'Order has been delivered', icon: CheckCircle },
+      { id: '1', title: 'Pending', description: 'Your order has been received', icon: Package },
+      { id: '2', title: 'Confirmed', description: 'Restaurant has confirmed your order', icon: CheckCircle },
+      { id: '3', title: 'Picked Up', description: 'Rider has collected your order', icon: Truck },
+      { id: '4', title: 'Delivered', description: 'Order has been delivered by the rider', icon: CheckCircle },
     ];
     return defs.map((d, idx) => ({
       id: d.id,
@@ -176,21 +174,17 @@ export default function OrderTracking() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
       case 'confirmed':
-        return 'bg-blue-100 text-blue-800';
-      case 'preparing':
-        return 'bg-orange-100 text-orange-800';
-      case 'ready':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
       case 'picked_up':
-        return 'bg-indigo-100 text-indigo-800';
+        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300';
       case 'delivered':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
     }
   };
 
@@ -198,8 +192,10 @@ export default function OrderTracking() {
     switch (status) {
       case 'pending':
         return <Clock className="h-4 w-4" />;
-      case 'preparing':
-        return <Package className="h-4 w-4" />;
+      case 'confirmed':
+        return <CheckCircle className="h-4 w-4" />;
+      case 'picked_up':
+        return <Truck className="h-4 w-4" />;
       case 'delivered':
         return <CheckCircle className="h-4 w-4" />;
       default:
