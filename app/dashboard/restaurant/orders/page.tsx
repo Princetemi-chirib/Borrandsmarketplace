@@ -32,8 +32,9 @@ export default function RestaurantOrders() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const statuses = ['All', 'Pending', 'Confirmed', 'Picked Up', 'Delivered', 'Cancelled'];
-  
+  // Filter options match order flow: Pending → Confirmed → Picked up → Delivered (Cancelled separate)
+  const statuses = ['All', 'Pending', 'Confirmed', 'Picked up', 'Delivered', 'Cancelled'];
+
   useEffect(() => {
     try {
       const userData = localStorage.getItem('user');
@@ -41,9 +42,16 @@ export default function RestaurantOrders() {
     } catch {}
   }, []);
 
-  const normalizeUiToApiStatus = (ui:string) => {
-    const map: Record<string, string> = { 'Picked Up': 'picked_up' };
-    return (map[ui] || ui).toLowerCase();
+  const normalizeUiToApiStatus = (ui: string): string => {
+    const map: Record<string, string> = {
+      'All': 'all',
+      'Pending': 'pending',
+      'Confirmed': 'confirmed',
+      'Picked up': 'picked_up',
+      'Delivered': 'delivered',
+      'Cancelled': 'cancelled',
+    };
+    return map[ui] ?? ui.toLowerCase();
   };
 
   const loadOrders = async () => {
@@ -150,11 +158,11 @@ export default function RestaurantOrders() {
       'All': 'all',
       'Pending': 'pending',
       'Confirmed': 'confirmed',
-      'Picked Up': 'picked_up',
+      'Picked up': 'picked_up',
       'Delivered': 'delivered',
-      'Cancelled': 'cancelled'
+      'Cancelled': 'cancelled',
     };
-    return statusMap[status] || status.toLowerCase();
+    return statusMap[status] ?? status.toLowerCase();
   };
 
   const filteredOrders = orders.filter((order:any) => {
@@ -247,7 +255,7 @@ export default function RestaurantOrders() {
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <button className="flex items-center space-x-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-accent transition-colors">
+            <button className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
               <RefreshCw className="h-4 w-4" />
               <span>Refresh</span>
             </button>
@@ -287,8 +295,8 @@ export default function RestaurantOrders() {
                   onClick={() => setSelectedStatus(status)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     selectedStatus === status
-                      ? 'bg-brand-primary text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   {status}
@@ -301,7 +309,7 @@ export default function RestaurantOrders() {
                 placeholder="Search orders..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary dark:focus:ring-brand-primary focus:border-transparent w-64 text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent w-64 text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
               />
               <Eye className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
             </div>

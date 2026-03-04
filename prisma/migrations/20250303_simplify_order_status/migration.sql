@@ -7,3 +7,4 @@ UPDATE `orders` SET `status` = 'CONFIRMED' WHERE `status` IN ('ACCEPTED', 'PREPA
 -- Step 2: Modify enum to new values (MySQL)
 ALTER TABLE `orders` MODIFY COLUMN `status` ENUM('PENDING', 'CONFIRMED', 'PICKED_UP', 'DELIVERED', 'CANCELLED') NOT NULL DEFAULT 'PENDING';
 
+
