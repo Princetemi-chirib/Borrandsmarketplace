@@ -68,8 +68,7 @@ interface Order {
 
 const orderStatuses: OrderStatus[] = [
   { status: 'pending', timestamp: new Date(), description: 'Order placed and waiting for restaurant confirmation', icon: Package },
-  { status: 'confirmed', timestamp: new Date(), description: 'Restaurant has confirmed your order', icon: CheckCircle },
-  { status: 'picked_up', timestamp: new Date(), description: 'Rider has picked up your order', icon: Truck },
+  { status: 'confirmed', timestamp: new Date(), description: 'Restaurant confirmed. Rider is on the way.', icon: Truck },
   { status: 'delivered', timestamp: new Date(), description: 'Order delivered by the rider', icon: CheckCircle }
 ];
 
@@ -124,7 +123,10 @@ export default function OrderTrackingPage() {
         },
       };
       setOrder(mapped);
-      setCurrentStatus(orderStatuses.findIndex(s => s.status === (mapped.status || '').toLowerCase()));
+      // 3-step flow: pending=0, confirmed|picked_up=1, delivered=2
+      const st = (mapped.status || '').toLowerCase();
+      const idx = st === 'delivered' ? 2 : (st === 'confirmed' || st === 'picked_up' ? 1 : 0);
+      setCurrentStatus(idx);
       setEta(mapped.estimatedDeliveryTime || 0);
     } catch (e) {
       console.error(e);
@@ -156,20 +158,19 @@ export default function OrderTrackingPage() {
   }, [orderId]);
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch ((status || '').toLowerCase()) {
       case 'pending': return 'text-yellow-600 bg-yellow-100';
       case 'confirmed': return 'text-blue-600 bg-blue-100';
-      case 'picked_up': return 'text-indigo-600 bg-indigo-100';
+      case 'picked_up': return 'text-blue-600 bg-blue-100';
       case 'delivered': return 'text-green-600 bg-green-100';
       default: return 'text-gray-600 bg-gray-100';
     }
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
+    switch ((status || '').toLowerCase()) {
       case 'pending': return Package;
-      case 'confirmed': return CheckCircle;
-      case 'picked_up': return Truck;
+      case 'confirmed': case 'picked_up': return Truck;
       case 'delivered': return CheckCircle;
       default: return Package;
     }
@@ -288,8 +289,8 @@ export default function OrderTrackingPage() {
           </div>
         </motion.div>
 
-        {/* Delivery ETA */}
-        {order.status === 'picked_up' && (
+        {/* Delivery ETA - show when rider is on the way (confirmed or picked_up) */}
+        {(order.status?.toLowerCase() === 'confirmed' || order.status?.toLowerCase() === 'picked_up') && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

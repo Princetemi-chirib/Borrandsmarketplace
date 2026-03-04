@@ -78,16 +78,18 @@ export default function OrderTracking() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const statusFlow = ['pending','confirmed','picked_up','delivered'] as const;
+  const statusFlow = ['pending','confirmed','delivered'] as const;
 
   const deriveTracking = (status: string): TrackingStep[] => {
     const normalizedStatus = (status || 'pending').toLowerCase();
-    const currentIndex = statusFlow.indexOf(normalizedStatus as any);
+    // Map to 3-step flow: pending=0, confirmed|picked_up=1, delivered=2
+    let currentIndex = 0;
+    if (normalizedStatus === 'delivered') currentIndex = 2;
+    else if (normalizedStatus === 'confirmed' || normalizedStatus === 'picked_up') currentIndex = 1;
     const defs: Array<{ id: string; title: string; description: string; icon: any }> = [
       { id: '1', title: 'Pending', description: 'Your order has been received', icon: Package },
-      { id: '2', title: 'Confirmed', description: 'Restaurant has confirmed your order', icon: CheckCircle },
-      { id: '3', title: 'Picked Up', description: 'Rider has collected your order', icon: Truck },
-      { id: '4', title: 'Delivered', description: 'Order has been delivered by the rider', icon: CheckCircle },
+      { id: '2', title: 'Confirmed', description: 'Restaurant confirmed. Rider is on the way.', icon: Truck },
+      { id: '3', title: 'Delivered', description: 'Order delivered by the rider', icon: CheckCircle },
     ];
     return defs.map((d, idx) => ({
       id: d.id,
