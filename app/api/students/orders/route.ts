@@ -57,8 +57,39 @@ export async function GET(request: NextRequest) {
     // Get total count for pagination
     const total = await prisma.order.count({ where });
 
+    // Enrich each order's items with image from menu when missing (e.g. orders created before we stored image)
+    const allItemIdsNeedingImage = new Set<string>();
+    const parsedOrders: Array<{ order: typeof orders[0]; items: any[] }> = [];
+    for (const o of orders) {
+      let items: any[] = [];
+      try {
+        items = typeof o.items === 'string' ? JSON.parse(o.items) : Array.isArray(o.items) ? o.items : [];
+      } catch {
+        items = [];
+      }
+      for (const it of items) {
+        if (!it.image && (it.itemId || it.id)) allItemIdsNeedingImage.add(it.itemId || it.id);
+      }
+      parsedOrders.push({ order: o, items });
+    }
+    let imageByItemId = new Map<string, string>();
+    if (allItemIdsNeedingImage.size > 0) {
+      const menuItems = await prisma.menuItem.findMany({
+        where: { id: { in: Array.from(allItemIdsNeedingImage) } },
+        select: { id: true, image: true }
+      });
+      imageByItemId = new Map(menuItems.map(m => [m.id, m.image || '']));
+    }
+    const ordersWithEnrichedItems = parsedOrders.map(({ order, items: itemsArr }) => {
+      const enrichedItems = itemsArr.map((it: any) => ({
+        ...it,
+        image: it.image || imageByItemId.get(it.itemId || it.id) || ''
+      }));
+      return { ...order, _id: order.id, items: JSON.stringify(enrichedItems) };
+    });
+
     return NextResponse.json({
-      orders: orders.map(o => ({ ...o, _id: o.id })),
+      orders: ordersWithEnrichedItems,
       pagination: {
         page,
         limit,
