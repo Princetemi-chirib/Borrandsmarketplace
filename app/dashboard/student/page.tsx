@@ -84,6 +84,7 @@ export default function StudentDashboard() {
 
           // Unwrap API responses - they return { orders } and { favorites }
           const orders = ordersData.orders || [];
+          const favorites = favoritesData.favorites || [];
 
           // Normalize orders: status lowercase, parse items, flatten restaurant name (API returns restaurant: { name })
           const normalizedOrders = orders.map((order: any) => ({
