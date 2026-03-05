@@ -60,7 +60,28 @@ export async function GET(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    return NextResponse.json({ order: { ...order, _id: order.id } });
+    // Enrich order items with image from menu when missing (e.g. orders created before we stored image)
+    let items: Array<{ itemId?: string; id?: string; name: string; price: number; quantity: number; total?: number; image?: string }> = [];
+    try {
+      items = typeof order.items === 'string' ? JSON.parse(order.items) : Array.isArray(order.items) ? order.items : [];
+    } catch {
+      items = [];
+    }
+    const itemIdsNeedingImage = Array.from(new Set((items as any[]).filter((i: any) => !i.image && (i.itemId || i.id)).map((i: any) => i.itemId || i.id)));
+    if (itemIdsNeedingImage.length > 0) {
+      const menuItems = await prisma.menuItem.findMany({
+        where: { id: { in: itemIdsNeedingImage } },
+        select: { id: true, image: true }
+      });
+      const imageByItemId = new Map(menuItems.map(m => [m.id, m.image || '']));
+      items = items.map((it: any) => ({
+        ...it,
+        image: it.image || imageByItemId.get(it.itemId || it.id) || ''
+      }));
+    }
+    const orderWithEnrichedItems = { ...order, _id: order.id, items: JSON.stringify(items) };
+
+    return NextResponse.json({ order: orderWithEnrichedItems });
   } catch (error) {
     console.error('Error fetching order:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
