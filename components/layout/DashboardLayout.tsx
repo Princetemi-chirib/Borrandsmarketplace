@@ -31,6 +31,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import Logo from '../Logo';
+import { getImageUrl, isValidImageUrl } from '@/lib/image-utils';
 
 interface LayoutCartItem {
   restaurantId: string;
@@ -534,13 +535,20 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
                             className="flex gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/40 border border-gray-100 dark:border-gray-600/50"
                           >
                             <div className="w-14 h-14 rounded-lg bg-gray-200 dark:bg-gray-600 flex-shrink-0 overflow-hidden">
-                              {item.image ? (
-                                <img src={item.image} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <Package className="h-6 w-6 text-gray-400 dark:text-gray-500" />
-                                </div>
-                              )}
+                              {item.image && isValidImageUrl(item.image) ? (
+                                <img
+                                  src={getImageUrl(item.image)}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                  }}
+                                />
+                              ) : null}
+                              <div className={`w-full h-full flex items-center justify-center ${item.image && isValidImageUrl(item.image) ? 'hidden' : ''}`}>
+                                <Package className="h-6 w-6 text-gray-400 dark:text-gray-500" />
+                              </div>
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-gray-900 dark:text-white truncate text-sm">{item.name}</p>

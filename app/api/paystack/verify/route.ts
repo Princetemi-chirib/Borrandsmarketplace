@@ -72,7 +72,8 @@ export async function GET(request: NextRequest) {
               itemId: item.itemId,
               name: item.name,
               price: item.price,
-              quantity: item.quantity
+              quantity: item.quantity,
+              image: item.image || ''
             });
             return acc;
           }, {});

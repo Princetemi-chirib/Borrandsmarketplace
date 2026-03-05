@@ -84,12 +84,14 @@ export default function StudentDashboard() {
 
           // Unwrap API responses - they return { orders } and { favorites }
           const orders = ordersData.orders || [];
-          const favorites = favoritesData.favorites || [];
 
-          // Normalize status to lowercase for comparison
+          // Normalize orders: status lowercase, parse items, flatten restaurant name (API returns restaurant: { name })
           const normalizedOrders = orders.map((order: any) => ({
             ...order,
-            status: order.status?.toLowerCase() || 'pending'
+            status: order.status?.toLowerCase() || 'pending',
+            items: typeof order.items === 'string' ? (() => { try { return JSON.parse(order.items); } catch { return []; } })() : (Array.isArray(order.items) ? order.items : []),
+            restaurantName: order.restaurant?.name ?? order.restaurantName ?? 'Restaurant',
+            total: typeof order.total === 'number' ? order.total : parseFloat(order.total) || 0
           }));
 
           // Compute stats from real data
