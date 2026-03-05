@@ -26,6 +26,7 @@ import {
   Navigation,
   Timer
 } from 'lucide-react';
+import { getImageUrl, isValidImageUrl } from '@/lib/image-utils';
 
 interface OrderItem {
   id: string;
@@ -350,7 +351,22 @@ export default function OrderTracking() {
                 {order.items.map((item) => (
                   <div key={item.id} className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg flex-shrink-0"></div>
+                      <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg flex-shrink-0 overflow-hidden">
+                        {item.image && isValidImageUrl(item.image) ? (
+                          <img
+                            src={getImageUrl(item.image)}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <div className={`w-full h-full flex items-center justify-center ${item.image && isValidImageUrl(item.image) ? 'hidden' : ''}`}>
+                          <Package className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+                        </div>
+                      </div>
                       <div>
                         <h4 className="font-medium text-gray-900 dark:text-white">{item.name}</h4>
                         <p className="text-sm text-gray-600 dark:text-gray-400">Qty: {item.quantity}</p>

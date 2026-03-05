@@ -21,6 +21,7 @@ import {
   Receipt,
   ShoppingBag
 } from 'lucide-react';
+import { getImageUrl, isValidImageUrl } from '@/lib/image-utils';
 
 export default function MyOrders() {
   const [selectedStatus, setSelectedStatus] = useState('All');
@@ -45,14 +46,21 @@ export default function MyOrders() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load orders');
       
-      // Normalize orders: status to lowercase, parse items if stringified
-      const normalizedOrders = (data.orders || []).map((order: any) => ({
-        ...order,
-        status: order.status?.toLowerCase() || 'pending',
-        items: typeof order.items === 'string' ? JSON.parse(order.items) : order.items,
-        restaurantName: order.restaurant?.name || order.restaurantName || 'Restaurant',
-        total: typeof order.total === 'number' ? order.total : parseFloat(order.total) || 0
-      }));
+      // Normalize orders: status to lowercase, parse items if stringified, preserve item image
+      const normalizedOrders = (data.orders || []).map((order: any) => {
+        const rawItems = typeof order.items === 'string' ? (() => { try { return JSON.parse(order.items); } catch { return []; } })() : (order.items || []);
+        const items = Array.isArray(rawItems) ? rawItems.map((it: any) => ({
+          ...it,
+          image: it.image || ''
+        })) : [];
+        return {
+          ...order,
+          status: order.status?.toLowerCase() || 'pending',
+          items,
+          restaurantName: order.restaurant?.name || order.restaurantName || 'Restaurant',
+          total: typeof order.total === 'number' ? order.total : parseFloat(order.total) || 0
+        };
+      });
       
       setOrders(normalizedOrders);
     } catch (error) {
@@ -216,10 +224,28 @@ export default function MyOrders() {
                   {order.items.map((item: any, itemIndex: number) => (
                     <div key={itemIndex} className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">×{item.quantity}</span>
-                        <span className="text-gray-900 dark:text-white">{item.name}</span>
+                        <div className="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700">
+                          {item.image && isValidImageUrl(item.image) ? (
+                            <img
+                              src={getImageUrl(item.image)}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          <div className={`w-full h-full flex items-center justify-center ${item.image && isValidImageUrl(item.image) ? 'hidden' : ''}`}>
+                            <Package className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">×{item.quantity}</span>
+                          <span className="ml-1 text-gray-900 dark:text-white">{item.name}</span>
+                        </div>
                       </div>
-                      <span className="text-gray-900 dark:text-white font-medium">{item.price}</span>
+                      <span className="text-gray-900 dark:text-white font-medium">₦{typeof item.price === 'number' ? (item.price * (item.quantity || 1)).toLocaleString() : item.price}</span>
                     </div>
                   ))}
                 </div>

@@ -12,8 +12,10 @@ import {
   Truck, 
   CreditCard, 
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Package
 } from 'lucide-react';
+import { getImageUrl, isValidImageUrl } from '@/lib/image-utils';
 
 interface CartItem {
   restaurantId: string;
@@ -381,16 +383,20 @@ export default function CheckoutPage() {
                         <div key={item.itemId} className="flex items-center justify-between text-sm">
                           <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700">
-                              {item.image && (
+                              {item.image && isValidImageUrl(item.image) ? (
                                 <img
-                                  src={item.image}
+                                  src={getImageUrl(item.image)}
                                   alt={item.name}
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).style.display = 'none';
+                                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
                                   }}
                                 />
-                              )}
+                              ) : null}
+                              <div className={`w-full h-full flex items-center justify-center ${item.image && isValidImageUrl(item.image) ? 'hidden' : ''}`}>
+                                <Package className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                              </div>
                             </div>
                             <div>
                               <p className="font-medium dark:text-white">{item.name}</p>
