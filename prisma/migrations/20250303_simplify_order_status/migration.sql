@@ -9,3 +9,5 @@ ALTER TABLE `orders` MODIFY COLUMN `status` ENUM('PENDING', 'CONFIRMED', 'PICKED
 
 
 
+
+

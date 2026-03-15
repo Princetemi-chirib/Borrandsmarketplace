@@ -20,7 +20,8 @@ import {
   Calendar,
   Star,
   X,
-  Plus
+  Plus,
+  Trash2
 } from 'lucide-react';
 
 interface Rider {
@@ -70,6 +71,8 @@ export default function AdminRiders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [riderToDelete, setRiderToDelete] = useState<Rider | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -179,6 +182,34 @@ export default function AdminRiders() {
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const handleDeleteRider = async () => {
+    if (!riderToDelete) return;
+    setIsDeleting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/admin/riders/${riderToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        toast.success('Rider removed successfully');
+        setRiderToDelete(null);
+        fetchRiders();
+      } else {
+        toast.error(data.message || 'Failed to remove rider');
+      }
+    } catch (error) {
+      console.error('Error deleting rider:', error);
+      toast.error('Failed to remove rider');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleAddRider = async (e: React.FormEvent) => {
@@ -457,12 +488,70 @@ export default function AdminRiders() {
                         </div>
                       </div>
                     </div>
+                    <div className="flex items-center gap-2 mt-4 md:mt-0">
+                      <button
+                        type="button"
+                        onClick={() => setRiderToDelete(rider)}
+                        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-700 bg-red-50 dark:text-red-200 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                        title="Remove rider"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               ))}
             </div>
           )}
         </motion.div>
+
+        {/* Delete rider confirmation modal */}
+        {riderToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/30">
+                  <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Remove rider</h2>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Are you sure you want to remove <strong className="text-gray-900 dark:text-white">{riderToDelete.name}</strong>?
+                They will no longer appear in the list and will not be able to log in.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRiderToDelete(null)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteRider}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                >
+                  {isDeleting ? (
+                    <>
+                      <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                      Removing...
+                    </>
+                  ) : (
+                    'Remove rider'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
 
         {/* Add Rider Modal */}
         {showAddModal && (
