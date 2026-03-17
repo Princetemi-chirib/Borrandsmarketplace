@@ -17,6 +17,7 @@
     "db:health": "curl http://localhost:3000/api/health/db",
     "clear:restaurants": "tsx scripts/clear-restaurants.ts",
     "clear:restaurant-users": "tsx scripts/clear-restaurant-users.ts",
+    "clear:riders-students-restaurants": "tsx scripts/clear-riders-students-restaurants.ts",
     "count:restaurants": "tsx scripts/count-restaurants.ts",
     "count:users": "tsx scripts/count-users.ts",
     "test:otp-email": "tsx scripts/test-otp-email.ts",
