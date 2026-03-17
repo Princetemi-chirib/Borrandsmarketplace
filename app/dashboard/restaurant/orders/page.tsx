@@ -1,28 +1,57 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import BackArrow from '@/components/ui/BackArrow';
+import { toast } from 'react-hot-toast';
 import { 
   Clock, 
   CheckCircle, 
   Truck, 
-  AlertCircle, 
   Phone, 
   MessageCircle,
   Star,
   RefreshCw,
   Package,
-  Calendar,
   MapPin,
   User,
   Eye,
   Check,
   X
 } from 'lucide-react';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import SkeletonLoader from '@/components/ui/SkeletonLoader';
+
+function digitsForTelSms(phone: string | undefined | null): string {
+  if (!phone || typeof phone !== 'string') return '';
+  const t = phone.trim();
+  if (!t) return '';
+  if (t.startsWith('+')) return '+' + t.slice(1).replace(/\D/g, '');
+  return t.replace(/\D/g, '');
+}
+
+function callCustomer(phone: string | undefined | null) {
+  const d = digitsForTelSms(phone);
+  if (!d) {
+    toast.error('No phone number on file for this customer.');
+    return;
+  }
+  window.location.href = `tel:${d}`;
+}
+
+function messageCustomer(order: { customerPhone?: string; customerName?: string; orderNumber?: string }) {
+  const d = digitsForTelSms(order.customerPhone);
+  if (!d) {
+    toast.error('No phone number on file for this customer.');
+    return;
+  }
+  const name = order.customerName || 'there';
+  const num = order.orderNumber || '';
+  const body = encodeURIComponent(
+    `Hi ${name}, this is regarding your order${num ? ` #${num}` : ''}. `
+  );
+  window.location.href = `sms:${d}?body=${body}`;
+}
 
 export default function RestaurantOrders() {
   const [user, setUser] = useState<any>(null);
@@ -31,6 +60,7 @@ export default function RestaurantOrders() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [detailOrder, setDetailOrder] = useState<any | null>(null);
 
   // Filter options match order flow: Pending → Confirmed → Picked up → Delivered (Cancelled separate)
   const statuses = ['All', 'Pending', 'Confirmed', 'Picked up', 'Delivered', 'Cancelled'];
@@ -255,8 +285,13 @@ export default function RestaurantOrders() {
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <button className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
-              <RefreshCw className="h-4 w-4" />
+            <button
+              type="button"
+              onClick={() => loadOrders()}
+              disabled={loading}
+              className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
             </button>
           </div>
@@ -346,7 +381,7 @@ export default function RestaurantOrders() {
             ) : (
               filteredOrders.map((order, index) => (
             <motion.div
-              key={order.id}
+              key={order._id || order.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -386,10 +421,22 @@ export default function RestaurantOrders() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => callCustomer(order.customerPhone)}
+                      aria-label="Call customer"
+                      title={order.customerPhone ? 'Call customer' : 'No phone on file'}
+                      className="p-2 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    >
                       <Phone className="h-4 w-4" />
                     </button>
-                    <button className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => messageCustomer(order)}
+                      aria-label="Message customer"
+                      title={order.customerPhone ? 'Text customer' : 'No phone on file'}
+                      className="p-2 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    >
                       <MessageCircle className="h-4 w-4" />
                     </button>
                   </div>
@@ -438,12 +485,21 @@ export default function RestaurantOrders() {
 
                 {/* Action Buttons */}
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
-                  <div className="flex space-x-2">
-                    <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDetailOrder(order)}
+                      className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
                       <Eye className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                       <span className="text-sm text-gray-700 dark:text-gray-300">View Details</span>
                     </button>
-                    <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => messageCustomer(order)}
+                      title={order.customerPhone ? 'Open SMS to customer' : 'No phone on file'}
+                      className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
                       <MessageCircle className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                       <span className="text-sm text-gray-700 dark:text-gray-300">Message Customer</span>
                     </button>
@@ -472,6 +528,153 @@ export default function RestaurantOrders() {
             )}
           </motion.div>
         )}
+
+        <AnimatePresence>
+          {detailOrder && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="order-detail-title"
+              onClick={() => setDetailOrder(null)}
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 24 }}
+                transition={{ type: 'spring', damping: 26 }}
+                className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+                  <h2 id="order-detail-title" className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Order #{detailOrder.orderNumber}
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setDetailOrder(null)}
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"
+                    aria-label="Close"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="overflow-y-auto px-5 py-4 space-y-4 text-sm">
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(detailOrder.status)}`}>
+                      {getStatusIcon(detailOrder.status)}
+                      {detailOrder.status?.replace('_', ' ') || '—'}
+                    </span>
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {detailOrder.createdAt
+                        ? new Date(detailOrder.createdAt).toLocaleString()
+                        : '—'}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-medium text-gray-900 dark:text-white">Customer</h3>
+                    <p className="text-gray-700 dark:text-gray-300">{detailOrder.customerName || '—'}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => callCustomer(detailOrder.customerPhone)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-medium hover:bg-primary-700"
+                      >
+                        <Phone className="h-3.5 w-3.5" />
+                        Call
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => messageCustomer(detailOrder)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        Message
+                      </button>
+                    </div>
+                    {detailOrder.customerPhone && (
+                      <p className="text-gray-600 dark:text-gray-400">{detailOrder.customerPhone}</p>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900 dark:text-white flex items-center gap-2 mb-1">
+                      <MapPin className="h-4 w-4" />
+                      Delivery address
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400">{detailOrder.deliveryAddress || '—'}</p>
+                  </div>
+                  {detailOrder.specialInstructions && (
+                    <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                      <strong className="text-yellow-900 dark:text-yellow-200">Instructions: </strong>
+                      <span className="text-yellow-800 dark:text-yellow-100">{detailOrder.specialInstructions}</span>
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-2">Items</h3>
+                    <ul className="space-y-2 border border-gray-200 dark:border-gray-600 rounded-lg divide-y divide-gray-200 dark:divide-gray-600">
+                      {(Array.isArray(detailOrder.items) ? detailOrder.items : []).map((item: any, i: number) => (
+                        <li key={i} className="flex justify-between gap-2 px-3 py-2">
+                          <span className="text-gray-800 dark:text-gray-200">
+                            ×{item.quantity} {item.name}
+                          </span>
+                          <span className="font-medium text-gray-900 dark:text-white shrink-0">
+                            {fmt(item.price)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="space-y-1 pt-2 border-t border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
+                    {detailOrder.subtotal != null && (
+                      <div className="flex justify-between">
+                        <span>Subtotal</span>
+                        <span>{fmt(detailOrder.subtotal)}</span>
+                      </div>
+                    )}
+                    {detailOrder.deliveryFee != null && Number(detailOrder.deliveryFee) > 0 && (
+                      <div className="flex justify-between">
+                        <span>Delivery fee</span>
+                        <span>{fmt(detailOrder.deliveryFee)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-semibold text-gray-900 dark:text-white text-base">
+                      <span>Total</span>
+                      <span>{fmt(detailOrder.total ?? detailOrder.subtotal ?? 0)}</span>
+                    </div>
+                    {detailOrder.estimatedDeliveryTime != null && (
+                      <p className="text-xs text-gray-500 pt-1">
+                        Est. delivery: {detailOrder.estimatedDeliveryTime} min
+                      </p>
+                    )}
+                  </div>
+                  {detailOrder.status === 'delivered' && detailOrder.rating && (
+                    <div className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                      <Star className="h-4 w-4 text-yellow-400 fill-current shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">{detailOrder.rating}/5</p>
+                        {detailOrder.review && (
+                          <p className="text-gray-600 dark:text-gray-400 mt-1">{detailOrder.review}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="px-5 py-3 border-t border-gray-200 dark:border-gray-700">
+                  <button
+                    type="button"
+                    onClick={() => setDetailOrder(null)}
+                    className="w-full py-2.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-medium hover:bg-gray-200 dark:hover:bg-gray-600"
+                  >
+                    Close
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </DashboardLayout>
   );
