@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
         university: true,
         cuisine: true,
         isOpen: true,
+        internalDeliveryEnabled: true,
         deliveryFee: true,
         minimumOrder: true,
         estimatedDeliveryTime: true,
@@ -76,6 +77,7 @@ export async function GET(request: NextRequest) {
         cuisine: Array.isArray(restaurant.cuisine) ? restaurant.cuisine : 
                  (typeof restaurant.cuisine === 'string' ? [restaurant.cuisine] : []),
         isOpen: restaurant.isOpen,
+        internalDeliveryEnabled: restaurant.internalDeliveryEnabled,
         deliveryFee: restaurant.deliveryFee || 0,
         minimumOrder: restaurant.minimumOrder || 0,
         estimatedDeliveryTime: restaurant.estimatedDeliveryTime || 30,
@@ -151,6 +153,7 @@ export async function PATCH(request: NextRequest) {
       }
     }
     if (body.isOpen !== undefined) updateData.isOpen = body.isOpen;
+    if (body.internalDeliveryEnabled !== undefined) updateData.internalDeliveryEnabled = !!body.internalDeliveryEnabled;
     if (body.deliveryFee !== undefined) updateData.deliveryFee = body.deliveryFee;
     if (body.minimumOrder !== undefined) updateData.minimumOrder = body.minimumOrder;
     if (body.estimatedDeliveryTime !== undefined) updateData.estimatedDeliveryTime = body.estimatedDeliveryTime;
@@ -228,6 +231,7 @@ export async function PATCH(request: NextRequest) {
         cuisine: Array.isArray(updatedRestaurant.cuisine) ? updatedRestaurant.cuisine : 
                  (typeof updatedRestaurant.cuisine === 'string' ? JSON.parse(updatedRestaurant.cuisine || '[]') : []),
         isOpen: updatedRestaurant.isOpen,
+        internalDeliveryEnabled: updatedRestaurant.internalDeliveryEnabled,
         deliveryFee: updatedRestaurant.deliveryFee || 0,
         minimumOrder: updatedRestaurant.minimumOrder || 0,
         estimatedDeliveryTime: updatedRestaurant.estimatedDeliveryTime || 30,

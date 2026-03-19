@@ -61,6 +61,7 @@ export default function RestaurantOrders() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [detailOrder, setDetailOrder] = useState<any | null>(null);
+  const [internalDeliveryEnabled, setInternalDeliveryEnabled] = useState(false);
 
   // Filter options match order flow: Pending → Confirmed → Picked up → Delivered (Cancelled separate)
   const statuses = ['All', 'Pending', 'Confirmed', 'Picked up', 'Delivered', 'Cancelled'];
@@ -70,6 +71,22 @@ export default function RestaurantOrders() {
       const userData = localStorage.getItem('user');
       if (userData) setUser(JSON.parse(userData));
     } catch {}
+  }, []);
+
+  useEffect(() => {
+    const loadDeliveryMode = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/restaurant/settings', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const data = await response.json();
+        if (response.ok && data?.settings) {
+          setInternalDeliveryEnabled(!!data.settings.internalDeliveryEnabled);
+        }
+      } catch {}
+    };
+    loadDeliveryMode();
   }, []);
 
   const normalizeUiToApiStatus = (ui: string): string => {
@@ -239,7 +256,18 @@ export default function RestaurantOrders() {
 
   const nextActionFor = (status: string) => {
     switch (status) {
-      case 'pending': return { label: 'Confirm Order', color: 'bg-blue-600 hover:bg-blue-700', next: 'confirmed' };
+      case 'pending':
+        return { label: 'Confirm Order', color: 'bg-blue-600 hover:bg-blue-700', next: 'confirmed' };
+      case 'confirmed':
+        if (internalDeliveryEnabled) {
+          return { label: 'Start Delivery', color: 'bg-purple-600 hover:bg-purple-700', next: 'picked_up' };
+        }
+        return null;
+      case 'picked_up':
+        if (internalDeliveryEnabled) {
+          return { label: 'Mark Delivered', color: 'bg-green-600 hover:bg-green-700', next: 'delivered' };
+        }
+        return null;
       default: return null;
     }
   };
@@ -511,7 +539,7 @@ export default function RestaurantOrders() {
                         <span className="text-sm">{nextActionFor(order.status)!.label}</span>
                       </button>
                     )}
-                    {order.status === 'confirmed' && !order.riderId && (
+                    {order.status === 'confirmed' && !order.riderId && !internalDeliveryEnabled && (
                       <span className="text-xs text-amber-600 dark:text-amber-400 self-center">Waiting for rider assignment</span>
                     )}
                     {order.status === 'pending' && (

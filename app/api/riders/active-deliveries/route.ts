@@ -44,6 +44,9 @@ export async function GET(request: NextRequest) {
         riderId: rider.id,
         status: {
           in: ['CONFIRMED', 'PICKED_UP']
+        },
+        restaurant: {
+          internalDeliveryEnabled: false
         }
       },
       include: {

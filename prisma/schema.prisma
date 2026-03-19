@@ -59,6 +59,7 @@ model Restaurant {
   rating                Float           @default(0)
   reviewCount           Int             @default(0)
   isOpen                Boolean         @default(true)
+  internalDeliveryEnabled Boolean       @default(false)
   deliveryFee           Float
   minimumOrder          Float
   estimatedDeliveryTime Int

@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       where: { id: orderId },
       include: {
         restaurant: {
-          select: { name: true, phone: true }
+          select: { name: true, phone: true, internalDeliveryEnabled: true }
         },
         student: {
           select: { name: true, phone: true }
@@ -69,6 +69,12 @@ export async function POST(request: NextRequest) {
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    if (order.restaurant.internalDeliveryEnabled) {
+      return NextResponse.json({
+        error: 'This order is handled by the restaurant internal delivery team'
+      }, { status: 400 });
     }
 
     // Check if order is available (CONFIRMED and no rider assigned)
