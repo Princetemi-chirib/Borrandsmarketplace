@@ -44,7 +44,8 @@ export async function GET(request: NextRequest) {
         status: 'CONFIRMED',
         riderId: null,
         restaurant: {
-          university: user.university // Same university
+          university: user.university, // Same university
+          internalDeliveryEnabled: false // Internal-delivery restaurants do not use rider marketplace
         }
       },
       include: {

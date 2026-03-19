@@ -10,7 +10,7 @@ type OrderStatus = typeof ALLOWED_STATUSES[number];
 function isValidTransition(prev: OrderStatus, next: OrderStatus): boolean {
   const flow: Record<OrderStatus, OrderStatus[]> = {
     PENDING: ['CONFIRMED','CANCELLED'],
-    CONFIRMED: ['CANCELLED'],
+    CONFIRMED: ['PICKED_UP','CANCELLED'],
     PICKED_UP: ['DELIVERED'],
     DELIVERED: [],
     CANCELLED: [],
@@ -64,7 +64,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         restaurant: {
           select: {
             id: true,
-            name: true
+            name: true,
+            internalDeliveryEnabled: true
           }
         }
       }
@@ -72,6 +73,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (!order) return NextResponse.json({ message: 'Not found' }, { status: 404 });
 
     const prevStatus = order.status as OrderStatus;
+    if (nextStatus === 'PICKED_UP' && !order.restaurant.internalDeliveryEnabled) {
+      return NextResponse.json({ message: 'Only internal-delivery restaurants can mark orders as picked up.' }, { status: 400 });
+    }
     if (!isValidTransition(prevStatus, nextStatus as OrderStatus)) {
       console.error(`Invalid status transition: ${prevStatus} → ${nextStatus}`);
       return NextResponse.json({ message: `Invalid transition ${prevStatus} → ${nextStatus}` }, { status: 400 });

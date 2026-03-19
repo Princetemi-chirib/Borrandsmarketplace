@@ -36,6 +36,7 @@ interface RestaurantSettings {
   university: string;
   cuisine: string[];
   isOpen: boolean;
+  internalDeliveryEnabled: boolean;
   deliveryFee: number;
   minimumOrder: number;
   estimatedDeliveryTime: number;
@@ -224,6 +225,7 @@ export default function RestaurantSettings() {
           cuisine: formData?.cuisine,
           operatingHours: formData?.operatingHours,
           deliveryFee: formData?.deliveryFee,
+          internalDeliveryEnabled: formData?.internalDeliveryEnabled,
           minimumOrder: formData?.minimumOrder,
           estimatedDeliveryTime: formData?.estimatedDeliveryTime,
           features: formData?.features,
@@ -412,6 +414,35 @@ export default function RestaurantSettings() {
                 className="space-y-6"
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900">Internal delivery</h3>
+                        <p className="text-xs text-gray-600 mt-1">
+                          When enabled, this restaurant handles delivery entirely in-house.
+                          Riders are not notified and order delivery status is managed from the restaurant dashboard.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange('internalDeliveryEnabled', !formData.internalDeliveryEnabled)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          formData.internalDeliveryEnabled ? 'bg-brand-primary' : 'bg-gray-300'
+                        }`}
+                        aria-label="Toggle internal delivery"
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            formData.internalDeliveryEnabled ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                    <p className="mt-2 text-xs font-medium text-gray-700">
+                      Current mode: {formData.internalDeliveryEnabled ? 'Internal delivery' : 'Rider marketplace'}
+                    </p>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Restaurant Name *

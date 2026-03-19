@@ -39,6 +39,7 @@ export async function PATCH(
             id: true,
             name: true,
             university: true,
+            internalDeliveryEnabled: true,
             logo: true,
             image: true
           }
@@ -178,44 +179,46 @@ export async function PATCH(
         }
       }
 
-      // Email all riders at the same university: new order available for delivery
-      try {
-        const riders = await prisma.rider.findMany({
-          where: {
-            isActive: true,
-            user: {
-              university: order.restaurant.university
+      // Notify riders only when restaurant is not handling delivery internally
+      if (!order.restaurant.internalDeliveryEnabled) {
+        try {
+          const riders = await prisma.rider.findMany({
+            where: {
+              isActive: true,
+              user: {
+                university: order.restaurant.university
+              }
+            },
+            include: {
+              user: {
+                select: { email: true, name: true }
+              }
             }
-          },
-          include: {
-            user: {
-              select: { email: true, name: true }
+          });
+          for (const r of riders) {
+            const email = r.user?.email || r.email;
+            if (email) {
+              try {
+                await sendNewOrderAvailableToRider(
+                  email,
+                  r.name,
+                  order.orderNumber,
+                  order.restaurant.name,
+                  order.deliveryAddress,
+                  order.deliveryFee
+                );
+              } catch (err) {
+                console.error(`Failed to send new-order email to rider ${r.id}:`, err);
+              }
             }
           }
-        });
-        for (const r of riders) {
-          const email = r.user?.email || r.email;
-          if (email) {
-            try {
-              await sendNewOrderAvailableToRider(
-                email,
-                r.name,
-                order.orderNumber,
-                order.restaurant.name,
-                order.deliveryAddress,
-                order.deliveryFee
-              );
-            } catch (err) {
-              console.error(`Failed to send new-order email to rider ${r.id}:`, err);
-            }
+          if (riders.length > 0) {
+            console.log(`✅ New order available emailed to ${riders.length} rider(s) for order #${order.orderNumber}`);
           }
+        } catch (error) {
+          console.error('Failed to email riders about new order:', error);
+          // Don't fail the request if rider emails fail
         }
-        if (riders.length > 0) {
-          console.log(`✅ New order available emailed to ${riders.length} rider(s) for order #${order.orderNumber}`);
-        }
-      } catch (error) {
-        console.error('Failed to email riders about new order:', error);
-        // Don't fail the request if rider emails fail
       }
 
       return NextResponse.json({ 

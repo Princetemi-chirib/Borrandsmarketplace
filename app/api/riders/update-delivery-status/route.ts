@@ -57,7 +57,7 @@ export async function PATCH(request: NextRequest) {
       where: { id: orderId },
       include: {
         restaurant: {
-          select: { name: true, phone: true }
+          select: { name: true, phone: true, internalDeliveryEnabled: true }
         },
         student: {
           select: { name: true, phone: true }
@@ -67,6 +67,12 @@ export async function PATCH(request: NextRequest) {
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    if (order.restaurant.internalDeliveryEnabled) {
+      return NextResponse.json({
+        error: 'This order is managed internally by the restaurant'
+      }, { status: 400 });
     }
 
     if (order.riderId !== rider.id) {
