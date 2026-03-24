@@ -3,6 +3,7 @@ import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
 import { sendOrderRejectionEmailToStudent, sendOrderAcceptanceNotificationToAdmin, sendOrderAcceptanceEmailToStudent } from '@/lib/services/email';
 import { sendRiderCancellationEmail, sendNewOrderAvailableToRider } from '@/lib/services/rider-notification';
+import { tryRestaurantAutoPayoutForOrder } from '@/lib/services/restaurant-auto-payout';
 
 export async function PATCH(
   request: NextRequest,
@@ -126,6 +127,12 @@ export async function PATCH(
           status: 'CONFIRMED'
         }
       });
+
+      try {
+        await tryRestaurantAutoPayoutForOrder(params.id);
+      } catch (payoutErr) {
+        console.error('Restaurant auto-payout error:', updatedOrder.orderNumber, payoutErr);
+      }
 
       // Parse items once for reuse
       let items;
