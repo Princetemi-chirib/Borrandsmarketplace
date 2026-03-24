@@ -26,10 +26,24 @@ export async function GET(request: NextRequest) {
     const orders = await prisma.order.findMany({
       where: query,
       orderBy: { createdAt: 'desc' },
-      take: limit
+      take: limit,
+      include: {
+        student: {
+          select: {
+            name: true,
+            phone: true,
+          },
+        },
+      },
     });
 
-    return NextResponse.json({ orders });
+    const normalizedOrders = orders.map((order: any) => ({
+      ...order,
+      customerName: order.student?.name || null,
+      customerPhone: order.student?.phone || null,
+    }));
+
+    return NextResponse.json({ orders: normalizedOrders });
   } catch (e: any) {
     return NextResponse.json({ message: 'Failed to load orders' }, { status: 500 });
   }
@@ -78,7 +92,8 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         name: true,
-        email: true
+        email: true,
+        phone: true,
       }
     });
 
@@ -129,6 +144,7 @@ export async function POST(request: NextRequest) {
         paymentMethod,
         deliveryAddress,
         deliveryInstructions: deliveryInstructions || undefined,
+        deliveryPhone: student?.phone || undefined,
         estimatedDeliveryTime: restaurant.estimatedDeliveryTime || 30,
         orderNumber,
         notes: `serviceCharge=${SERVICE_CHARGE}`,
