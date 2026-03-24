@@ -60,6 +60,8 @@ model Restaurant {
   reviewCount           Int             @default(0)
   isOpen                Boolean         @default(true)
   internalDeliveryEnabled Boolean       @default(false)
+  autoPayoutEnabled     Boolean         @default(false)
+  paystackRecipientCode String?
   deliveryFee           Float
   minimumOrder          Float
   estimatedDeliveryTime Int
@@ -177,6 +179,10 @@ model Order {
   rejectedAt            DateTime?
   rejectionReason       String?
   items                 String        @db.LongText
+  autoPayoutStatus      OrderAutoPayoutStatus?
+  autoPayoutAmount      Float?
+  autoPayoutTransferRef String?
+  autoPayoutError       String?       @db.VarChar(512)
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
   restaurant            Restaurant    @relation(fields: [restaurantId], references: [id])
@@ -358,6 +364,13 @@ enum PaymentStatus {
 enum PaymentMethod {
   CARD
   CASH
+}
+
+enum OrderAutoPayoutStatus {
+  PROCESSING
+  PAID
+  FAILED
+  SKIPPED
 }
 
 enum InventoryStatus {

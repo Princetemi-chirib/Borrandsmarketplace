@@ -37,6 +37,7 @@ interface RestaurantSettings {
   cuisine: string[];
   isOpen: boolean;
   internalDeliveryEnabled: boolean;
+  autoPayoutEnabled: boolean;
   deliveryFee: number;
   minimumOrder: number;
   estimatedDeliveryTime: number;
@@ -81,6 +82,14 @@ const paymentMethodOptions = [
 
 const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const dayLabels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+function normalizeSettingsPayload(s: RestaurantSettings): RestaurantSettings {
+  return {
+    ...s,
+    autoPayoutEnabled: !!s.autoPayoutEnabled,
+    internalDeliveryEnabled: !!s.internalDeliveryEnabled,
+  };
+}
 
 export default function RestaurantSettings() {
   const [user, setUser] = useState<any>(null);
@@ -135,8 +144,9 @@ export default function RestaurantSettings() {
 
       if (response.ok) {
         const data = await response.json();
-        setRestaurant(data.settings);
-        setFormData(data.settings);
+        const normalized = normalizeSettingsPayload(data.settings);
+        setRestaurant(normalized);
+        setFormData(normalized);
       } else {
         console.error('Failed to fetch restaurant settings');
       }
@@ -226,6 +236,7 @@ export default function RestaurantSettings() {
           operatingHours: formData?.operatingHours,
           deliveryFee: formData?.deliveryFee,
           internalDeliveryEnabled: formData?.internalDeliveryEnabled,
+          autoPayoutEnabled: formData?.autoPayoutEnabled,
           minimumOrder: formData?.minimumOrder,
           estimatedDeliveryTime: formData?.estimatedDeliveryTime,
           features: formData?.features,
@@ -242,8 +253,9 @@ export default function RestaurantSettings() {
 
       if (response.ok) {
         const data = await response.json();
-        setRestaurant(data.settings);
-        setFormData(data.settings);
+        const normalized = normalizeSettingsPayload(data.settings);
+        setRestaurant(normalized);
+        setFormData(normalized);
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
       } else {
@@ -870,10 +882,40 @@ export default function RestaurantSettings() {
                 </div>
 
                 <div className="pt-6 border-t border-gray-200">
+                  <div className="mb-4 p-4 border border-gray-200 rounded-lg bg-amber-50/80">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900">Auto payout (Paystack)</h3>
+                        <p className="text-xs text-gray-600 mt-1">
+                          When enabled, your share of each paid card order is sent to your saved bank account from the platform&apos;s Paystack balance.
+                          You must keep a funded payout float on Paystack; customer settlements refill it on delay (e.g. T+1).
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange('autoPayoutEnabled', !formData.autoPayoutEnabled)}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${
+                          !!formData.autoPayoutEnabled ? 'bg-brand-primary' : 'bg-gray-300'
+                        }`}
+                        aria-label="Toggle automatic payout"
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            !!formData.autoPayoutEnabled ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-700">
+                      Transfers use only the meal total (menu line items). Delivery fee and service charge are never sent to the restaurant; the platform keeps them.
+                      Optional: RESTAURANT_AUTO_PAYOUT_RATIO (0–1) scales only that meal amount; default is 100%.
+                      Minimum transfer ₦100.
+                    </p>
+                  </div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Payout account
                   </label>
-                  <p className="text-xs text-gray-500 mb-3">Used for manual payouts. Select bank and account number, then verify to confirm account name.</p>
+                  <p className="text-xs text-gray-500 mb-3">Used for manual payouts and automatic Paystack transfers. Select bank and account number, then verify to confirm account name.</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Bank</label>

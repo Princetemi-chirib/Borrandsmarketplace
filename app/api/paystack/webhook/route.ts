@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { dbConnect, prisma } from '@/lib/db-prisma';
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,10 +37,48 @@ export async function POST(request: NextRequest) {
         
         break;
 
-      case 'transfer.success':
-        // Transfer was successful
-        console.log('Transfer successful:', event.data.reference);
+      case 'transfer.success': {
+        const ref: string | undefined = event.data?.reference;
+        console.log('Transfer successful:', ref);
+        if (ref?.startsWith('ap-')) {
+          const orderId = ref.slice(3);
+          try {
+            await dbConnect();
+            await prisma.order.updateMany({
+              where: { id: orderId, autoPayoutStatus: 'PROCESSING' },
+              data: { autoPayoutStatus: 'PAID', autoPayoutError: null },
+            });
+          } catch (e) {
+            console.error('Webhook: failed to mark order paid for transfer', orderId, e);
+          }
+        }
         break;
+      }
+
+      case 'transfer.failed': {
+        const ref: string | undefined = event.data?.reference;
+        const reason =
+          event.data?.failures?.[0]?.reason ||
+          event.data?.message ||
+          'Transfer failed';
+        console.log('Transfer failed:', ref, reason);
+        if (ref?.startsWith('ap-')) {
+          const orderId = ref.slice(3);
+          try {
+            await dbConnect();
+            await prisma.order.updateMany({
+              where: { id: orderId },
+              data: {
+                autoPayoutStatus: 'FAILED',
+                autoPayoutError: String(reason).slice(0, 512),
+              },
+            });
+          } catch (e) {
+            console.error('Webhook: failed to mark order payout failed', orderId, e);
+          }
+        }
+        break;
+      }
 
       case 'charge.failed':
         // Payment failed
