@@ -887,8 +887,8 @@ export default function RestaurantSettings() {
                       <div>
                         <h3 className="text-sm font-semibold text-gray-900">Auto payout (Paystack)</h3>
                         <p className="text-xs text-gray-600 mt-1">
-                          When enabled, your share of each paid card order is sent to your saved bank account from the platform&apos;s Paystack balance.
-                          You must keep a funded payout float on Paystack; customer settlements refill it on delay (e.g. T+1).
+                          When enabled, your share is sent after you confirm a paid card order (not when payment first completes).
+                          Uses the platform&apos;s Paystack balance — keep a funded float; settlements refill on delay (e.g. T+1).
                         </p>
                       </div>
                       <button

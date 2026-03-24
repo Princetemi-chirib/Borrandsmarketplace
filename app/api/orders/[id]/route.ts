@@ -3,6 +3,7 @@ import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
 import emitter from '@/lib/services/events';
 import { sendOrderNotificationEmail } from '@/lib/services/email';
+import { tryRestaurantAutoPayoutForOrder } from '@/lib/services/restaurant-auto-payout';
 
 const ALLOWED_STATUSES = ['PENDING','CONFIRMED','PICKED_UP','DELIVERED','CANCELLED'] as const;
 type OrderStatus = typeof ALLOWED_STATUSES[number];
@@ -88,6 +89,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       where: { id: params.id },
       data: updateData
     });
+
+    if (nextStatus === 'CONFIRMED') {
+      try {
+        await tryRestaurantAutoPayoutForOrder(params.id);
+      } catch (payoutErr) {
+        console.error('Restaurant auto-payout error:', updatedOrder.orderNumber, payoutErr);
+      }
+    }
 
     // Send email notification to student for status updates (CONFIRMED, PICKED_UP)
     const orderWithRelations = order as typeof order & {

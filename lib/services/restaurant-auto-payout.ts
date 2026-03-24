@@ -16,8 +16,8 @@ function payoutNairaFromSubtotal(subtotal: number): number {
 }
 
 /**
- * After a paid card order is created, send restaurant share from Paystack balance if enabled.
- * Idempotent: skips if this order already has a terminal auto-payout status.
+ * After the restaurant confirms a paid card order (status CONFIRMED), send their share from Paystack balance if enabled.
+ * Idempotent: skips if this order already has auto-payout PROCESSING or PAID.
  */
 export async function tryRestaurantAutoPayoutForOrder(orderId: string): Promise<void> {
   const order = await prisma.order.findUnique({
@@ -39,6 +39,10 @@ export async function tryRestaurantAutoPayoutForOrder(orderId: string): Promise<
   });
 
   if (!order || order.paymentMethod !== 'CARD' || order.paymentStatus !== 'PAID') {
+    return;
+  }
+
+  if (order.status !== 'CONFIRMED') {
     return;
   }
 
