@@ -304,6 +304,100 @@ export class PaystackService {
       return { success: false, error: msg };
     }
   }
+
+  /**
+   * Create a transfer recipient (NUBAN) for payouts. Returns recipient_code for /transfer.
+   */
+  async createTransferRecipient(data: {
+    name: string;
+    account_number: string;
+    bank_code: string;
+  }): Promise<{ success: boolean; recipient_code?: string; error?: string }> {
+    try {
+      getPaystackCredentials();
+      const paystackApi = getPaystackApi();
+      const response = await paystackApi.post<{
+        status: boolean;
+        message: string;
+        data: { recipient_code: string };
+      }>('/transferrecipient', {
+        type: 'nuban',
+        name: data.name.trim(),
+        account_number: data.account_number.trim(),
+        bank_code: data.bank_code.trim(),
+        currency: 'NGN',
+      });
+      if (!response.data.status || !response.data.data?.recipient_code) {
+        return {
+          success: false,
+          error: response.data.message || 'Recipient creation failed',
+        };
+      }
+      return { success: true, recipient_code: response.data.data.recipient_code };
+    } catch (error: any) {
+      if (error.message?.includes('credentials not properly configured')) {
+        return { success: false, error: 'Paystack is not configured.' };
+      }
+      const msg = error.response?.data?.message || error.message || 'Recipient creation failed';
+      return { success: false, error: msg };
+    }
+  }
+
+  /**
+   * Debit platform Paystack balance and send to recipient.
+   * amountKobo must be a positive integer.
+   */
+  async initiateTransfer(data: {
+    amountKobo: number;
+    recipient: string;
+    reason: string;
+    reference: string;
+  }): Promise<{
+    success: boolean;
+    transfer_code?: string;
+    reference?: string;
+    error?: string;
+    rawStatus?: string;
+  }> {
+    try {
+      getPaystackCredentials();
+      const paystackApi = getPaystackApi();
+      const response = await paystackApi.post<{
+        status: boolean;
+        message: string;
+        data: {
+          reference?: string;
+          transfer_code?: string;
+          status?: string;
+        };
+      }>('/transfer', {
+        source: 'balance',
+        amount: Math.round(data.amountKobo),
+        recipient: data.recipient,
+        reason: data.reason.slice(0, 200),
+        reference: data.reference,
+      });
+      const d = response.data.data;
+      if (!response.data.status) {
+        return {
+          success: false,
+          error: response.data.message || 'Transfer failed',
+        };
+      }
+      return {
+        success: true,
+        transfer_code: d?.transfer_code,
+        reference: d?.reference || data.reference,
+        rawStatus: d?.status,
+      };
+    } catch (error: any) {
+      if (error.message?.includes('credentials not properly configured')) {
+        return { success: false, error: 'Paystack is not configured.' };
+      }
+      const msg = error.response?.data?.message || error.message || 'Transfer failed';
+      return { success: false, error: msg };
+    }
+  }
 }
 
 export default PaystackService.getInstance();

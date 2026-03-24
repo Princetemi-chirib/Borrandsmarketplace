@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import PaystackService from '@/lib/paystack';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { sendNewOrderEmailToRestaurant, sendOrderPlacedEmailToStudent, sendNewOrderNotificationToAdmin } from '@/lib/services/email';
+import { tryRestaurantAutoPayoutForOrder } from '@/lib/services/restaurant-auto-payout';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -180,6 +181,14 @@ export async function GET(request: NextRequest) {
           const createdOrders = createdOrdersWithData.map(item => item.createdOrder);
           
           console.log(`✅ Created ${createdOrders.length} order(s) for payment ${reference}`);
+
+          for (const item of createdOrdersWithData) {
+            try {
+              await tryRestaurantAutoPayoutForOrder(item.createdOrder.id);
+            } catch (payoutErr) {
+              console.error('Restaurant auto-payout error:', item.createdOrder?.orderNumber, payoutErr);
+            }
+          }
 
           // Notify admin of each new order (admin will get "assign rider" email when restaurant accepts)
           for (const item of createdOrdersWithData) {

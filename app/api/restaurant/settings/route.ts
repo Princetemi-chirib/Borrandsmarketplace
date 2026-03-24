@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
         cuisine: true,
         isOpen: true,
         internalDeliveryEnabled: true,
+        autoPayoutEnabled: true,
         deliveryFee: true,
         minimumOrder: true,
         estimatedDeliveryTime: true,
@@ -78,6 +79,7 @@ export async function GET(request: NextRequest) {
                  (typeof restaurant.cuisine === 'string' ? [restaurant.cuisine] : []),
         isOpen: restaurant.isOpen,
         internalDeliveryEnabled: restaurant.internalDeliveryEnabled,
+        autoPayoutEnabled: restaurant.autoPayoutEnabled,
         deliveryFee: restaurant.deliveryFee || 0,
         minimumOrder: restaurant.minimumOrder || 0,
         estimatedDeliveryTime: restaurant.estimatedDeliveryTime || 30,
@@ -136,6 +138,15 @@ export async function PATCH(request: NextRequest) {
 
     const body = await request.json();
 
+    const existingRestaurant = await prisma.restaurant.findUnique({
+      where: { id: auth.restaurantId },
+      select: {
+        payoutBankCode: true,
+        payoutAccountNumber: true,
+        payoutAccountName: true,
+      },
+    });
+
     // Build update data object (only include fields that are provided)
     const updateData: any = {};
 
@@ -154,6 +165,7 @@ export async function PATCH(request: NextRequest) {
     }
     if (body.isOpen !== undefined) updateData.isOpen = body.isOpen;
     if (body.internalDeliveryEnabled !== undefined) updateData.internalDeliveryEnabled = !!body.internalDeliveryEnabled;
+    if (body.autoPayoutEnabled !== undefined) updateData.autoPayoutEnabled = !!body.autoPayoutEnabled;
     if (body.deliveryFee !== undefined) updateData.deliveryFee = body.deliveryFee;
     if (body.minimumOrder !== undefined) updateData.minimumOrder = body.minimumOrder;
     if (body.estimatedDeliveryTime !== undefined) updateData.estimatedDeliveryTime = body.estimatedDeliveryTime;
@@ -188,6 +200,33 @@ export async function PATCH(request: NextRequest) {
     if (body.payoutBankName !== undefined) updateData.payoutBankName = body.payoutBankName?.trim() || null;
     if (body.payoutAccountNumber !== undefined) updateData.payoutAccountNumber = body.payoutAccountNumber?.trim() || null;
     if (body.payoutAccountName !== undefined) updateData.payoutAccountName = body.payoutAccountName?.trim() || null;
+
+    if (
+      existingRestaurant &&
+      (body.payoutBankCode !== undefined ||
+        body.payoutAccountNumber !== undefined ||
+        body.payoutAccountName !== undefined)
+    ) {
+      const mergedBank =
+        body.payoutBankCode !== undefined
+          ? body.payoutBankCode?.trim() || null
+          : existingRestaurant.payoutBankCode;
+      const mergedAcct =
+        body.payoutAccountNumber !== undefined
+          ? body.payoutAccountNumber?.trim() || null
+          : existingRestaurant.payoutAccountNumber;
+      const mergedName =
+        body.payoutAccountName !== undefined
+          ? body.payoutAccountName?.trim() || null
+          : existingRestaurant.payoutAccountName;
+      if (
+        mergedBank !== existingRestaurant.payoutBankCode ||
+        mergedAcct !== existingRestaurant.payoutAccountNumber ||
+        mergedName !== existingRestaurant.payoutAccountName
+      ) {
+        updateData.paystackRecipientCode = null;
+      }
+    }
 
     // Handle empty logo string - convert to null if empty
     if (updateData.logo === '') {
@@ -232,6 +271,7 @@ export async function PATCH(request: NextRequest) {
                  (typeof updatedRestaurant.cuisine === 'string' ? JSON.parse(updatedRestaurant.cuisine || '[]') : []),
         isOpen: updatedRestaurant.isOpen,
         internalDeliveryEnabled: updatedRestaurant.internalDeliveryEnabled,
+        autoPayoutEnabled: updatedRestaurant.autoPayoutEnabled,
         deliveryFee: updatedRestaurant.deliveryFee || 0,
         minimumOrder: updatedRestaurant.minimumOrder || 0,
         estimatedDeliveryTime: updatedRestaurant.estimatedDeliveryTime || 30,
