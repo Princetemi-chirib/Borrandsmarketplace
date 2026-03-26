@@ -1,61 +1,19 @@
 'use client';
 
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { LogIn, Store, GraduationCap } from 'lucide-react';
-import Logo from '@/components/Logo';
+import EntryFooter from '@/components/entry/EntryFooter';
+import EntryHeader from '@/components/entry/EntryHeader';
+import EntryHero from '@/components/entry/EntryHero';
+import EntrySections from '@/components/entry/EntrySections';
 
 export default function EntryPage() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-      {/* Logo at top */}
-      <header className="pt-8 pb-6 px-4 flex justify-center border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800/50">
-        <Logo size="lg" showText={true} />
-      </header>
-
-      {/* Main content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="w-full max-w-sm space-y-6"
-        >
-          <p className="text-center text-gray-600 dark:text-gray-400 text-sm">
-            Sign in or create an account
-          </p>
-
-          <div className="space-y-3">
-            <Link
-              href="/auth/login"
-              className="flex items-center justify-center gap-3 w-full py-3.5 px-4 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-            >
-              <LogIn className="h-5 w-5" />
-              Login
-            </Link>
-            <Link
-              href="/auth/register"
-              className="flex items-center justify-center gap-3 w-full py-3.5 px-4 rounded-xl border-2 border-primary-500 text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-900/20 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-            >
-              <GraduationCap className="h-5 w-5" />
-              Student Sign up
-            </Link>
-            <Link
-              href="/auth/register-restaurant"
-              className="flex items-center justify-center gap-3 w-full py-3.5 px-4 rounded-xl bg-accent-500 hover:bg-accent-600 text-white font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-            >
-              <Store className="h-5 w-5" />
-              Restaurant Signup
-            </Link>
-          </div>
-        </motion.div>
+    <div className="min-h-screen bg-gray-50 text-gray-900">
+      <EntryHeader />
+      <main className="mx-auto w-full max-w-5xl space-y-6 px-4 py-5">
+        <EntryHero />
+        <EntrySections />
       </main>
-
-      <footer className="py-4 text-center text-xs text-gray-400 dark:text-gray-500">
-        <Link href="/" className="hover:text-gray-600 dark:hover:text-gray-400">
-          Back to home
-        </Link>
-      </footer>
+      <EntryFooter />
     </div>
   );
 }
