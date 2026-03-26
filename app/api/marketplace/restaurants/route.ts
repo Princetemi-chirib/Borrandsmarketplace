@@ -12,6 +12,7 @@ export async function GET() {
       select: {
         id: true,
         name: true,
+        description: true,
         cuisine: true,
         rating: true,
         reviewCount: true,
@@ -20,6 +21,7 @@ export async function GET() {
         bannerImage: true,
         estimatedDeliveryTime: true,
         deliveryFee: true,
+        minimumOrder: true,
         university: true
       },
       orderBy: { rating: 'desc' },

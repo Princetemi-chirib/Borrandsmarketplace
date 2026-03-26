@@ -189,6 +189,16 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const token = localStorage.getItem('token');
+    const currentUser = localStorage.getItem('user');
+    if (!token || !currentUser) {
+      // Preserve intended destination so login can return user to checkout.
+      localStorage.setItem('postLoginRedirect', '/dashboard/student/checkout');
+      setError('Please login or sign up to continue to payment.');
+      router.push('/auth/login');
+      return;
+    }
     
     if (!deliveryAddress.address.trim()) {
       setError('Please enter your delivery address');

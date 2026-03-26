@@ -58,7 +58,13 @@ export default function LoginPage() {
         
         const user = result.data.user;
         if (user.role === 'STUDENT') {
-          router.push('/dashboard/student');
+          const savedRedirect = localStorage.getItem('postLoginRedirect');
+          if (savedRedirect && (savedRedirect.startsWith('/dashboard/student') || savedRedirect.startsWith('/checkout') || savedRedirect.startsWith('/restaurants'))) {
+            localStorage.removeItem('postLoginRedirect');
+            router.push(savedRedirect);
+          } else {
+            router.push('/dashboard/student');
+          }
         } else if (user.role === 'RESTAURANT') {
           router.push('/dashboard/restaurant');
         } else if (user.role === 'RIDER') {
