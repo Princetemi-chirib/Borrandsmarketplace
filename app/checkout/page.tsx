@@ -82,43 +82,43 @@ export default function PublicCheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto w-full max-w-4xl px-4 py-6">
         <div className="mb-4 flex items-center justify-between">
-          <Link href="/restaurants" className="inline-flex items-center gap-1 text-sm font-semibold text-blue-700"><ArrowLeft className="h-4 w-4" />Back</Link>
-          <span className="text-sm text-gray-600">{cart.length} item(s)</span>
+          <Link href="/restaurants" className="inline-flex items-center gap-1 text-sm font-semibold text-blue-700 dark:text-blue-400"><ArrowLeft className="h-4 w-4" />Back</Link>
+          <span className="text-sm text-gray-600 dark:text-gray-300">{cart.length} item(s)</span>
         </div>
 
         <form onSubmit={onPay} className="grid gap-4 lg:grid-cols-3">
           <div className="space-y-4 lg:col-span-2">
-            <div className="rounded-2xl border border-gray-200 bg-white p-4">
-              <h2 className="mb-3 text-lg font-semibold">Delivery details</h2>
-              <textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Enter full delivery address" className="mb-3 w-full rounded-lg border border-gray-200 p-2 text-sm" rows={3} />
-              <textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Instructions (optional)" className="mb-3 w-full rounded-lg border border-gray-200 p-2 text-sm" rows={2} />
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" className="w-full rounded-lg border border-gray-200 p-2 text-sm" />
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+              <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Delivery details</h2>
+              <textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Enter full delivery address" className="mb-3 w-full rounded-lg border border-gray-200 p-2 text-sm text-gray-900 placeholder-gray-400 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500" rows={3} />
+              <textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Instructions (optional)" className="mb-3 w-full rounded-lg border border-gray-200 p-2 text-sm text-gray-900 placeholder-gray-400 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500" rows={2} />
+              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" className="w-full rounded-lg border border-gray-200 p-2 text-sm text-gray-900 placeholder-gray-400 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500" />
             </div>
-            <div className="rounded-2xl border border-gray-200 bg-white p-4">
-              <h2 className="mb-3 text-lg font-semibold">Order items</h2>
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+              <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Order items</h2>
               <div className="space-y-2">
                 {cart.map((x) => (
-                  <div key={`${x.restaurantId}-${x.itemId}`} className="flex items-center justify-between text-sm">
+                  <div key={`${x.restaurantId}-${x.itemId}`} className="flex items-center justify-between text-sm text-gray-700 dark:text-gray-300">
                     <span>{x.name} x{x.quantity}</span>
-                    <span>N{(x.price * x.quantity).toLocaleString()}</span>
+                    <span className="text-gray-900 dark:text-white">N{(x.price * x.quantity).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-4 lg:h-fit">
-            <h2 className="mb-3 text-lg font-semibold">Summary</h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span>Subtotal</span><span>N{subtotal.toLocaleString()}</span></div>
-              <div className="flex justify-between"><span>Service</span><span>N{service.toLocaleString()}</span></div>
-              <div className="flex justify-between"><span>Delivery</span><span>N{delivery.toLocaleString()}</span></div>
-              <div className="mt-2 flex justify-between border-t border-gray-200 pt-2 text-base font-semibold"><span>Total</span><span>N{total.toLocaleString()}</span></div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 lg:h-fit dark:border-gray-700 dark:bg-gray-800">
+            <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Summary</h2>
+            <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+              <div className="flex justify-between"><span>Subtotal</span><span className="text-gray-900 dark:text-white">N{subtotal.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Service</span><span className="text-gray-900 dark:text-white">N{service.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Delivery</span><span className="text-gray-900 dark:text-white">N{delivery.toLocaleString()}</span></div>
+              <div className="mt-2 flex justify-between border-t border-gray-200 pt-2 text-base font-semibold dark:border-gray-600"><span>Total</span><span className="text-gray-900 dark:text-white">N{total.toLocaleString()}</span></div>
             </div>
-            {error && <p className="mt-3 rounded-md bg-red-50 p-2 text-xs text-red-700">{error}</p>}
+            {error && <p className="mt-3 rounded-md bg-red-50 p-2 text-xs text-red-700 dark:bg-red-900/30 dark:text-red-300">{error}</p>}
             <button disabled={loading} type="submit" className="mt-4 w-full rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60">
               {loading ? 'Processing...' : 'Paystack Checkout'}
             </button>
