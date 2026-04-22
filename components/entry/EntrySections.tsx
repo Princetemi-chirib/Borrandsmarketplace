@@ -10,6 +10,9 @@ import {
   Heart,
   ShoppingBag,
   Store,
+  Search,
+  Star,
+  Clock,
 } from 'lucide-react';
 
 const categories = [
@@ -17,49 +20,57 @@ const categories = [
   { label: 'Shops', color: 'bg-blue-50 text-blue-700', Icon: ShoppingBag },
 ];
 
-interface FeaturedRestaurant {
+interface Restaurant {
   _id?: string;
   id: string;
   name: string;
   image?: string;
   bannerImage?: string;
   logo?: string;
-  university?: string;
   cuisine?: string[] | string;
   estimatedDeliveryTime?: number;
   minimumOrder?: number;
+  rating?: number;
+  reviewCount?: number;
 }
 
 export default function EntrySections() {
-  const [featured, setFeatured] = useState<FeaturedRestaurant[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadFeatured = async () => {
+    const loadRestaurants = async () => {
       try {
         const res = await fetch('/api/marketplace/restaurants', { cache: 'no-store' });
         const data = await res.json();
         if (res.ok && Array.isArray(data.restaurants)) {
-          const selectedCampus = localStorage.getItem('selectedCampus') || 'All campuses';
-          const scoped = selectedCampus === 'All campuses'
-            ? data.restaurants
-            : data.restaurants.filter((r: FeaturedRestaurant) => (r.university || '') === selectedCampus);
-          setFeatured((scoped.length ? scoped : data.restaurants).slice(0, 2));
+          setRestaurants(data.restaurants);
         }
-      } catch {}
+      } catch {
+      } finally {
+        setLoading(false);
+      }
     };
-    loadFeatured();
-    const onCampusChanged = () => loadFeatured();
-    window.addEventListener('campus-changed', onCampusChanged as EventListener);
-    return () => window.removeEventListener('campus-changed', onCampusChanged as EventListener);
+    loadRestaurants();
   }, []);
 
-  const pickImage = (r: FeaturedRestaurant) => {
+  const pickImage = (r: Restaurant) => {
     const raw = r.bannerImage || r.image || r.logo || '';
     if (!isValidImageUrl(raw)) return '';
     return getImageUrl(raw);
   };
-  const cuisineText = (r: FeaturedRestaurant) =>
+  const cuisineText = (r: Restaurant) =>
     Array.isArray(r.cuisine) ? r.cuisine.slice(0, 2).join(', ') : (r.cuisine || 'Great meals');
+
+  const filtered = (() => {
+    if (!search.trim()) return restaurants;
+    const q = search.toLowerCase();
+    return restaurants.filter((r) => {
+      const cuisine = Array.isArray(r.cuisine) ? r.cuisine.join(' ') : (r.cuisine || '');
+      return r.name.toLowerCase().includes(q) || cuisine.toLowerCase().includes(q);
+    });
+  })();
 
   return (
     <>
@@ -84,43 +95,61 @@ export default function EntrySections() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold">Featured Restaurants</h2>
+          <h2 className="text-xl font-bold">All Restaurants</h2>
           <Link
             href="/restaurants"
             className="inline-flex items-center gap-1 text-sm font-semibold text-blue-700 hover:text-blue-800"
           >
-            View all
+            Open full page
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {featured.map((r, idx) => (
-            <Link
-              key={r.id}
-              href={`/restaurants/${r.id}`}
-              className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
-            >
-              {pickImage(r) ? (
-                <img src={pickImage(r)} alt={r.name} className="h-40 w-full object-cover" />
-              ) : (
-                <div className="h-40 w-full bg-gradient-to-r from-red-100 to-blue-100" />
-              )}
-              <div className="p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="font-semibold">{r.name}</p>
-                  <span className={`rounded-full px-2 py-1 text-xs font-semibold ${idx === 0 ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>
-                    {idx === 0 ? 'Hot' : 'Trending'}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600">{cuisineText(r)}</p>
-                <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
-                  <span>Delivery {r.estimatedDeliveryTime || 30} mins</span>
-                  <span>From N{Number(r.minimumOrder || 1500).toLocaleString()}</span>
-                </div>
-              </div>
-            </Link>
-          ))}
+
+        <div className="rounded-xl border border-gray-200 bg-white p-3">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search restaurants or cuisine..."
+              className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-red-400 focus:outline-none"
+            />
+          </div>
         </div>
+
+        {loading ? (
+          <div className="py-8 text-center text-sm text-gray-500">Loading restaurants...</div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((r) => (
+              <Link
+                key={r.id}
+                href={`/restaurants/${r.id}`}
+                className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+              >
+                {pickImage(r) ? (
+                  <img src={pickImage(r)} alt={r.name} className="h-36 w-full object-cover" />
+                ) : (
+                  <div className="h-36 w-full bg-gradient-to-r from-red-100 to-blue-100" />
+                )}
+                <div className="p-4">
+                  <p className="font-semibold text-gray-900">{r.name}</p>
+                  <p className="mt-1 text-xs text-gray-600">{cuisineText(r)}</p>
+                  <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                    <span className="inline-flex items-center gap-1">
+                      <Star className="h-3.5 w-3.5 text-yellow-500" />
+                      {Number(r.rating || 0).toFixed(1)} ({r.reviewCount || 0})
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      {r.estimatedDeliveryTime || 30}m
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="rounded-3xl border border-red-200 bg-red-50 p-5">
