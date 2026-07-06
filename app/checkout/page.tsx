@@ -54,7 +54,7 @@ export default function PublicCheckoutPage() {
     try {
       setLoading(true);
 
-      const restaurantIds = [...new Set(cart.map((x) => x.restaurantId))];
+      const restaurantIds = Array.from(new Set(cart.map((x) => x.restaurantId)));
       const statusChecks = await Promise.all(
         restaurantIds.map(async (id) => {
           const res = await fetch(`/api/marketplace/restaurants/${id}`, { cache: 'no-store' });
