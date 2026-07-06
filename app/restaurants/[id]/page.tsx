@@ -6,7 +6,16 @@ import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Plus, Minus } from 'lucide-react';
 import { getImageUrl, isValidImageUrl } from '@/lib/image-utils';
 
-type Restaurant = { id: string; name: string; description?: string; image?: string; bannerImage?: string; logo?: string };
+type Restaurant = {
+  id: string;
+  name: string;
+  description?: string;
+  image?: string;
+  bannerImage?: string;
+  logo?: string;
+  isOpen?: boolean;
+  todayHours?: { open: string; close: string } | null;
+};
 type MenuItem = { id: string; name: string; price: number; description?: string; image?: string };
 type CartItem = { restaurantId: string; restaurantName: string; itemId: string; name: string; price: number; quantity: number; image?: string };
 
@@ -44,7 +53,7 @@ export default function PublicRestaurantDetailsPage() {
   const cartCount = useMemo(() => cart.reduce((s, x) => s + x.quantity, 0), [cart]);
 
   const add = (item: MenuItem) => {
-    if (!restaurant) return;
+    if (!restaurant || restaurant.isOpen === false) return;
     setCart((prev) => {
       const found = prev.find((x) => x.itemId === item.id && x.restaurantId === restaurant.id);
       if (found) return prev.map((x) => (x === found ? { ...x, quantity: x.quantity + 1 } : x));
@@ -83,8 +92,33 @@ export default function PublicRestaurantDetailsPage() {
             <div className="h-44 w-full bg-gradient-to-r from-red-100 to-blue-100" />
           )}
           <div className="p-4">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{restaurant?.name || 'Restaurant'}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{restaurant?.name || 'Restaurant'}</h1>
+              {restaurant && (
+                <span
+                  className={`rounded-full px-3 py-1 text-sm font-medium ${
+                    restaurant.isOpen !== false
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                      : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                  }`}
+                >
+                  {restaurant.isOpen !== false ? 'Open Now' : 'Closed'}
+                </span>
+              )}
+              {restaurant?.todayHours && (
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {restaurant.todayHours.open} – {restaurant.todayHours.close}
+                </span>
+              )}
+            </div>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{restaurant?.description || 'Fresh meals for campus life.'}</p>
+            {restaurant?.isOpen === false && (
+              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20">
+                <p className="text-sm font-medium text-red-700 dark:text-red-300">
+                  This restaurant is currently closed. You can browse the menu, but ordering is unavailable.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -99,12 +133,19 @@ export default function PublicRestaurantDetailsPage() {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => sub(item)}
-                    className="rounded-md border border-gray-200 p-1 text-gray-800 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700"
+                    disabled={restaurant?.isOpen === false}
+                    className="rounded-md border border-gray-200 p-1 text-gray-800 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700"
                   >
                     <Minus className="h-4 w-4" />
                   </button>
                   <span className="w-6 text-center text-sm text-gray-900 dark:text-white">{qty(item.id)}</span>
-                  <button onClick={() => add(item)} className="rounded-md bg-red-600 p-1 text-white"><Plus className="h-4 w-4" /></button>
+                  <button
+                    onClick={() => add(item)}
+                    disabled={restaurant?.isOpen === false}
+                    className="rounded-md bg-red-600 p-1 text-white disabled:cursor-not-allowed disabled:bg-gray-400"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
               {item.description && <p className="text-xs text-gray-500 dark:text-gray-400">{item.description}</p>}

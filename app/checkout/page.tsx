@@ -53,6 +53,21 @@ export default function PublicCheckoutPage() {
 
     try {
       setLoading(true);
+
+      const restaurantIds = [...new Set(cart.map((x) => x.restaurantId))];
+      const statusChecks = await Promise.all(
+        restaurantIds.map(async (id) => {
+          const res = await fetch(`/api/marketplace/restaurants/${id}`, { cache: 'no-store' });
+          const data = await res.json();
+          return { id, name: data?.restaurant?.name, isOpen: data?.restaurant?.isOpen };
+        })
+      );
+      const closed = statusChecks.filter((r) => r.isOpen === false);
+      if (closed.length > 0) {
+        const names = closed.map((r) => r.name || 'A restaurant').join(', ');
+        throw new Error(`${names} ${closed.length === 1 ? 'is' : 'are'} currently closed. Please remove those items before paying.`);
+      }
+
       const res = await fetch('/api/paystack/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

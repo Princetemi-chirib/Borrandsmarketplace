@@ -32,6 +32,8 @@ interface Restaurant {
   minimumOrder?: number;
   rating?: number;
   reviewCount?: number;
+  isOpen?: boolean;
+  todayHours?: { open: string; close: string } | null;
 }
 
 export default function EntrySections() {
@@ -125,16 +127,48 @@ export default function EntrySections() {
               <Link
                 key={r.id}
                 href={`/restaurants/${r.id}`}
-                className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+                className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${
+                  r.isOpen === false ? 'border-red-200 opacity-90' : 'border-gray-200'
+                }`}
               >
                 {pickImage(r) ? (
-                  <img src={pickImage(r)} alt={r.name} className="h-36 w-full object-cover" />
+                  <div className="relative">
+                    <img src={pickImage(r)} alt={r.name} className="h-36 w-full object-cover" />
+                    {r.isOpen === false && (
+                      <span className="absolute left-2 top-2 rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                        Closed
+                      </span>
+                    )}
+                  </div>
                 ) : (
-                  <div className="h-36 w-full bg-gradient-to-r from-red-100 to-blue-100" />
+                  <div className="relative h-36 w-full bg-gradient-to-r from-red-100 to-blue-100">
+                    {r.isOpen === false && (
+                      <span className="absolute left-2 top-2 rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                        Closed
+                      </span>
+                    )}
+                  </div>
                 )}
                 <div className="p-4">
-                  <p className="font-semibold text-gray-900">{r.name}</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-semibold text-gray-900">{r.name}</p>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                        r.isOpen !== false
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {r.isOpen !== false ? 'Open' : 'Closed'}
+                    </span>
+                  </div>
                   <p className="mt-1 text-xs text-gray-600">{cuisineText(r)}</p>
+                  {r.isOpen === false && (
+                    <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-700">
+                      Currently closed — ordering unavailable
+                      {r.todayHours ? ` (hours: ${r.todayHours.open}–${r.todayHours.close})` : ''}
+                    </p>
+                  )}
                   <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
                     <span className="inline-flex items-center gap-1">
                       <Star className="h-3.5 w-3.5 text-yellow-500" />

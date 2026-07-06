@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
+import { getTodayHours, isRestaurantOpen } from '@/lib/restaurant-hours';
 
 export async function GET(
   request: NextRequest,
@@ -23,16 +24,21 @@ export async function GET(
         minimumOrder: true,
         estimatedDeliveryTime: true,
         isOpen: true,
+        operatingHours: true,
       },
     });
     if (!restaurant) {
       return NextResponse.json({ message: 'Restaurant not found' }, { status: 404 });
     }
 
+    const actuallyOpen = isRestaurantOpen(restaurant.operatingHours, restaurant.isOpen);
+
     return NextResponse.json({
       restaurant: {
         ...restaurant,
         _id: restaurant.id,
+        isOpen: actuallyOpen,
+        todayHours: getTodayHours(restaurant.operatingHours),
       },
     });
   } catch (e: any) {

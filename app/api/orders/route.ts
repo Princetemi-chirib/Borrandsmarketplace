@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
 import { verifyAppRequest } from '@/lib/auth-app';
+import { isRestaurantOpen } from '@/lib/restaurant-hours';
 import { sendNewOrderEmailToRestaurant, sendOrderPlacedEmailToStudent, sendNewOrderNotificationToAdmin } from '@/lib/services/email';
 
 const ALLOWED_STATUSES = new Set(['PENDING','CONFIRMED','PICKED_UP','DELIVERED','CANCELLED']);
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
         estimatedDeliveryTime: true,
         name: true,
         isOpen: true,
+        operatingHours: true,
         user: {
           select: {
             email: true
@@ -82,7 +84,7 @@ export async function POST(request: NextRequest) {
     if (!restaurant) {
       return NextResponse.json({ message: 'Restaurant not found or inactive' }, { status: 404 });
     }
-    if (!restaurant.isOpen) {
+    if (!isRestaurantOpen(restaurant.operatingHours, restaurant.isOpen)) {
       return NextResponse.json({ message: 'Restaurant is currently closed and cannot accept new orders' }, { status: 400 });
     }
 

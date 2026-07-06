@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { dbConnect, prisma } from '@/lib/db-prisma';
+import { getTodayHours, isRestaurantOpen } from '@/lib/restaurant-hours';
 
 export async function GET() {
   try {
@@ -22,7 +23,9 @@ export async function GET() {
         estimatedDeliveryTime: true,
         deliveryFee: true,
         minimumOrder: true,
-        university: true
+        university: true,
+        isOpen: true,
+        operatingHours: true,
       },
       orderBy: { rating: 'desc' },
       take: 100
@@ -46,10 +49,14 @@ export async function GET() {
         cuisineArray = r.cuisine;
       }
 
+      const actuallyOpen = isRestaurantOpen(r.operatingHours, r.isOpen);
+
       return {
         ...r,
         _id: r.id,
         cuisine: cuisineArray,
+        isOpen: actuallyOpen,
+        todayHours: getTodayHours(r.operatingHours),
         // Filter out the old non-existent default image path
         image: r.image && r.image !== '/images/default-restaurant.jpg' ? r.image : '',
         logo: r.logo || '',

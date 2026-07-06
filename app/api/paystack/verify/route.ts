@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PaystackService from '@/lib/paystack';
 import { dbConnect, prisma } from '@/lib/db-prisma';
+import { isRestaurantOpen } from '@/lib/restaurant-hours';
 import { sendNewOrderEmailToRestaurant, sendOrderPlacedEmailToStudent, sendNewOrderNotificationToAdmin } from '@/lib/services/email';
 
 // Force dynamic rendering for this route
@@ -101,6 +102,7 @@ export async function GET(request: NextRequest) {
                 id: true,
                 name: true,
                 isOpen: true,
+                operatingHours: true,
                 isApproved: true,
                 isActive: true,
                 deliveryFee: true, 
@@ -120,7 +122,7 @@ export async function GET(request: NextRequest) {
             }
 
             // If restaurant is closed, skip order creation for this restaurant
-            if (!restaurant.isOpen) {
+            if (!isRestaurantOpen(restaurant.operatingHours, restaurant.isOpen)) {
               console.warn(`Skipping order creation: restaurant ${orderData.restaurantId} is closed`);
               return null;
             }
